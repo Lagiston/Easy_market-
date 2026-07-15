@@ -10,6 +10,11 @@ async function main() {
   if (!email || !password) {
     throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set");
   }
+  if (password.length < 12 || password === "change-me") {
+    throw new Error(
+      "ADMIN_PASSWORD must be at least 12 characters and not the .env.example placeholder",
+    );
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {

@@ -27,6 +27,11 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
 export function requireRole(...roles: Role[]) {
   return (req: Request, res: Response, next: NextFunction) => {
+    // Guard against routes that forgot requireAuth before requireRole.
+    if (!req.user) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
     if (!roles.includes(req.user.role as Role)) {
       res.status(403).json({ error: "Forbidden" });
       return;
