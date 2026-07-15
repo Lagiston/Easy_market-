@@ -20,17 +20,13 @@ bun run dev:server       # Express on Bun with --hot, http://localhost:3000
 bun run dev:client       # Vite dev server, http://localhost:5173 (proxies /api to :3000)
 bun run --cwd server typecheck   # tsc --noEmit
 bun run test:e2e         # Playwright E2E: sets up the test DB, then runs specs in e2e/
-bun run test:e2e:setup   # just the test-DB lifecycle (create + migrate + seed), idempotent
 ```
 
-## E2E testing (Playwright)
+## E2E testing
 
-Playwright lives at the repo root (`playwright.config.ts`, specs in `e2e/`, chromium only) and runs against a **separate test database** (`es_market_test`) — never the dev DB.
+Playwright E2E tests live in `e2e/` and run against a separate test database (`es_market_test`, never the dev DB).
 
-- `e2e/test-env.ts` is the single source of truth for the test env: server on **:3100**, client on **:5273** (no collision with dev servers), committed test-only admin creds (`admin@e2e.test`), and a `TEST_DATABASE_URL` derived from `server/.env` by swapping the DB name (override with `TEST_DATABASE_URL`).
-- `e2e/setup-db.ts` (run automatically by `test:e2e`) creates the DB if missing, runs `prisma migrate deploy`, and seeds the admin; it refuses to run against any DB not named `es_market_test`.
-- The config's two `webServer` entries start the Express server (test env injected via `webServer.env` — explicit env always wins over auto-loaded `.env`) and the Vite client with `API_PROXY_TARGET=http://localhost:3100`. Don't move DB setup into Playwright `globalSetup` — webServers launch before it.
-- The root `package.json` has `"type": "module"` so Playwright's Node loader can import `e2e/*.ts`.
+**Always delegate writing, extending, or fixing E2E tests to the `e2e-test-writer` subagent** (`.claude/agents/e2e-test-writer.md`) — launch it via the Agent tool rather than editing specs directly in the main conversation. It carries the full setup details (test env, ports, DB lifecycle, auth constraints) and the project's test conventions (locator style, parallel-safety, assertion standards), and it runs the specs it writes. Give it the feature or flow to cover and any acceptance criteria; it handles the rest.
 
 ## Authentication
 
