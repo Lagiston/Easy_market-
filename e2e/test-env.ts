@@ -29,6 +29,12 @@ export const TEST_DATABASE_URL =
 export const TEST_ADMIN_EMAIL = "admin@e2e.test";
 export const TEST_ADMIN_PASSWORD = "e2e-admin-password-123";
 
+// Non-admin staff account, seeded by e2e/seed-agent.ts (setup-db.ts only seeds
+// the ADMIN via server/prisma/seed.ts) for exercising AGENT-role behavior.
+export const TEST_AGENT_EMAIL = "agent@e2e.test";
+export const TEST_AGENT_PASSWORD = "e2e-agent-password-123";
+export const TEST_AGENT_NAME = "E2E Agent";
+
 export const serverEnv = {
   DATABASE_URL: TEST_DATABASE_URL,
   PORT: String(SERVER_PORT),

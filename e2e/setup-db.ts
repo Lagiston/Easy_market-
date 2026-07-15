@@ -43,4 +43,5 @@ function run(command: string, args: string[], env: Record<string, string>) {
 await createDatabaseIfMissing();
 run("bunx", ["prisma", "migrate", "deploy"], { DATABASE_URL: TEST_DATABASE_URL });
 run("bun", ["prisma/seed.ts"], serverEnv);
+run("bun", ["prisma/seed-agent-e2e.ts"], { DATABASE_URL: TEST_DATABASE_URL });
 console.log("Test database ready.");
