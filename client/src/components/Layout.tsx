@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { authClient, type SessionUser } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +15,17 @@ export default function Layout({ user }: { user: SessionUser }) {
 
   return (
     <nav className="flex items-center justify-between border-b bg-background px-6 py-3">
-      <span className="text-lg font-semibold">ES-Market</span>
+      <div className="flex items-center gap-6">
+        <span className="text-lg font-semibold">ES-Market</span>
+        {user.role === "ADMIN" && (
+          <Link
+            to="/users"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Users
+          </Link>
+        )}
+      </div>
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">{user.name}</span>
         <Button type="button" variant="outline" size="sm" onClick={handleSignOut}>
