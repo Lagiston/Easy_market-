@@ -19,7 +19,18 @@ bun install              # install all workspace deps (from root)
 bun run dev:server       # Express on Bun with --hot, http://localhost:3000
 bun run dev:client       # Vite dev server, http://localhost:5173 (proxies /api to :3000)
 bun run --cwd server typecheck   # tsc --noEmit
+bun run test:e2e         # Playwright E2E: sets up the test DB, then runs specs in e2e/
+bun run test:e2e:setup   # just the test-DB lifecycle (create + migrate + seed), idempotent
 ```
+
+## E2E testing (Playwright)
+
+Playwright lives at the repo root (`playwright.config.ts`, specs in `e2e/`, chromium only) and runs against a **separate test database** (`es_market_test`) — never the dev DB.
+
+- `e2e/test-env.ts` is the single source of truth for the test env: server on **:3100**, client on **:5273** (no collision with dev servers), committed test-only admin creds (`admin@e2e.test`), and a `TEST_DATABASE_URL` derived from `server/.env` by swapping the DB name (override with `TEST_DATABASE_URL`).
+- `e2e/setup-db.ts` (run automatically by `test:e2e`) creates the DB if missing, runs `prisma migrate deploy`, and seeds the admin; it refuses to run against any DB not named `es_market_test`.
+- The config's two `webServer` entries start the Express server (test env injected via `webServer.env` — explicit env always wins over auto-loaded `.env`) and the Vite client with `API_PROXY_TARGET=http://localhost:3100`. Don't move DB setup into Playwright `globalSetup` — webServers launch before it.
+- The root `package.json` has `"type": "module"` so Playwright's Node loader can import `e2e/*.ts`.
 
 ## Authentication
 
@@ -29,8 +40,9 @@ Better Auth (email/password) with the Prisma adapter on PostgreSQL — DB-backed
 - **Roles:** `role` is a Better Auth additional field on `user` (default `"AGENT"`, `input: false` so clients can't set it); the Prisma `Role` enum is `ADMIN | AGENT`.
 - **Route protection:** `server/src/middleware/require-auth.ts` exports `requireAuth` (401s if no session, then populates `req.user`/`req.session`) and `requireRole(...roles)` (403s otherwise). Example: `app.get("/api/me", requireAuth, ...)`.
 - **Client:** `client/src/lib/auth-client.ts` creates `authClient` from `better-auth/react`, with `inferAdditionalFields` so `role` is typed on the session user (exported as `SessionUser`). Same-origin: Vite proxies `/api` to :3000, so no `baseURL` is set. Use `authClient.useSession()` for auth state, `authClient.signIn.email()` / `authClient.signOut()` for flows; `ProtectedRoute` redirects unauthenticated users to `/login` and takes an optional `roles` prop for role-gated routes (e.g. `<ProtectedRoute roles={["ADMIN"]} />` wraps `/users`; disallowed roles are redirected to `/`). Role-only UI (like the "Users" nav link in `Layout`) checks `user.role`. Client gating is UX only — protect the matching API routes with `requireRole` too.
-- **Admin seeding:** `bun run --cwd server seed` (also wired as the Prisma seed) — idempotent, reads `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME`, hashes with `better-auth/crypto` under the `credential` provider.
-- **Env vars** (`server/.env`, see `.env.example`): `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (:3000), `CLIENT_URL` (:5173, listed in `trustedOrigins`), plus the `ADMIN_*` seed vars.
+- **Admin seeding:** `bun run --cwd server seed` (also wired as the Prisma seed) — idempotent, reads `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME`, hashes with `better-auth/crypto` under the `credential` provider. Rejects passwords under 12 chars or the `change-me` placeholder.
+- **Env vars** (`server/.env`, see `.env.example`): `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (:3000), `CLIENT_URL` (:5173, listed in `trustedOrigins`), plus the `ADMIN_*` seed vars. `auth.ts` **throws at startup** if `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, or `CLIENT_URL` is missing (no silent fallbacks); `useSecureCookies` is forced on when `NODE_ENV=production`.
+- **Rate limiting:** `server/src/middleware/rate-limit.ts` (`express-rate-limit`) — mounted in `index.ts` only when `NODE_ENV=production`: `/api/auth` gets 20 req/IP/15 min (brute-force), the rest of `/api` 300. Dev and E2E runs are unthrottled. If prod sits behind a proxy, `app.set("trust proxy", ...)` still needs to be configured.
 
 ## Documentation lookups
 

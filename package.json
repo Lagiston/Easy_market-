@@ -1,10 +1,20 @@
 {
   "name": "es-market",
   "private": true,
+  "type": "module",
   "workspaces": ["client", "server"],
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "dev:client": "bun run --cwd client dev",
-    "dev:server": "bun run --cwd server dev"
+    "dev:server": "bun run --cwd server dev",
+    "test:e2e": "bun e2e/setup-db.ts && playwright test",
+    "test:e2e:setup": "bun e2e/setup-db.ts",
+    "test:e2e:ui": "bun e2e/setup-db.ts && playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0",
+    "@types/pg": "^8.15.0",
+    "dotenv": "^17.0.0",
+    "pg": "^8.16.0"
   }
 }
