@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
+import { Role } from "../src/generated/prisma/client";
 import { prisma } from "../src/lib/prisma";
 
 async function main() {
@@ -23,7 +24,7 @@ async function main() {
       name,
       email,
       emailVerified: true,
-      role: "ADMIN",
+      role: Role.ADMIN,
       accounts: {
         create: {
           id: randomUUID(),

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { fromNodeHeaders } from "better-auth/node";
+import { Role } from "../generated/prisma/client";
 import { auth } from "../lib/auth";
 
 type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
@@ -24,9 +25,9 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   next();
 }
 
-export function requireRole(...roles: Array<"ADMIN" | "AGENT">) {
+export function requireRole(...roles: Role[]) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!roles.includes(req.user.role as "ADMIN" | "AGENT")) {
+    if (!roles.includes(req.user.role as Role)) {
       res.status(403).json({ error: "Forbidden" });
       return;
     }
