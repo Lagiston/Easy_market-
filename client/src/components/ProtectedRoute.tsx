@@ -13,7 +13,7 @@ export default function ProtectedRoute() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       <Layout user={session.user} />
       <main className="p-6">
         <Outlet />
