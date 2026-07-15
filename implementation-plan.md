@@ -9,9 +9,9 @@ Goal: repo scaffold, database, and staff auth working end-to-end.
 - [ ] 1.1 Scaffold monorepo: `client/` (Vite + React + TS) and `server/` (Express + TS), shared lint/format config
 - [ ] 1.2 Docker Compose for local PostgreSQL; server `.env` handling
 - [ ] 1.3 Prisma setup + initial schema: `User` (role: ADMIN/AGENT), `Session`
-- [ ] 1.4 Session auth: login/logout endpoints, DB-backed sessions (opaque cookie ID), auth + role middleware
-- [ ] 1.5 Seed script: seeded admin account
-- [ ] 1.6 Dashboard shell: login page, protected layout with nav, logout
+- [x] 1.4 Session auth: login/logout endpoints, DB-backed sessions (opaque cookie ID), auth + role middleware
+- [x] 1.5 Seed script: seeded admin account
+- [x] 1.6 Dashboard shell: login page, protected layout with nav, logout
 - [ ] 1.7 User management (admin): list/create/deactivate staff accounts, change password
 
 **Demo:** admin logs in, creates an agent account; agent logs in.
