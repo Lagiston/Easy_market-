@@ -1,22 +1,23 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import ChangePassword from './pages/dashboard/ChangePassword'
-import DashboardHome from './pages/dashboard/DashboardHome'
-import DashboardLayout from './pages/dashboard/DashboardLayout'
-import Login from './pages/dashboard/Login'
-import Users from './pages/dashboard/Users'
-import StoreHome from './pages/store/Home'
+import { useEffect, useState } from 'react';
 
-export default function App() {
+function App() {
+  const [health, setHealth] = useState<'loading' | 'ok' | 'error'>('loading');
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
+      .then((data: { status: string }) => setHealth(data.status === 'ok' ? 'ok' : 'error'))
+      .catch(() => setHealth('error'));
+  }, []);
+
   return (
-    <Routes>
-      <Route path="/" element={<StoreHome />} />
-      <Route path="/dashboard/login" element={<Login />} />
-      <Route path="/dashboard/change-password" element={<ChangePassword />} />
-      <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<DashboardHome />} />
-        <Route path="users" element={<Users />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  )
+    <div className="App">
+      <h1>ES-Market</h1>
+      {health === 'loading' && <p>Checking server…</p>}
+      {health === 'ok' && <p>✅ Server is up and running</p>}
+      {health === 'error' && <p>❌ Server is unreachable</p>}
+    </div>
+  );
 }
+
+export default App;
