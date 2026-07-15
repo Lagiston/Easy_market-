@@ -52,6 +52,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               autoComplete="email"
+              placeholder="you@example.com"
               {...register("email")}
               className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                 errors.email
@@ -69,6 +70,7 @@ export default function LoginPage() {
               id="password"
               type="password"
               autoComplete="current-password"
+              placeholder="••••••••"
               {...register("password")}
               className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                 errors.password
