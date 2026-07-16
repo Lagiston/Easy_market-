@@ -1,4 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
 import { renderWithQuery } from "@/test/render-with-query";
@@ -69,5 +70,48 @@ describe("UsersPage", () => {
       ).toBeInTheDocument(),
     );
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("shows the create user dialog when the button is clicked", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: /create user/i }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("hides the create user dialog when clicking outside", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: /create user/i }));
+    await screen.findByRole("dialog");
+
+    await user.click(document.body);
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("hides the create user dialog when pressing Escape", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: /create user/i }));
+    await screen.findByRole("dialog");
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
   });
 });
