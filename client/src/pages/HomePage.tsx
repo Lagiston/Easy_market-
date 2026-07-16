@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HomePage() {
   const { data, isPending, isError } = useQuery({
@@ -12,7 +13,7 @@ export default function HomePage() {
   return (
     <div>
       <h1 className="mb-2 text-xl font-semibold text-gray-900">Home</h1>
-      {health === 'loading' && <p>Checking server…</p>}
+      {health === 'loading' && <Skeleton className="h-5 w-48" />}
       {health === 'ok' && <p>✅ Server is up and running</p>}
       {health === 'error' && <p>❌ Server is unreachable</p>}
     </div>

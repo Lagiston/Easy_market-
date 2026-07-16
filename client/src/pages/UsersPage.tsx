@@ -2,6 +2,7 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
@@ -79,21 +80,21 @@ export default function UsersPage() {
                     <TableRow key={i}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="size-9 animate-pulse rounded-full bg-muted" />
+                          <Skeleton className="size-9 rounded-full" />
                           <div className="space-y-1.5">
-                            <div className="h-3 w-28 animate-pulse rounded bg-muted" />
-                            <div className="h-3 w-40 animate-pulse rounded bg-muted" />
+                            <Skeleton className="h-3 w-28" />
+                            <Skeleton className="h-3 w-40" />
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="h-5 w-16 animate-pulse rounded-4xl bg-muted" />
+                        <Skeleton className="h-5 w-16 rounded-4xl" />
                       </TableCell>
                       <TableCell>
-                        <div className="h-3 w-8 animate-pulse rounded bg-muted" />
+                        <Skeleton className="h-3 w-8" />
                       </TableCell>
                       <TableCell>
-                        <div className="ml-auto h-3 w-24 animate-pulse rounded bg-muted" />
+                        <Skeleton className="ml-auto h-3 w-24" />
                       </TableCell>
                     </TableRow>
                   ))

@@ -16,7 +16,9 @@ export default function Layout({ user }: { user: SessionUser }) {
   return (
     <nav className="flex items-center justify-between border-b bg-background px-6 py-3">
       <div className="flex items-center gap-6">
-        <span className="text-lg font-semibold">ES-Market</span>
+        <Link to="/" className="text-lg font-semibold">
+          ES-Market
+        </Link>
         {user.role === "ADMIN" && (
           <Link
             to="/users"
