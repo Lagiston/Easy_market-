@@ -150,6 +150,72 @@ test.describe("GET /api/users API guards", () => {
   });
 });
 
+test.describe("Create user (ADMIN)", () => {
+  test("creating a user via the dialog adds it to the table", async ({ page }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    await page.goto("/users");
+
+    const email = `create-${Date.now()}-${Math.random().toString(36).slice(2)}@e2e.test`;
+    const name = "Created Via UI";
+
+    try {
+      await page.getByRole("button", { name: "Create user" }).click();
+
+      const dialog = page.getByRole("dialog");
+      await expect(dialog.getByRole("heading", { name: "Create user" })).toBeVisible();
+
+      await dialog.getByLabel("Name").fill(name);
+      await dialog.getByLabel("Email").fill(email);
+      await dialog.getByLabel("Password").fill("created-via-ui-password-123");
+
+      await dialog.getByRole("button", { name: "Create user" }).click();
+
+      await expect(dialog).not.toBeVisible();
+
+      const row = page.getByRole("row").filter({ hasText: email });
+      await expect(row).toBeVisible();
+      await expect(row.getByText(name, { exact: true })).toBeVisible();
+      await expect(row.getByText("Agent", { exact: true })).toBeVisible();
+    } finally {
+      await hardDeleteUser(email);
+    }
+  });
+});
+
+test.describe("Edit user (ADMIN)", () => {
+  test("editing a user's name and email updates the table row", async ({ page }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    const { name, email } = await createThrowawayAgent(page, "edit-confirm");
+    const newName = "Edited Via UI";
+    const newEmail = `edited-${Date.now()}-${Math.random().toString(36).slice(2)}@e2e.test`;
+
+    try {
+      await page.goto("/users");
+      const row = page.getByRole("row").filter({ hasText: email });
+      await expect(row).toBeVisible();
+
+      await row.getByRole("button", { name: `Edit ${name}` }).click();
+
+      const dialog = page.getByRole("dialog");
+      await expect(dialog.getByRole("heading", { name: "Edit user" })).toBeVisible();
+
+      await dialog.getByLabel("Name").fill(newName);
+      await dialog.getByLabel("Email").fill(newEmail);
+
+      await dialog.getByRole("button", { name: "Save changes" }).click();
+
+      await expect(dialog).not.toBeVisible();
+
+      const updatedRow = page.getByRole("row").filter({ hasText: newEmail });
+      await expect(updatedRow).toBeVisible();
+      await expect(updatedRow.getByText(newName, { exact: true })).toBeVisible();
+      await expect(page.getByRole("row").filter({ hasText: email })).not.toBeVisible();
+    } finally {
+      await hardDeleteUser(newEmail);
+    }
+  });
+});
+
 test.describe("Delete user (ADMIN)", () => {
   test("the admin's own row has no delete button", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
