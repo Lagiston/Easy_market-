@@ -20,7 +20,20 @@ bun run dev:server       # Express on Bun with --hot, http://localhost:3000
 bun run dev:client       # Vite dev server, http://localhost:5173 (proxies /api to :3000)
 bun run --cwd server typecheck   # tsc --noEmit
 bun run test:e2e         # Playwright E2E: sets up the test DB, then runs specs in e2e/
+bun run --cwd client test        # Vitest component tests, single run
+bun run --cwd client test:watch  # Vitest component tests, watch mode
 ```
+
+## Component testing
+
+Component tests use Vitest + React Testing Library, colocated with the component as `*.test.tsx` (e.g. `client/src/pages/UsersPage.tsx` → `client/src/pages/UsersPage.test.tsx`). Config lives in `client/vitest.config.ts` (jsdom environment, `@` alias matching Vite's, setup file at `client/src/test/setup.ts` which loads `@testing-library/jest-dom`).
+
+- Mock `axios` with `vi.mock("axios")` / `vi.mocked(axios, { deep: true })` rather than hitting the network — reset mocks in `beforeEach`.
+- Any component using TanStack Query must be rendered through `renderWithQuery` from `client/src/test/render-with-query.tsx` (wraps in a fresh `QueryClientProvider` with retries disabled), not `render` directly.
+- Prefer `screen.findBy*` / `waitFor` for async states (loading → success/error) over arbitrary waits.
+- Run `bun run --cwd client test` after writing or changing component tests, and `bun run --cwd client test:watch` while iterating.
+
+This is separate from Playwright E2E (below) — component tests exercise one component in isolation with mocked I/O; E2E drives the real app end-to-end.
 
 ## E2E testing
 
