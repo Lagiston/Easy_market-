@@ -114,4 +114,19 @@ describe("UsersPage", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
   });
+
+  it("opens the edit dialog pre-filled when a row's edit button is clicked", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Edit Ada Lovelace" }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Edit user")).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toHaveValue("Ada Lovelace");
+    expect(screen.getByLabelText("Email")).toHaveValue("ada@es-market.test");
+    expect(screen.getByLabelText("Password")).toHaveValue("");
+  });
 });

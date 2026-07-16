@@ -2,23 +2,42 @@ import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserSchema, type CreateUserInput } from "@es-market/core";
+import {
+  createUserSchema,
+  updateUserSchema,
+  type UpdateUserInput,
+} from "@es-market/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
+import type { UserRow } from "@/components/UsersTable";
 
-export default function CreateUserForm({ onSuccess }: { onSuccess?: () => void }) {
+export default function UserForm({
+  user,
+  onSuccess,
+}: {
+  user?: UserRow;
+  onSuccess?: () => void;
+}) {
   const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateUserInput>({ resolver: zodResolver(createUserSchema) });
+  } = useForm<UpdateUserInput>({
+    resolver: zodResolver(user ? updateUserSchema : createUserSchema),
+    defaultValues: user
+      ? { name: user.name, email: user.email, password: "" }
+      : undefined,
+  });
 
   const mutation = useMutation({
-    mutationFn: (input: CreateUserInput) =>
-      axios.post("/api/users", input).then((res) => res.data.user),
+    mutationFn: (input: UpdateUserInput) =>
+      (user
+        ? axios.put(`/api/users/${user.id}`, input)
+        : axios.post("/api/users", input)
+      ).then((res) => res.data.user),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       onSuccess?.();
@@ -28,7 +47,7 @@ export default function CreateUserForm({ onSuccess }: { onSuccess?: () => void }
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not create the user. Please try again."
+      : `Could not ${user ? "update" : "create"} the user. Please try again.`
     : null;
 
   return (
@@ -38,9 +57,9 @@ export default function CreateUserForm({ onSuccess }: { onSuccess?: () => void }
       className="grid gap-4"
     >
       <div className="grid gap-1.5">
-        <Label htmlFor="create-user-name">Name</Label>
+        <Label htmlFor="user-form-name">Name</Label>
         <Input
-          id="create-user-name"
+          id="user-form-name"
           autoComplete="off"
           aria-invalid={!!errors.name}
           {...register("name")}
@@ -50,9 +69,9 @@ export default function CreateUserForm({ onSuccess }: { onSuccess?: () => void }
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="create-user-email">Email</Label>
+        <Label htmlFor="user-form-email">Email</Label>
         <Input
-          id="create-user-email"
+          id="user-form-email"
           type="email"
           autoComplete="off"
           aria-invalid={!!errors.email}
@@ -63,14 +82,19 @@ export default function CreateUserForm({ onSuccess }: { onSuccess?: () => void }
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="create-user-password">Password</Label>
+        <Label htmlFor="user-form-password">Password</Label>
         <Input
-          id="create-user-password"
+          id="user-form-password"
           type="password"
           autoComplete="new-password"
           aria-invalid={!!errors.password}
           {...register("password")}
         />
+        {user && !errors.password && (
+          <p className="text-sm text-muted-foreground">
+            Leave blank to keep the current password.
+          </p>
+        )}
         {errors.password && (
           <p className="text-sm text-destructive">{errors.password.message}</p>
         )}
@@ -78,7 +102,13 @@ export default function CreateUserForm({ onSuccess }: { onSuccess?: () => void }
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
       <DialogFooter showCloseButton>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Creating…" : "Create user"}
+          {user
+            ? mutation.isPending
+              ? "Saving…"
+              : "Save changes"
+            : mutation.isPending
+              ? "Creating…"
+              : "Create user"}
         </Button>
       </DialogFooter>
     </form>

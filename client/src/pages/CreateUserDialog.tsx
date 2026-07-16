@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import CreateUserForm from "@/components/CreateUserForm";
+import UserForm from "@/components/UserForm";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ export default function CreateUserDialog() {
             Add a staff account. New users are created as agents.
           </DialogDescription>
         </DialogHeader>
-        <CreateUserForm onSuccess={() => setOpen(false)} />
+        <UserForm onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );

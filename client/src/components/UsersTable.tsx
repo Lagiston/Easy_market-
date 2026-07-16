@@ -1,5 +1,6 @@
-import { Check, Minus } from "lucide-react";
+import { Check, Minus, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -34,7 +35,13 @@ function initials(name: string) {
     .join("");
 }
 
-export default function UsersTable({ users }: { users: UserRow[] | null }) {
+export default function UsersTable({
+  users,
+  onEdit,
+}: {
+  users: UserRow[] | null;
+  onEdit: (user: UserRow) => void;
+}) {
   return (
     <Table>
       <TableHeader>
@@ -43,6 +50,9 @@ export default function UsersTable({ users }: { users: UserRow[] | null }) {
           <TableHead>Role</TableHead>
           <TableHead>Verified</TableHead>
           <TableHead className="text-right">Joined</TableHead>
+          <TableHead>
+            <span className="sr-only">Actions</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -66,6 +76,9 @@ export default function UsersTable({ users }: { users: UserRow[] | null }) {
                 </TableCell>
                 <TableCell>
                   <Skeleton className="ml-auto h-3 w-24" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="size-7 rounded-lg" />
                 </TableCell>
               </TableRow>
             ))
@@ -96,6 +109,16 @@ export default function UsersTable({ users }: { users: UserRow[] | null }) {
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
                   {joinedDateFormat.format(new Date(user.createdAt))}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Edit ${user.name}`}
+                    onClick={() => onEdit(user)}
+                  >
+                    <Pencil />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
