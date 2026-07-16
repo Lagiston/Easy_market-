@@ -10,7 +10,7 @@ AI-powered e-commerce site + internal dashboard for a physical store. Customers 
 
 ## Stack
 
-Bun workspaces monorepo: `client/` (Vite + React + TypeScript) and `server/` (Express 5 + TypeScript, runs natively on Bun — no build step). PostgreSQL via Prisma. OpenAI API for AI features (server-side only, never from the browser). Client UI: Tailwind CSS v4 + shadcn/ui.
+Bun workspaces monorepo: `client/` (Vite + React + TypeScript), `server/` (Express 5 + TypeScript, runs natively on Bun — no build step), and `core/` (`@es-market/core` — shared TypeScript consumed as source by both, no build step; holds the zod schemas). PostgreSQL via Prisma. OpenAI API for AI features (server-side only, never from the browser). Client UI: Tailwind CSS v4 + shadcn/ui.
 
 ## Commands
 
@@ -67,3 +67,5 @@ Use the **context7 MCP server** to fetch up-to-date docs before working with any
 - **Styling:** Tailwind v4 utilities + shadcn components only — no custom CSS files or inline styles. shadcn is set up with the nova preset, neutral base, CSS variables, and RTL enabled (`client/components.json`); add components with `bunx shadcn@latest add <name>` from `client/`. Use theme tokens (`bg-muted`, `text-destructive`, `bg-primary`, …), not hardcoded palette colors. Brand primary is a dark forest green (oklch hue 152, defined in `client/src/index.css`).
 - **AI:** GPT-5 for reply drafting, GPT-5 mini for classification; structured outputs (JSON schema). Every AI reply requires agent approval before sending.
 - **Data fetching:** use `axios` (not `fetch`) with TanStack Query (`@tanstack/react-query`) for all client-side API calls — wrap queries in `useQuery`/`useMutation` rather than manual `useEffect`/`useState` fetching. `QueryClientProvider` is set up in `client/src/main.tsx`.
+- **Validation:** use `zod` (v4) for data validation on both sides — no hand-rolled validation. Define each schema once in the `core` package (`core/src/schemas/`, exported from `core/src/index.ts` along with its inferred type) and import it from `@es-market/core` in both client and server — never duplicate a schema in `client/` or `server/`. Server routes validate request bodies with the shared schema + `safeParse` (400 with the first issue's message on failure; see `server/src/routes/users.ts`); the client uses the same schema in forms (see the Forms bullet), which keeps error messages identical on both sides. Example: `createUserSchema` in `core/src/schemas/user.ts`.
+- **Forms:** build client forms with React Hook Form + a zod schema via `zodResolver` from `@hookform/resolvers/zod` — no manual `useState` form handling. Reference implementation: the create-user form in `client/src/pages/CreateUserDialog.tsx` (schema-driven validation, inline `text-destructive` field errors, submit wired to a TanStack `useMutation`).

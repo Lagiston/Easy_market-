@@ -54,9 +54,12 @@ test.describe("User list (ADMIN)", () => {
     );
     await page.goto("/users");
 
+    // TanStack Query's default client retries the failed request 3 times with
+    // exponential backoff (~7s total) before surfacing the error state, so
+    // allow extra time beyond the default 5s expect timeout.
     await expect(
       page.getByText("Could not load users. Please try again."),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole("table")).not.toBeVisible();
   });
 });
