@@ -1,3 +1,138 @@
+import { useEffect, useState } from "react";
+import { Check, Minus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+type UserRow = {
+  id: string;
+  name: string;
+  email: string;
+  role: "ADMIN" | "AGENT";
+  emailVerified: boolean;
+  createdAt: string;
+};
+
+const joinedDateFormat = new Intl.DateTimeFormat("en", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join("");
+}
+
 export default function UsersPage() {
-  return <h1 className="text-2xl font-semibold">Users</h1>;
+  const [users, setUsers] = useState<UserRow[] | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
+      .then((data: { users: UserRow[] }) => setUsers(data.users))
+      .catch(() => setError(true));
+  }, []);
+
+  return (
+    <Card className="mx-auto max-w-4xl">
+      <CardHeader>
+        <CardTitle>Users</CardTitle>
+        <CardDescription>
+          {users ? `${users.length} member${users.length === 1 ? "" : "s"}` : "Staff accounts"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {error ? (
+          <p className="py-8 text-center text-sm text-destructive">
+            Could not load users. Please try again.
+          </p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Verified</TableHead>
+                <TableHead className="text-right">Joined</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users === null
+                ? Array.from({ length: 3 }, (_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="size-9 animate-pulse rounded-full bg-muted" />
+                          <div className="space-y-1.5">
+                            <div className="h-3 w-28 animate-pulse rounded bg-muted" />
+                            <div className="h-3 w-40 animate-pulse rounded bg-muted" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="h-5 w-16 animate-pulse rounded-4xl bg-muted" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="h-3 w-8 animate-pulse rounded bg-muted" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="ml-auto h-3 w-24 animate-pulse rounded bg-muted" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                            {initials(user.name)}
+                          </div>
+                          <div>
+                            <p className="font-medium">{user.name}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
+                          {user.role === "ADMIN" ? "Admin" : "Agent"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {user.emailVerified ? (
+                          <Check aria-label="Verified" className="size-4 text-muted-foreground" />
+                        ) : (
+                          <Minus aria-label="Not verified" className="size-4 text-muted-foreground/50" />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {joinedDateFormat.format(new Date(user.createdAt))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
 }

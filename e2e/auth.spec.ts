@@ -156,7 +156,9 @@ test.describe("Role-based access control", () => {
 
     await page.getByRole("link", { name: "Users" }).click();
     await expect(page).toHaveURL("/users");
-    await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
+    // The page title is a shadcn CardTitle (a div, not a heading), so assert
+    // the user table rendered instead.
+    await expect(page.getByRole("columnheader", { name: "User", exact: true })).toBeVisible();
   });
 
   test("AGENT is redirected away from /users and does not see the Users nav link", async ({
