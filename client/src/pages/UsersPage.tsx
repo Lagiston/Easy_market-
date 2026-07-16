@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import { Check, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,15 +43,12 @@ function initials(name: string) {
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<UserRow[] | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/users")
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
-      .then((data: { users: UserRow[] }) => setUsers(data.users))
-      .catch(() => setError(true));
-  }, []);
+  const { data, isError } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => axios.get<{ users: UserRow[] }>("/api/users").then((res) => res.data.users),
+  });
+  const users = data ?? null;
+  const error = isError;
 
   return (
     <Card className="mx-auto max-w-4xl">

@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 export default function HomePage() {
-  const [health, setHealth] = useState<'loading' | 'ok' | 'error'>('loading');
+  const { data, isPending, isError } = useQuery({
+    queryKey: ["health"],
+    queryFn: () => axios.get<{ status: string }>("/api/health").then((res) => res.data),
+  });
 
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
-      .then((data: { status: string }) => setHealth(data.status === 'ok' ? 'ok' : 'error'))
-      .catch(() => setHealth('error'));
-  }, []);
+  const health = isPending ? "loading" : isError || data?.status !== "ok" ? "error" : "ok";
 
   return (
     <div>
