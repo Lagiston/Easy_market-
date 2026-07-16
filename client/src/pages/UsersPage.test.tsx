@@ -1,7 +1,8 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
+import { Role } from "@es-market/core";
 import { renderWithQuery } from "@/test/render-with-query";
 import UsersPage from "./UsersPage";
 
@@ -13,7 +14,7 @@ const users = [
     id: "1",
     name: "Ada Lovelace",
     email: "ada@es-market.test",
-    role: "ADMIN" as const,
+    role: Role.ADMIN,
     emailVerified: true,
     createdAt: "2026-01-10T00:00:00.000Z",
   },
@@ -21,7 +22,7 @@ const users = [
     id: "2",
     name: "Grace Hopper",
     email: "grace@es-market.test",
-    role: "AGENT" as const,
+    role: Role.AGENT,
     emailVerified: false,
     createdAt: "2026-02-14T00:00:00.000Z",
   },
@@ -30,6 +31,8 @@ const users = [
 describe("UsersPage", () => {
   beforeEach(() => {
     mockedAxios.get.mockReset();
+    mockedAxios.delete.mockReset();
+    mockedAxios.isAxiosError.mockReset();
   });
 
   it("shows skeleton rows while loading", () => {
@@ -128,5 +131,81 @@ describe("UsersPage", () => {
     expect(screen.getByLabelText("Name")).toHaveValue("Ada Lovelace");
     expect(screen.getByLabelText("Email")).toHaveValue("ada@es-market.test");
     expect(screen.getByLabelText("Password")).toHaveValue("");
+  });
+
+  it("does not render a delete button for the admin row", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    expect(screen.queryByRole("button", { name: "Delete Ada Lovelace" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete Grace Hopper" })).toBeEnabled();
+  });
+
+  it("opens a confirmation dialog when the delete button is clicked", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Delete Grace Hopper" }));
+
+    expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
+    expect(screen.getByText("Delete Grace Hopper?")).toBeInTheDocument();
+    expect(mockedAxios.delete).not.toHaveBeenCalled();
+  });
+
+  it("closes the confirmation dialog without deleting when Cancel is clicked", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Delete Grace Hopper" }));
+    await screen.findByRole("alertdialog");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(mockedAxios.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes the user when the confirmation is accepted", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    mockedAxios.delete.mockResolvedValue({});
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Delete Grace Hopper" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(mockedAxios.delete).toHaveBeenCalledWith("/api/users/2");
+  });
+
+  it("shows the server error and keeps the dialog open when deletion fails", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    mockedAxios.isAxiosError.mockImplementation(
+      (error) => (error as { isAxiosError?: boolean })?.isAxiosError === true,
+    );
+    mockedAxios.delete.mockRejectedValue({
+      isAxiosError: true,
+      response: { data: { error: "Admins can't be deleted" } },
+    });
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Delete Grace Hopper" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    expect(await screen.findByText("Admins can't be deleted")).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
   });
 });

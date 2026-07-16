@@ -2,6 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
+import { Role } from "@es-market/core";
 import { renderWithQuery } from "@/test/render-with-query";
 import CreateUserDialog from "./CreateUserDialog";
 
@@ -12,7 +13,7 @@ const createdUser = {
   id: "3",
   name: "New Agent",
   email: "agent@es-market.test",
-  role: "AGENT" as const,
+  role: Role.AGENT,
   emailVerified: false,
   createdAt: "2026-07-16T00:00:00.000Z",
 };

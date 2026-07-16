@@ -24,6 +24,7 @@ usersRouter.get("/me", requireAuth, (req, res) => {
 
 usersRouter.get("/users", requireAuth, requireRole(Role.ADMIN), async (_req, res) => {
   const users = await prisma.user.findMany({
+    where: { deletedAt: null },
     select: userSelect,
     orderBy: { createdAt: "asc" },
   });
@@ -112,4 +113,23 @@ usersRouter.put<{ id: string }>("/users/:id", requireAuth, requireRole(Role.ADMI
   }
 
   res.json({ user });
+});
+
+usersRouter.delete<{ id: string }>("/users/:id", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
+  const userId = req.params.id;
+
+  const target = await prisma.user.findUnique({ where: { id: userId } });
+  if (!target || target.deletedAt) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  if (target.role === Role.ADMIN) {
+    res.status(400).json({ error: "Admins can't be deleted" });
+    return;
+  }
+
+  await prisma.user.update({ where: { id: userId }, data: { deletedAt: new Date() } });
+  await prisma.session.deleteMany({ where: { userId } });
+
+  res.status(204).end();
 });

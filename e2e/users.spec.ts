@@ -1,11 +1,41 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { Client } from "pg";
 import {
   TEST_ADMIN_EMAIL,
   TEST_ADMIN_PASSWORD,
   TEST_AGENT_EMAIL,
   TEST_AGENT_PASSWORD,
+  TEST_DATABASE_URL,
 } from "./test-env";
 import { loginAs } from "./helpers";
+
+// Creates a throwaway AGENT via the API (as an already-logged-in admin) for
+// tests that delete a user, so the shared seeded TEST_AGENT_EMAIL row is
+// never touched. Returns the created user's name/email for locating its row.
+async function createThrowawayAgent(page: Page, label: string) {
+  const email = `${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@e2e.test`;
+  const name = `Throwaway ${label}`;
+  const response = await page.request.post("/api/users", {
+    data: { name, email, password: "throwaway-password-123" },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to create throwaway agent: ${response.status()}`);
+  }
+  return { name, email };
+}
+
+// Hard-deletes a throwaway user (bypassing the soft-delete API) so repeated
+// local/CI runs against the shared test DB don't accumulate rows. Cascades to
+// the user's account/session rows per the schema's onDelete: Cascade.
+async function hardDeleteUser(email: string) {
+  const client = new Client({ connectionString: TEST_DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query('DELETE FROM "user" WHERE email = $1', [email]);
+  } finally {
+    await client.end();
+  }
+}
 
 test.describe("User list (ADMIN)", () => {
   test("admin navigates via the Users nav link and sees the user table", async ({ page }) => {
@@ -117,5 +147,87 @@ test.describe("GET /api/users API guards", () => {
     // Ordered by createdAt ascending.
     const timestamps = body.users.map((u) => new Date(u.createdAt).getTime());
     expect(timestamps).toEqual([...timestamps].sort((a, b) => a - b));
+  });
+});
+
+test.describe("Delete user (ADMIN)", () => {
+  test("the admin's own row has no delete button", async ({ page }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    await page.goto("/users");
+
+    const adminRow = page.getByRole("row").filter({ hasText: TEST_ADMIN_EMAIL });
+    await expect(adminRow.getByRole("button", { name: "Delete E2E Admin" })).not.toBeVisible();
+  });
+
+  test("deleting a user removes it from the table and updates the member count", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    const { name, email } = await createThrowawayAgent(page, "delete-confirm");
+
+    try {
+      await page.goto("/users");
+      const row = page.getByRole("row").filter({ hasText: email });
+      await expect(row).toBeVisible();
+
+      await row.getByRole("button", { name: `Delete ${name}` }).click();
+
+      const dialog = page.getByRole("alertdialog");
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole("heading", { name: `Delete ${name}?` })).toBeVisible();
+
+      await dialog.getByRole("button", { name: "Delete" }).click();
+
+      await expect(dialog).not.toBeVisible();
+      await expect(row).not.toBeVisible();
+
+      // The member count description tracks the table's actual row count, so
+      // recompute it after the deletion rather than diffing against a
+      // "before" snapshot — other tests run in parallel against the same
+      // shared user table and may add/remove rows concurrently.
+      const rowCountAfter = await page
+        .getByRole("row")
+        .filter({ hasNotText: "Joined" }) // exclude the header row
+        .count();
+      await expect(
+        page.getByText(`${rowCountAfter} member${rowCountAfter === 1 ? "" : "s"}`, {
+          exact: true,
+        }),
+      ).toBeVisible();
+    } finally {
+      await hardDeleteUser(email);
+    }
+  });
+
+  test("canceling the confirm dialog keeps the user and sends no delete request", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    const { name, email } = await createThrowawayAgent(page, "delete-cancel");
+
+    try {
+      await page.goto("/users");
+      const row = page.getByRole("row").filter({ hasText: email });
+      await expect(row).toBeVisible();
+
+      let deleteRequestSent = false;
+      await page.route(`**/api/users/*`, (route) => {
+        if (route.request().method() === "DELETE") deleteRequestSent = true;
+        return route.continue();
+      });
+
+      await row.getByRole("button", { name: `Delete ${name}` }).click();
+
+      const dialog = page.getByRole("alertdialog");
+      await expect(dialog).toBeVisible();
+
+      await dialog.getByRole("button", { name: "Cancel" }).click();
+
+      await expect(dialog).not.toBeVisible();
+      await expect(row).toBeVisible();
+      expect(deleteRequestSent).toBe(false);
+    } finally {
+      await hardDeleteUser(email);
+    }
   });
 });

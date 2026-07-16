@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { Role } from "@es-market/core";
 import { prisma } from "./prisma";
 
 // Fail fast on missing auth env: Better Auth would otherwise fall back to a
@@ -28,8 +29,21 @@ export const auth = betterAuth({
     additionalFields: {
       role: {
         type: "string",
-        defaultValue: "AGENT",
+        required: true,
+        defaultValue: Role.AGENT,
         input: false,
+      },
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        // Soft-deleted users keep their row/credentials; block new sessions
+        // (sign-in included) instead of hard-deleting or banning them.
+        async before(session) {
+          const user = await prisma.user.findUnique({ where: { id: session.userId } });
+          if (user?.deletedAt) return false;
+        },
       },
     },
   },

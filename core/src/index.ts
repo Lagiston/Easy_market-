@@ -1,4 +1,5 @@
 export {
+  Role,
   createUserSchema,
   updateUserSchema,
   type CreateUserInput,

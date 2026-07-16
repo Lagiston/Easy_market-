@@ -1,4 +1,5 @@
-import { Check, Minus, Pencil } from "lucide-react";
+import { Check, Minus, Pencil, Trash2 } from "lucide-react";
+import { Role } from "@es-market/core";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +16,7 @@ export type UserRow = {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "AGENT";
+  role: Role;
   emailVerified: boolean;
   createdAt: string;
 };
@@ -38,9 +39,11 @@ function initials(name: string) {
 export default function UsersTable({
   users,
   onEdit,
+  onDelete,
 }: {
   users: UserRow[] | null;
   onEdit: (user: UserRow) => void;
+  onDelete: (user: UserRow) => void;
 }) {
   return (
     <Table>
@@ -96,8 +99,8 @@ export default function UsersTable({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
-                    {user.role === "ADMIN" ? "Admin" : "Agent"}
+                  <Badge variant={user.role === Role.ADMIN ? "default" : "secondary"}>
+                    {user.role === Role.ADMIN ? "Admin" : "Agent"}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -111,14 +114,26 @@ export default function UsersTable({
                   {joinedDateFormat.format(new Date(user.createdAt))}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Edit ${user.name}`}
-                    onClick={() => onEdit(user)}
-                  >
-                    <Pencil />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Edit ${user.name}`}
+                      onClick={() => onEdit(user)}
+                    >
+                      <Pencil />
+                    </Button>
+                    {user.role !== Role.ADMIN && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Delete ${user.name}`}
+                        onClick={() => onDelete(user)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

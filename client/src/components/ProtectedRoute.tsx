@@ -1,8 +1,9 @@
 import { Navigate, Outlet } from "react-router";
+import { type Role } from "@es-market/core";
 import { authClient } from "../lib/auth-client";
 import Layout from "./Layout";
 
-export default function ProtectedRoute({ roles }: { roles?: string[] }) {
+export default function ProtectedRoute({ roles }: { roles?: Role[] }) {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
@@ -11,7 +12,7 @@ export default function ProtectedRoute({ roles }: { roles?: string[] }) {
   if (!session) {
     return <Navigate to="/login" replace />;
   }
-  if (roles && !roles.includes(session.user.role)) {
+  if (roles && !roles.includes(session.user.role as Role)) {
     return <Navigate to="/" replace />;
   }
 

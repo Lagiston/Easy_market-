@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+// Mirrors the `Role` enum in server/prisma/schema.prisma. Shared here so the
+// client (which has no access to the Prisma-generated enum) and server both
+// reference the same values instead of "ADMIN"/"AGENT" string literals.
+export const Role = {
+  ADMIN: "ADMIN",
+  AGENT: "AGENT",
+} as const;
+
+export type Role = (typeof Role)[keyof typeof Role];
+
 const NAME_ERROR = "Name must be at least 3 characters";
 const EMAIL_ERROR = "A valid email is required";
 const PASSWORD_ERROR = "Password must be at least 8 characters";

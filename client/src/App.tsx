@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router";
+import { Role } from "@es-market/core";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -11,7 +12,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<HomePage />} />
       </Route>
-      <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
+      <Route element={<ProtectedRoute roles={[Role.ADMIN]} />}>
         <Route path="/users" element={<UsersPage />} />
       </Route>
     </Routes>

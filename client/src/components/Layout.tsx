@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router";
+import { Role } from "@es-market/core";
 import { authClient, type SessionUser } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 
@@ -19,7 +20,7 @@ export default function Layout({ user }: { user: SessionUser }) {
         <Link to="/" className="text-lg font-semibold">
           ES-Market
         </Link>
-        {user.role === "ADMIN" && (
+        {user.role === Role.ADMIN && (
           <Link
             to="/users"
             className="text-sm text-muted-foreground hover:text-foreground"
