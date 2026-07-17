@@ -11,8 +11,8 @@ vi.mock("axios");
 const mockedAxios = vi.mocked(axios, { deep: true });
 
 const categories = [
-  { id: "c1", name: "Groceries" },
-  { id: "c2", name: "Beverages" },
+  { id: "c1", name: { en: "Groceries" } },
+  { id: "c2", name: { en: "Beverages" } },
 ];
 
 function renderForm(onSuccess = vi.fn(), product?: ProductRow) {
@@ -81,8 +81,8 @@ describe("ProductForm (create mode)", () => {
   it("creates the product, uploads the image, and calls onSuccess", async () => {
     const createdProduct = {
       id: "3",
-      name: "Rice 5kg",
-      description: "Long grain rice",
+      name: { en: "Rice 5kg" },
+      description: { en: "Long grain rice" },
       stock: 10,
       imageUrl: null,
       category: categories[0],
@@ -108,9 +108,10 @@ describe("ProductForm (create mode)", () => {
 
     await waitFor(() =>
       expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
-        name: "Rice 5kg",
-        description: "Long grain rice",
+        name: { en: "Rice 5kg" },
+        description: { en: "Long grain rice" },
         stock: 10,
+        lowStockThreshold: 10,
         categoryId: "c1",
       }),
     );
@@ -150,9 +151,10 @@ describe("ProductForm (create mode)", () => {
 describe("ProductForm (edit mode)", () => {
   const existingProduct: ProductRow = {
     id: "42",
-    name: "Rice 5kg",
-    description: "Long grain rice",
+    name: { en: "Rice 5kg" },
+    description: { en: "Long grain rice" },
     stock: 20,
+    lowStockThreshold: 10,
     imageUrl: null,
     category: categories[0]!,
   };
@@ -171,15 +173,17 @@ describe("ProductForm (edit mode)", () => {
     expect(screen.getByLabelText("Name")).toHaveValue("Rice 5kg");
     expect(screen.getByLabelText("Description")).toHaveValue("Long grain rice");
     expect(screen.getByLabelText("Stock")).toHaveValue(20);
+    expect(screen.getByLabelText("Low stock threshold")).toHaveValue(10);
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
       expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/42", {
-        name: "Rice 5kg",
-        description: "Long grain rice",
+        name: { en: "Rice 5kg" },
+        description: { en: "Long grain rice" },
         stock: 20,
+        lowStockThreshold: 10,
         categoryId: "c1",
       }),
     );
@@ -187,7 +191,7 @@ describe("ProductForm (edit mode)", () => {
 
   it("submits the update and calls onSuccess", async () => {
     mockedAxios.put.mockResolvedValue({
-      data: { product: { ...existingProduct, name: "Rice 10kg" } },
+      data: { product: { ...existingProduct, name: { en: "Rice 10kg" } } },
     });
     const user = userEvent.setup();
     const { onSuccess } = renderForm(vi.fn(), existingProduct);
@@ -199,9 +203,10 @@ describe("ProductForm (edit mode)", () => {
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/42", {
-      name: "Rice 10kg",
-      description: "Long grain rice",
+      name: { en: "Rice 10kg" },
+      description: { en: "Long grain rice" },
       stock: 20,
+      lowStockThreshold: 10,
       categoryId: "c1",
     });
   });

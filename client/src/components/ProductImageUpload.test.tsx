@@ -10,11 +10,11 @@ const mockedAxios = vi.mocked(axios, { deep: true });
 
 const uploadedProduct = {
   id: "1",
-  name: "Rice 5kg",
+  name: { en: "Rice 5kg" },
   description: null,
   stock: 20,
   imageUrl: "/api/uploads/products/1.jpg",
-  category: { id: "c1", name: "Groceries" },
+  category: { id: "c1", name: { en: "Groceries" } },
 };
 
 describe("ProductImageUpload", () => {

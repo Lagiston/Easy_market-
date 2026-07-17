@@ -9,13 +9,13 @@ vi.mock("axios");
 const mockedAxios = vi.mocked(axios, { deep: true });
 
 const categories = [
-  { id: "c1", name: "Groceries" },
-  { id: "c2", name: "Beverages" },
+  { id: "c1", name: { en: "Groceries" } },
+  { id: "c2", name: { en: "Beverages" } },
 ];
 
 const createdProduct = {
   id: "3",
-  name: "Rice 5kg",
+  name: { en: "Rice 5kg" },
   description: null,
   stock: 10,
   imageUrl: null,
@@ -101,9 +101,10 @@ describe("CreateProductDialog", () => {
 
     await waitFor(() =>
       expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
-        name: "Rice 5kg",
-        description: "",
+        name: { en: "Rice 5kg" },
+        description: undefined,
         stock: 10,
+        lowStockThreshold: 10,
         categoryId: "c1",
       }),
     );

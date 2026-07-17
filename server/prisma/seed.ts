@@ -44,15 +44,16 @@ async function main() {
 }
 
 async function seedCategories() {
-  const categories = ["Groceries", "Beverages", "Household", "Personal Care", "Snacks"];
-  for (const name of categories) {
-    await prisma.category.upsert({
-      where: { name },
-      update: {},
-      create: { id: randomUUID(), name },
+  const names = ["Groceries", "Beverages", "Household", "Personal Care", "Snacks"];
+  for (const en of names) {
+    const existing = await prisma.category.findFirst({
+      where: { deletedAt: null, name: { path: ["en"], equals: en } },
     });
+    if (!existing) {
+      await prisma.category.create({ data: { id: randomUUID(), name: { en } } });
+    }
   }
-  console.log(`Seeded ${categories.length} categories`);
+  console.log(`Seeded ${names.length} categories`);
 }
 
 main()

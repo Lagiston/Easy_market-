@@ -36,6 +36,22 @@ export default function Layout({ user }: { user: SessionUser }) {
             Products
           </Link>
         )}
+        {user.role === Role.ADMIN && (
+          <Link
+            to="/dashboard"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Dashboard
+          </Link>
+        )}
+        {user.role === Role.ADMIN && (
+          <Link
+            to="/categories"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Categories
+          </Link>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">{user.name}</span>

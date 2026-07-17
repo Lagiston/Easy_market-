@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createProductSchema,
   updateProductSchema,
+  type LocalizedName,
+  type UpdateProductFormInput,
   type UpdateProductInput,
 } from "@es-market/core";
 import { Button } from "@/components/ui/button";
@@ -13,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -22,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import type { ProductRow } from "@/components/ProductsTable";
 
-type Category = { id: string; name: string };
+type Category = { id: string; name: LocalizedName };
 
 export default function ProductForm({
   product,
@@ -48,16 +51,26 @@ export default function ProductForm({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<UpdateProductInput>({
+  } = useForm<UpdateProductFormInput, unknown, UpdateProductInput>({
     resolver: zodResolver(product ? updateProductSchema : createProductSchema),
     defaultValues: product
       ? {
-          name: product.name,
-          description: product.description ?? "",
+          name: { en: product.name.en, ar: product.name.ar ?? "" },
+          description: {
+            en: product.description?.en ?? "",
+            ar: product.description?.ar ?? "",
+          },
           stock: product.stock,
+          lowStockThreshold: product.lowStockThreshold,
           categoryId: product.category.id,
         }
-      : { name: "", description: "", stock: 0, categoryId: "" },
+      : {
+          name: { en: "", ar: "" },
+          description: { en: "", ar: "" },
+          stock: 0,
+          lowStockThreshold: 10,
+          categoryId: "",
+        },
   });
 
   const mutation = useMutation({
@@ -97,6 +110,9 @@ export default function ProductForm({
       : `Could not ${product ? "update" : "create"} the product. Please try again.`
     : null;
 
+  const enHasError = !!errors.name?.en || !!errors.description?.en;
+  const arHasError = !!errors.name?.ar || !!errors.description?.ar;
+
   return (
     <form
       noValidate
@@ -109,30 +125,76 @@ export default function ProductForm({
       })}
       className="grid gap-4"
     >
-      <div className="grid gap-1.5">
-        <Label htmlFor="product-form-name">Name</Label>
-        <Input
-          id="product-form-name"
-          autoComplete="off"
-          aria-invalid={!!errors.name}
-          {...register("name")}
-        />
-        {errors.name && (
-          <p className="text-sm text-destructive">{errors.name.message}</p>
-        )}
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="product-form-description">Description</Label>
-        <Textarea
-          id="product-form-description"
-          rows={3}
-          aria-invalid={!!errors.description}
-          {...register("description")}
-        />
-        {errors.description && (
-          <p className="text-sm text-destructive">{errors.description.message}</p>
-        )}
-      </div>
+      <Tabs defaultValue="en">
+        <TabsList>
+          <TabsTrigger value="en">
+            English
+            {enHasError && (
+              <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="ar">
+            Arabic
+            {arHasError && (
+              <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
+            )}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="en" className="grid gap-4 pt-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="product-form-name-en">Name</Label>
+            <Input
+              id="product-form-name-en"
+              autoComplete="off"
+              aria-invalid={!!errors.name?.en}
+              {...register("name.en")}
+            />
+            {errors.name?.en && (
+              <p className="text-sm text-destructive">{errors.name.en.message}</p>
+            )}
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="product-form-description-en">Description</Label>
+            <Textarea
+              id="product-form-description-en"
+              rows={3}
+              aria-invalid={!!errors.description?.en}
+              {...register("description.en")}
+            />
+            {errors.description?.en && (
+              <p className="text-sm text-destructive">{errors.description.en.message}</p>
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="ar" className="grid gap-4 pt-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="product-form-name-ar">Name</Label>
+            <Input
+              id="product-form-name-ar"
+              dir="rtl"
+              autoComplete="off"
+              aria-invalid={!!errors.name?.ar}
+              {...register("name.ar")}
+            />
+            {errors.name?.ar && (
+              <p className="text-sm text-destructive">{errors.name.ar.message}</p>
+            )}
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="product-form-description-ar">Description</Label>
+            <Textarea
+              id="product-form-description-ar"
+              dir="rtl"
+              rows={3}
+              aria-invalid={!!errors.description?.ar}
+              {...register("description.ar")}
+            />
+            {errors.description?.ar && (
+              <p className="text-sm text-destructive">{errors.description.ar.message}</p>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
       <div className="grid gap-1.5">
         <Label htmlFor="product-form-stock">Stock</Label>
         <Input
@@ -148,6 +210,20 @@ export default function ProductForm({
         )}
       </div>
       <div className="grid gap-1.5">
+        <Label htmlFor="product-form-low-stock-threshold">Low stock threshold</Label>
+        <Input
+          id="product-form-low-stock-threshold"
+          type="number"
+          min={0}
+          step={1}
+          aria-invalid={!!errors.lowStockThreshold}
+          {...register("lowStockThreshold", { valueAsNumber: true })}
+        />
+        {errors.lowStockThreshold && (
+          <p className="text-sm text-destructive">{errors.lowStockThreshold.message}</p>
+        )}
+      </div>
+      <div className="grid gap-1.5">
         <Label htmlFor="product-form-category">Category</Label>
         <Controller
           name="categoryId"
@@ -155,12 +231,16 @@ export default function ProductForm({
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger id="product-form-category" aria-invalid={!!errors.categoryId}>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="Select a category">
+                  {(value: string) =>
+                    categories?.find((category) => category.id === value)?.name.en ?? ""
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {categories?.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
-                    {category.name}
+                    {category.name.en}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -79,25 +79,26 @@ model Verification {
 
 model Category {
   id        String    @id
-  name      String
+  name      Json
   createdAt DateTime  @default(now())
+  deletedAt DateTime?
   products  Product[]
 
-  @@unique([name])
   @@map("category")
 }
 
 model Product {
-  id          String    @id
-  name        String
-  description String?
-  stock       Int
-  imageUrl    String?
-  categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  id                String    @id
+  name              Json
+  description       Json?
+  stock             Int
+  lowStockThreshold Int       @default(10)
+  imageUrl          String?
+  categoryId        String
+  category          Category  @relation(fields: [categoryId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
 
   @@index([categoryId])
   @@map("product")

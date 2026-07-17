@@ -3,13 +3,13 @@ import { unlink } from "node:fs/promises";
 import path from "node:path";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer, { MulterError } from "multer";
-import { Role } from "../generated/prisma/client";
+import { Role, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { productImagesDir } from "../lib/uploads";
 import { requireAuth, requireRole } from "../middleware/require-auth";
 import { createProductSchema, updateProductSchema } from "@es-market/core";
 
-// Product and category endpoints; mounted at /api in index.ts.
+// Product endpoints; mounted at /api in index.ts.
 export const productsRouter = Router();
 
 const productInclude = {
@@ -55,11 +55,6 @@ function uploadImage(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-productsRouter.get("/categories", requireAuth, requireRole(Role.ADMIN), async (_req, res) => {
-  const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
-  res.json({ categories });
-});
-
 productsRouter.get("/products", requireAuth, requireRole(Role.ADMIN), async (_req, res) => {
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
@@ -75,16 +70,23 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, stock, categoryId } = parsed.data;
+  const { name, description, stock, lowStockThreshold, categoryId } = parsed.data;
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
-  if (!category) {
+  if (!category || category.deletedAt) {
     res.status(404).json({ error: "Category not found" });
     return;
   }
 
   const product = await prisma.product.create({
-    data: { id: randomUUID(), name, description: description ?? null, stock, categoryId },
+    data: {
+      id: randomUUID(),
+      name,
+      description: description ?? Prisma.JsonNull,
+      stock,
+      lowStockThreshold,
+      categoryId,
+    },
     include: productInclude,
   });
   res.status(201).json({ product });
@@ -96,7 +98,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, stock, categoryId } = parsed.data;
+  const { name, description, stock, lowStockThreshold, categoryId } = parsed.data;
   const productId = req.params.id;
 
   const target = await prisma.product.findUnique({ where: { id: productId } });
@@ -106,14 +108,20 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
   }
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
-  if (!category) {
+  if (!category || category.deletedAt) {
     res.status(404).json({ error: "Category not found" });
     return;
   }
 
   const product = await prisma.product.update({
     where: { id: productId },
-    data: { name, description: description ?? null, stock, categoryId },
+    data: {
+      name,
+      description: description ?? Prisma.JsonNull,
+      stock,
+      lowStockThreshold,
+      categoryId,
+    },
     include: productInclude,
   });
   res.json({ product });

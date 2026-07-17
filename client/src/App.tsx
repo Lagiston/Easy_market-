@@ -5,6 +5,8 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
 import ProductsPage from "./pages/ProductsPage";
+import DashboardPage from "./pages/DashboardPage";
+import CategoriesPage from "./pages/CategoriesPage";
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
       <Route element={<ProtectedRoute roles={[Role.ADMIN]} />}>
         <Route path="/users" element={<UsersPage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
       </Route>
     </Routes>
   );

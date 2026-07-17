@@ -11,19 +11,21 @@ const mockedAxios = vi.mocked(axios, { deep: true });
 const products = [
   {
     id: "1",
-    name: "Rice 5kg",
+    name: { en: "Rice 5kg" },
     description: null,
     stock: 20,
+    lowStockThreshold: 10,
     imageUrl: null,
-    category: { id: "c1", name: "Groceries" },
+    category: { id: "c1", name: { en: "Groceries" } },
   },
   {
     id: "2",
-    name: "Orange Juice",
+    name: { en: "Orange Juice" },
     description: null,
     stock: 5,
+    lowStockThreshold: 10,
     imageUrl: null,
-    category: { id: "c2", name: "Beverages" },
+    category: { id: "c2", name: { en: "Beverages" } },
   },
 ];
 
@@ -110,7 +112,7 @@ describe("ProductsPage", () => {
         : Promise.resolve({ data: { products } }),
     );
     mockedAxios.put.mockResolvedValue({
-      data: { product: { ...products[0], name: "Rice 10kg" } },
+      data: { product: { ...products[0], name: { en: "Rice 10kg" } } },
     });
     const user = userEvent.setup();
     renderWithQuery(<ProductsPage />);
@@ -127,9 +129,10 @@ describe("ProductsPage", () => {
 
     await waitFor(() =>
       expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/1", {
-        name: "Rice 10kg",
-        description: "",
+        name: { en: "Rice 10kg" },
+        description: undefined,
         stock: 20,
+        lowStockThreshold: 10,
         categoryId: "c1",
       }),
     );

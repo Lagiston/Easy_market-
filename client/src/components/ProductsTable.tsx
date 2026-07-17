@@ -1,4 +1,5 @@
 import { ImageOff, Pencil, Trash2 } from "lucide-react";
+import type { LocalizedDescription, LocalizedName } from "@es-market/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,11 +14,12 @@ import {
 
 export type ProductRow = {
   id: string;
-  name: string;
-  description: string | null;
+  name: LocalizedName;
+  description: LocalizedDescription | null;
   stock: number;
+  lowStockThreshold: number;
   imageUrl: string | null;
-  category: { id: string; name: string };
+  category: { id: string; name: LocalizedName };
 };
 
 export default function ProductsTable({
@@ -77,9 +79,9 @@ export default function ProductsTable({
                     </AvatarFallback>
                   </Avatar>
                 </TableCell>
-                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell className="font-medium">{product.name.en}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {product.category.name}
+                  {product.category.name.en}
                 </TableCell>
                 <TableCell className="text-right">{product.stock}</TableCell>
                 <TableCell>
@@ -87,7 +89,7 @@ export default function ProductsTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Edit ${product.name}`}
+                      aria-label={`Edit ${product.name.en}`}
                       onClick={() => onEdit(product)}
                     >
                       <Pencil />
@@ -95,7 +97,7 @@ export default function ProductsTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Delete ${product.name}`}
+                      aria-label={`Delete ${product.name.en}`}
                       onClick={() => onDelete(product)}
                     >
                       <Trash2 />

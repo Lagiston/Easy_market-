@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ProductRow } from "@/components/ProductsTable";
+import type { CategoryRow } from "@/components/CategoriesTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,19 +12,19 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export default function DeleteProductDialog({
-  product,
+export default function DeleteCategoryDialog({
+  category,
   onOpenChange,
 }: {
-  product: ProductRow | null;
+  category: CategoryRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => axios.delete(`/api/products/${product!.id}`),
+    mutationFn: () => axios.delete(`/api/categories/${category!.id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
       onOpenChange(false);
     },
   });
@@ -32,12 +32,12 @@ export default function DeleteProductDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not delete the product. Please try again."
+      : "Could not delete the category. Please try again."
     : null;
 
   return (
     <AlertDialog
-      open={product !== null}
+      open={category !== null}
       onOpenChange={(open) => {
         if (!open) mutation.reset();
         onOpenChange(open);
@@ -45,9 +45,10 @@ export default function DeleteProductDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {product?.name.en}?</AlertDialogTitle>
+          <AlertDialogTitle>Delete {category?.name.en}?</AlertDialogTitle>
           <AlertDialogDescription>
-            This removes the product from the catalog and can&apos;t be undone.
+            This removes the category and can&apos;t be undone. Products already assigned to
+            it keep their existing category.
           </AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
