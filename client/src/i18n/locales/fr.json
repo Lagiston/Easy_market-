@@ -1,0 +1,16 @@
+{
+  "brand": "ES-Market",
+  "nav": {
+    "home": "Accueil"
+  },
+  "language": {
+    "label": "Langue"
+  },
+  "home": {
+    "title": "Bienvenue chez ES-Market",
+    "subtitle": "Parcourez nos produits"
+  },
+  "footer": {
+    "copyright": "© {{year}} ES-Market"
+  }
+}

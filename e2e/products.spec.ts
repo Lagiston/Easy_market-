@@ -19,7 +19,8 @@ async function hardDeleteProduct(name: string) {
   const client = new Client({ connectionString: TEST_DATABASE_URL });
   await client.connect();
   try {
-    await client.query('DELETE FROM "product" WHERE name = $1', [name]);
+    // `name` is a JSON column of localized values; match on the English name.
+    await client.query('DELETE FROM "product" WHERE name->>\'en\' = $1', [name]);
   } finally {
     await client.end();
   }
@@ -50,7 +51,7 @@ async function createProduct(
   if (description !== undefined) {
     await dialog.getByLabel("Description").fill(description);
   }
-  await dialog.getByLabel("Stock").fill(stock);
+  await dialog.getByLabel("Stock", { exact: true }).fill(stock);
   await dialog.getByLabel("Category").click();
   await page.getByRole("option", { name: category }).click();
   await dialog.getByLabel("Image").setInputFiles(imagePath);
@@ -66,7 +67,7 @@ test.describe("Product list (ADMIN)", () => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
 
     await page.getByRole("link", { name: "Products" }).click();
-    await expect(page).toHaveURL("/products");
+    await expect(page).toHaveURL("/admin/products");
 
     await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Category" })).toBeVisible();
@@ -77,7 +78,7 @@ test.describe("Product list (ADMIN)", () => {
 test.describe("Create product (ADMIN)", () => {
   test("creating a product via the dialog adds it to the table", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Created Via UI ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -88,7 +89,7 @@ test.describe("Create product (ADMIN)", () => {
       await expect(dialog.getByRole("heading", { name: "Create product" })).toBeVisible();
 
       await dialog.getByLabel("Name").fill(name);
-      await dialog.getByLabel("Stock").fill("42");
+      await dialog.getByLabel("Stock", { exact: true }).fill("42");
       await dialog.getByLabel("Category").click();
       await page.getByRole("option", { name: "Beverages" }).click();
       await dialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
@@ -109,7 +110,7 @@ test.describe("Create product (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     let createRequestSent = false;
     await page.route("**/api/products", (route) => {
@@ -122,7 +123,7 @@ test.describe("Create product (ADMIN)", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("heading", { name: "Create product" })).toBeVisible();
 
-    await dialog.getByLabel("Stock").fill("5");
+    await dialog.getByLabel("Stock", { exact: true }).fill("5");
     await dialog.getByLabel("Category").click();
     await page.getByRole("option", { name: "Groceries" }).click();
     await dialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
@@ -138,7 +139,7 @@ test.describe("Create product (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     let createRequestSent = false;
     await page.route("**/api/products", (route) => {
@@ -154,7 +155,7 @@ test.describe("Create product (ADMIN)", () => {
     await expect(dialog.getByRole("heading", { name: "Create product" })).toBeVisible();
 
     await dialog.getByLabel("Name").fill(name);
-    await dialog.getByLabel("Stock").fill("5");
+    await dialog.getByLabel("Stock", { exact: true }).fill("5");
     await dialog.getByLabel("Category").click();
     await page.getByRole("option", { name: "Groceries" }).click();
 
@@ -169,7 +170,7 @@ test.describe("Create product (ADMIN)", () => {
 test.describe("Edit product (ADMIN)", () => {
   test("editing a product via the Edit dialog updates the table row", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Editable Product ${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const updatedName = `${name} (edited)`;
@@ -186,10 +187,10 @@ test.describe("Edit product (ADMIN)", () => {
       const dialog = page.getByRole("dialog");
       await expect(dialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
       await expect(dialog.getByLabel("Name")).toHaveValue(name);
-      await expect(dialog.getByLabel("Stock")).toHaveValue("10");
+      await expect(dialog.getByLabel("Stock", { exact: true })).toHaveValue("10");
 
       await dialog.getByLabel("Name").fill(updatedName);
-      await dialog.getByLabel("Stock").fill("99");
+      await dialog.getByLabel("Stock", { exact: true }).fill("99");
       await dialog.getByLabel("Category").click();
       await page.getByRole("option", { name: "Beverages" }).click();
 
@@ -210,7 +211,7 @@ test.describe("Edit product (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Edit Validation ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -250,7 +251,7 @@ test.describe("Product description (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Described Product ${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const description = "A rich, aromatic blend sourced from local growers.";
@@ -273,7 +274,7 @@ test.describe("Product description (ADMIN)", () => {
 
   test("creating a product with the description left blank succeeds", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Blank Description ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -291,7 +292,7 @@ test.describe("Product description (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     let createRequestSent = false;
     await page.route("**/api/products", (route) => {
@@ -312,7 +313,7 @@ test.describe("Product description (ADMIN)", () => {
 
       await dialog.getByLabel("Name").fill(name);
       await dialog.getByLabel("Description").fill(longDescription);
-      await dialog.getByLabel("Stock").fill("6");
+      await dialog.getByLabel("Stock", { exact: true }).fill("6");
       await dialog.getByLabel("Category").click();
       await page.getByRole("option", { name: "Groceries" }).click();
       await dialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
@@ -335,7 +336,7 @@ test.describe("Delete product (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Deletable Product ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -364,7 +365,7 @@ test.describe("Delete product (ADMIN)", () => {
 
   test("cancelling the delete confirmation keeps the product in the table", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Delete Cancel ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -394,7 +395,7 @@ test.describe("Product image upload (ADMIN)", () => {
 
   test("creating a product with an image shows the thumbnail in the table", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Photo On Create ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -419,7 +420,7 @@ test.describe("Product image upload (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Photo On Edit ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -462,7 +463,7 @@ test.describe("Product image upload (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Photo Invalid Type ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -470,7 +471,7 @@ test.describe("Product image upload (ADMIN)", () => {
       await page.getByRole("button", { name: "Create product" }).click();
       const dialog = page.getByRole("dialog");
       await dialog.getByLabel("Name").fill(name);
-      await dialog.getByLabel("Stock").fill("2");
+      await dialog.getByLabel("Stock", { exact: true }).fill("2");
       await dialog.getByLabel("Category").click();
       await page.getByRole("option", { name: "Groceries" }).click();
 
@@ -511,7 +512,7 @@ test.describe("Product image upload (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Photo Too Large ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -519,7 +520,7 @@ test.describe("Product image upload (ADMIN)", () => {
       await page.getByRole("button", { name: "Create product" }).click();
       const dialog = page.getByRole("dialog");
       await dialog.getByLabel("Name").fill(name);
-      await dialog.getByLabel("Stock").fill("2");
+      await dialog.getByLabel("Stock", { exact: true }).fill("2");
       await dialog.getByLabel("Category").click();
       await page.getByRole("option", { name: "Groceries" }).click();
 
@@ -554,7 +555,7 @@ test.describe("Product image upload (ADMIN)", () => {
     page,
   }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/products");
+    await page.goto("/admin/products");
 
     const name = `Photo Edit Invalid ${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -596,20 +597,20 @@ test.describe("Product image upload (ADMIN)", () => {
 });
 
 test.describe("Product list access control", () => {
-  test("AGENT visiting /products is redirected home and sees no Products nav link", async ({
+  test("AGENT visiting /admin/products is redirected home and sees no Products nav link", async ({
     page,
   }) => {
     await loginAs(page, TEST_AGENT_EMAIL, TEST_AGENT_PASSWORD);
 
     await expect(page.getByRole("link", { name: "Products" })).not.toBeVisible();
 
-    await page.goto("/products");
-    await expect(page).toHaveURL("/");
+    await page.goto("/admin/products");
+    await expect(page).toHaveURL("/admin");
     await expect(page.getByRole("columnheader", { name: "Stock" })).not.toBeVisible();
   });
 
-  test("unauthenticated visit to /products redirects to /login", async ({ page }) => {
-    await page.goto("/products");
-    await expect(page).toHaveURL(/\/login$/);
+  test("unauthenticated visit to /admin/products redirects to /admin/login", async ({ page }) => {
+    await page.goto("/admin/products");
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 });

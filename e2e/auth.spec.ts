@@ -9,7 +9,7 @@ import { loginAs } from "./helpers";
 
 test.describe("Login page", () => {
   test("renders the form fields and submit button", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/admin/login");
 
     await expect(page.getByText("ES-Market")).toBeVisible();
     await expect(page.getByLabel("Email")).toBeVisible();
@@ -18,45 +18,45 @@ test.describe("Login page", () => {
   });
 
   test("shows client-side validation for an invalid email format", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/admin/login");
 
     await page.getByLabel("Email").fill("not-an-email");
     await page.getByLabel("Password").fill("something");
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page.getByText("Enter a valid email address")).toBeVisible();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
   test("shows client-side validation for an empty password", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/admin/login");
 
     await page.getByLabel("Email").fill("someone@example.com");
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page.getByText("Password is required")).toBeVisible();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
   test("shows client-side validation for a fully empty form", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/admin/login");
 
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page.getByText("Enter a valid email address")).toBeVisible();
     await expect(page.getByText("Password is required")).toBeVisible();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
   test("shows an error and stays on the page for a wrong password", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/admin/login");
 
     await page.getByLabel("Email").fill(TEST_ADMIN_EMAIL);
     await page.getByLabel("Password").fill("definitely-the-wrong-password");
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page.getByText(/invalid email or password/i)).toBeVisible();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/admin\/login$/);
 
     // No session was established: /api/me must still 401.
     const response = await page.request.get("/api/me");
@@ -64,14 +64,14 @@ test.describe("Login page", () => {
   });
 
   test("shows an error for a non-existent email", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto("/admin/login");
 
     await page.getByLabel("Email").fill("nobody-at-all@e2e.test");
     await page.getByLabel("Password").fill("whatever-password-123");
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page.getByText(/invalid email or password/i)).toBeVisible();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 });
 
@@ -102,14 +102,14 @@ test.describe("Login flow", () => {
 });
 
 test.describe("Route protection", () => {
-  test("unauthenticated access to a protected route redirects to /login", async ({ page }) => {
-    await page.goto("/");
-    await expect(page).toHaveURL(/\/login$/);
+  test("unauthenticated access to a protected route redirects to /admin/login", async ({ page }) => {
+    await page.goto("/admin");
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
-  test("unauthenticated access to an admin-only route redirects to /login", async ({ page }) => {
-    await page.goto("/users");
-    await expect(page).toHaveURL(/\/login$/);
+  test("unauthenticated access to an admin-only route redirects to /admin/login", async ({ page }) => {
+    await page.goto("/admin/users");
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 });
 
@@ -119,16 +119,16 @@ test.describe("Authenticated session", () => {
 
     await page.reload();
 
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/admin");
     await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
   });
 
-  test("navigating to /login while already authenticated redirects home", async ({ page }) => {
+  test("navigating to /admin/login while already authenticated redirects home", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
 
-    await page.goto("/login");
+    await page.goto("/admin/login");
 
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/admin");
   });
 
   test("logout clears the session and blocks further access to protected routes", async ({
@@ -138,37 +138,37 @@ test.describe("Authenticated session", () => {
 
     await page.getByRole("button", { name: "Sign out" }).click();
 
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/admin\/login$/);
 
     const response = await page.request.get("/api/me");
     expect(response.status()).toBe(401);
 
-    await page.goto("/");
-    await expect(page).toHaveURL(/\/login$/);
+    await page.goto("/admin");
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 });
 
 test.describe("Role-based access control", () => {
-  test("ADMIN can access /users and sees the Users nav link", async ({ page }) => {
+  test("ADMIN can access /admin/users and sees the Users nav link", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
 
     await expect(page.getByRole("link", { name: "Users" })).toBeVisible();
 
     await page.getByRole("link", { name: "Users" }).click();
-    await expect(page).toHaveURL("/users");
+    await expect(page).toHaveURL("/admin/users");
     // The page title is a shadcn CardTitle (a div, not a heading), so assert
     // the user table rendered instead.
     await expect(page.getByRole("columnheader", { name: "User", exact: true })).toBeVisible();
   });
 
-  test("AGENT is redirected away from /users and does not see the Users nav link", async ({
+  test("AGENT is redirected away from /admin/users and does not see the Users nav link", async ({
     page,
   }) => {
     await loginAs(page, TEST_AGENT_EMAIL, TEST_AGENT_PASSWORD);
 
     await expect(page.getByRole("link", { name: "Users" })).not.toBeVisible();
 
-    await page.goto("/users");
-    await expect(page).toHaveURL("/");
+    await page.goto("/admin/users");
+    await expect(page).toHaveURL("/admin");
   });
 });

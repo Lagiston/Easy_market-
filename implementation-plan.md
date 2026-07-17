@@ -33,7 +33,7 @@ Goal: staff manage products; data model supports 4 languages.
 
 Goal: customers browse the catalog in their language.
 
-- [ ] 3.1 Storefront shell: layout, i18next setup (English default, ar/sw/fr with English fallback), language switcher, RTL for Arabic
+- [x] 3.1 Storefront shell: layout, i18next setup (English default, ar/sw/fr with English fallback), language switcher, RTL for Arabic
 - [ ] 3.2 Public product API: list with filtering/sorting/pagination, detail
 - [ ] 3.3 Product list page with filters (category, price) and sorting
 - [ ] 3.4 Product detail page (out-of-stock state shown)

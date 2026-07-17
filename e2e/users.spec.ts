@@ -42,7 +42,7 @@ test.describe("User list (ADMIN)", () => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
 
     await page.getByRole("link", { name: "Users" }).click();
-    await expect(page).toHaveURL("/users");
+    await expect(page).toHaveURL("/admin/users");
 
     // Table headers
     await expect(page.getByRole("columnheader", { name: "User" })).toBeVisible();
@@ -82,7 +82,7 @@ test.describe("User list (ADMIN)", () => {
     await page.route("**/api/users", (route) =>
       route.fulfill({ status: 500, body: "Internal Server Error" }),
     );
-    await page.goto("/users");
+    await page.goto("/admin/users");
 
     // TanStack Query's default client retries the failed request 3 times with
     // exponential backoff (~7s total) before surfacing the error state, so
@@ -95,21 +95,21 @@ test.describe("User list (ADMIN)", () => {
 });
 
 test.describe("User list access control", () => {
-  test("AGENT visiting /users is redirected home and sees no Users nav link", async ({
+  test("AGENT visiting /admin/users is redirected home and sees no Users nav link", async ({
     page,
   }) => {
     await loginAs(page, TEST_AGENT_EMAIL, TEST_AGENT_PASSWORD);
 
     await expect(page.getByRole("link", { name: "Users" })).not.toBeVisible();
 
-    await page.goto("/users");
-    await expect(page).toHaveURL("/");
+    await page.goto("/admin/users");
+    await expect(page).toHaveURL("/admin");
     await expect(page.getByRole("columnheader", { name: "Verified" })).not.toBeVisible();
   });
 
-  test("unauthenticated visit to /users redirects to /login", async ({ page }) => {
-    await page.goto("/users");
-    await expect(page).toHaveURL(/\/login$/);
+  test("unauthenticated visit to /admin/users redirects to /admin/login", async ({ page }) => {
+    await page.goto("/admin/users");
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 });
 
@@ -144,16 +144,16 @@ test.describe("GET /api/users API guards", () => {
     const agent = body.users.find((u) => u.email === TEST_AGENT_EMAIL)!;
     expect(agent.role).toBe("AGENT");
 
-    // Ordered by createdAt ascending.
+    // Ordered by createdAt descending (newest first).
     const timestamps = body.users.map((u) => new Date(u.createdAt).getTime());
-    expect(timestamps).toEqual([...timestamps].sort((a, b) => a - b));
+    expect(timestamps).toEqual([...timestamps].sort((a, b) => b - a));
   });
 });
 
 test.describe("Create user (ADMIN)", () => {
   test("creating a user via the dialog adds it to the table", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/users");
+    await page.goto("/admin/users");
 
     const email = `create-${Date.now()}-${Math.random().toString(36).slice(2)}@e2e.test`;
     const name = "Created Via UI";
@@ -190,7 +190,7 @@ test.describe("Edit user (ADMIN)", () => {
     const newEmail = `edited-${Date.now()}-${Math.random().toString(36).slice(2)}@e2e.test`;
 
     try {
-      await page.goto("/users");
+      await page.goto("/admin/users");
       const row = page.getByRole("row").filter({ hasText: email });
       await expect(row).toBeVisible();
 
@@ -219,7 +219,7 @@ test.describe("Edit user (ADMIN)", () => {
 test.describe("Delete user (ADMIN)", () => {
   test("the admin's own row has no delete button", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/users");
+    await page.goto("/admin/users");
 
     const adminRow = page.getByRole("row").filter({ hasText: TEST_ADMIN_EMAIL });
     await expect(adminRow.getByRole("button", { name: "Delete E2E Admin" })).not.toBeVisible();
@@ -232,7 +232,7 @@ test.describe("Delete user (ADMIN)", () => {
     const { name, email } = await createThrowawayAgent(page, "delete-confirm");
 
     try {
-      await page.goto("/users");
+      await page.goto("/admin/users");
       const row = page.getByRole("row").filter({ hasText: email });
       await expect(row).toBeVisible();
 
@@ -272,7 +272,7 @@ test.describe("Delete user (ADMIN)", () => {
     const { name, email } = await createThrowawayAgent(page, "delete-cancel");
 
     try {
-      await page.goto("/users");
+      await page.goto("/admin/users");
       const row = page.getByRole("row").filter({ hasText: email });
       await expect(row).toBeVisible();
 

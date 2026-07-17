@@ -31,7 +31,7 @@ export default function LoginPage() {
     return null;
   }
   if (session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   async function onSubmit({ email, password }: LoginForm) {
@@ -40,7 +40,7 @@ export default function LoginPage() {
       setError("root", { message: error.message ?? "Invalid email or password" });
       return;
     }
-    navigate("/", { replace: true });
+    navigate("/admin", { replace: true });
   }
 
   return (
