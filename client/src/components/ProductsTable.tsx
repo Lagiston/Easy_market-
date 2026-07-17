@@ -14,6 +14,7 @@ import {
 export type ProductRow = {
   id: string;
   name: string;
+  description: string | null;
   stock: number;
   imageUrl: string | null;
   category: { id: string; name: string };

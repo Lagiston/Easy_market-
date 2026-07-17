@@ -39,12 +39,14 @@ describe("ProductForm (create mode)", () => {
     mockedAxios.isAxiosError.mockReset();
   });
 
-  it("renders the name, stock, and category fields", () => {
+  it("renders the name, description, stock, category, and image fields", () => {
     renderForm();
 
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Description")).toBeInTheDocument();
     expect(screen.getByLabelText("Stock")).toBeInTheDocument();
     expect(screen.getByLabelText("Category")).toBeInTheDocument();
+    expect(screen.getByLabelText("Image")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create product" })).toBeInTheDocument();
   });
 
@@ -62,14 +64,9 @@ describe("ProductForm (create mode)", () => {
     expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
-  it("submits the form and calls onSuccess", async () => {
-    mockedAxios.post.mockResolvedValue({
-      data: {
-        product: { id: "3", name: "Rice 5kg", stock: 10, imageUrl: null, category: categories[0] },
-      },
-    });
+  it("requires an image before submitting", async () => {
     const user = userEvent.setup();
-    const { onSuccess } = renderForm();
+    renderForm();
 
     await user.type(screen.getByLabelText("Name"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
@@ -77,12 +74,53 @@ describe("ProductForm (create mode)", () => {
     await selectCategory(user, "Groceries");
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
-    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
-    expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
+    expect(await screen.findByText("An image is required")).toBeInTheDocument();
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
+  it("creates the product, uploads the image, and calls onSuccess", async () => {
+    const createdProduct = {
+      id: "3",
       name: "Rice 5kg",
+      description: "Long grain rice",
       stock: 10,
-      categoryId: "c1",
-    });
+      imageUrl: null,
+      category: categories[0],
+    };
+    mockedAxios.post.mockImplementation((url: string) =>
+      url === "/api/products"
+        ? Promise.resolve({ data: { product: createdProduct } })
+        : Promise.resolve({
+            data: { product: { ...createdProduct, imageUrl: "/api/uploads/products/3.jpg" } },
+          }),
+    );
+    const user = userEvent.setup();
+    const { onSuccess } = renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Description"), "Long grain rice");
+    await user.clear(screen.getByLabelText("Stock"));
+    await user.type(screen.getByLabelText("Stock"), "10");
+    await selectCategory(user, "Groceries");
+    const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Image"), file);
+    await user.click(screen.getByRole("button", { name: "Create product" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
+        name: "Rice 5kg",
+        description: "Long grain rice",
+        stock: 10,
+        categoryId: "c1",
+      }),
+    );
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        "/api/products/3/image",
+        expect.any(FormData),
+      ),
+    );
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
   });
 
   it("shows the server error and does not call onSuccess on failure", async () => {
@@ -100,6 +138,8 @@ describe("ProductForm (create mode)", () => {
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
+    const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Image"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     expect(await screen.findByText("Category not found")).toBeInTheDocument();
@@ -111,6 +151,7 @@ describe("ProductForm (edit mode)", () => {
   const existingProduct: ProductRow = {
     id: "42",
     name: "Rice 5kg",
+    description: "Long grain rice",
     stock: 20,
     imageUrl: null,
     category: categories[0]!,
@@ -128,6 +169,7 @@ describe("ProductForm (edit mode)", () => {
     renderForm(vi.fn(), existingProduct);
 
     expect(screen.getByLabelText("Name")).toHaveValue("Rice 5kg");
+    expect(screen.getByLabelText("Description")).toHaveValue("Long grain rice");
     expect(screen.getByLabelText("Stock")).toHaveValue(20);
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
 
@@ -136,6 +178,7 @@ describe("ProductForm (edit mode)", () => {
     await waitFor(() =>
       expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/42", {
         name: "Rice 5kg",
+        description: "Long grain rice",
         stock: 20,
         categoryId: "c1",
       }),
@@ -157,6 +200,7 @@ describe("ProductForm (edit mode)", () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/42", {
       name: "Rice 10kg",
+      description: "Long grain rice",
       stock: 20,
       categoryId: "c1",
     });

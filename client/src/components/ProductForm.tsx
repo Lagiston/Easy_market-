@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
@@ -10,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import {
   Select,
@@ -30,6 +32,9 @@ export default function ProductForm({
   onSuccess?: (product: ProductRow) => void;
 }) {
   const queryClient = useQueryClient();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const pendingProductRef = useRef<ProductRow | null>(null);
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: () =>
@@ -46,17 +51,41 @@ export default function ProductForm({
   } = useForm<UpdateProductInput>({
     resolver: zodResolver(product ? updateProductSchema : createProductSchema),
     defaultValues: product
-      ? { name: product.name, stock: product.stock, categoryId: product.category.id }
-      : { name: "", stock: 0, categoryId: "" },
+      ? {
+          name: product.name,
+          description: product.description ?? "",
+          stock: product.stock,
+          categoryId: product.category.id,
+        }
+      : { name: "", description: "", stock: 0, categoryId: "" },
   });
 
   const mutation = useMutation({
-    mutationFn: (input: UpdateProductInput) =>
-      (product
-        ? axios.put(`/api/products/${product.id}`, input)
-        : axios.post("/api/products", input)
-      ).then((res) => res.data.product as ProductRow),
+    mutationFn: async (input: UpdateProductInput) => {
+      if (product) {
+        return axios
+          .put(`/api/products/${product.id}`, input)
+          .then((res) => res.data.product as ProductRow);
+      }
+
+      if (!pendingProductRef.current) {
+        pendingProductRef.current = await axios
+          .post("/api/products", input)
+          .then((res) => res.data.product as ProductRow);
+        // Refresh the list now, even if the image upload below fails, so the
+        // row isn't stuck missing from the table until an unrelated refetch.
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      }
+      const created = pendingProductRef.current!;
+
+      const formData = new FormData();
+      formData.append("image", imageFile!);
+      return axios
+        .post(`/api/products/${created.id}/image`, formData)
+        .then((res) => res.data.product as ProductRow);
+    },
     onSuccess: (product) => {
+      pendingProductRef.current = null;
       queryClient.invalidateQueries({ queryKey: ["products"] });
       onSuccess?.(product);
     },
@@ -71,7 +100,13 @@ export default function ProductForm({
   return (
     <form
       noValidate
-      onSubmit={handleSubmit((input) => mutation.mutate(input))}
+      onSubmit={handleSubmit((input) => {
+        if (!product && !imageFile) {
+          setImageError("An image is required");
+          return;
+        }
+        mutation.mutate(input);
+      })}
       className="grid gap-4"
     >
       <div className="grid gap-1.5">
@@ -84,6 +119,18 @@ export default function ProductForm({
         />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name.message}</p>
+        )}
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="product-form-description">Description</Label>
+        <Textarea
+          id="product-form-description"
+          rows={3}
+          aria-invalid={!!errors.description}
+          {...register("description")}
+        />
+        {errors.description && (
+          <p className="text-sm text-destructive">{errors.description.message}</p>
         )}
       </div>
       <div className="grid gap-1.5">
@@ -124,6 +171,23 @@ export default function ProductForm({
           <p className="text-sm text-destructive">{errors.categoryId.message}</p>
         )}
       </div>
+      {!product && (
+        <div className="grid gap-1.5">
+          <Label htmlFor="product-form-image">Image</Label>
+          <Input
+            id="product-form-image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            aria-invalid={!!imageError}
+            onChange={(event) => {
+              const file = event.target.files?.[0] ?? null;
+              setImageFile(file);
+              if (file) setImageError(null);
+            }}
+          />
+          {imageError && <p className="text-sm text-destructive">{imageError}</p>}
+        </div>
+      )}
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
       <DialogFooter showCloseButton>
         <Button type="submit" disabled={mutation.isPending}>

@@ -12,6 +12,7 @@ const products = [
   {
     id: "1",
     name: "Rice 5kg",
+    description: null,
     stock: 20,
     imageUrl: null,
     category: { id: "c1", name: "Groceries" },
@@ -19,6 +20,7 @@ const products = [
   {
     id: "2",
     name: "Orange Juice",
+    description: null,
     stock: 5,
     imageUrl: null,
     category: { id: "c2", name: "Beverages" },
@@ -126,6 +128,7 @@ describe("ProductsPage", () => {
     await waitFor(() =>
       expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/1", {
         name: "Rice 10kg",
+        description: "",
         stock: 20,
         categoryId: "c1",
       }),

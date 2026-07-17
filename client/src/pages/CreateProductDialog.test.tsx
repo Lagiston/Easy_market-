@@ -16,6 +16,7 @@ const categories = [
 const createdProduct = {
   id: "3",
   name: "Rice 5kg",
+  description: null,
   stock: 10,
   imageUrl: null,
   category: categories[0],
@@ -50,8 +51,10 @@ describe("CreateProductDialog", () => {
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Description")).toBeInTheDocument();
     expect(screen.getByLabelText("Stock")).toBeInTheDocument();
     expect(screen.getByLabelText("Category")).toBeInTheDocument();
+    expect(screen.getByLabelText("Image")).toBeInTheDocument();
   });
 
   it("shows validation errors and does not submit invalid input", async () => {
@@ -66,9 +69,7 @@ describe("CreateProductDialog", () => {
     expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
-  it("creates the product and advances to the required image step", async () => {
-    mockedAxios.post.mockResolvedValue({ data: { product: createdProduct } });
-
+  it("requires an image before submitting", async () => {
     const user = await openDialog();
     await user.type(screen.getByLabelText("Name"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
@@ -76,22 +77,17 @@ describe("CreateProductDialog", () => {
     await selectCategory(user, "Groceries");
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
-    expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
-      name: "Rice 5kg",
-      stock: 10,
-      categoryId: "c1",
-    });
-    expect(
-      await screen.findByRole("heading", { name: "Add a photo" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(await screen.findByText("An image is required")).toBeInTheDocument();
+    expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
-  it("uploads an image for the created product and closes the modal", async () => {
+  it("creates the product with its image and closes the modal on success", async () => {
     mockedAxios.post.mockImplementation((url: string) =>
       url === "/api/products"
         ? Promise.resolve({ data: { product: createdProduct } })
-        : Promise.resolve({ data: { product: { ...createdProduct, imageUrl: "/api/uploads/products/3.jpg" } } }),
+        : Promise.resolve({
+            data: { product: { ...createdProduct, imageUrl: "/api/uploads/products/3.jpg" } },
+          }),
     );
 
     const user = await openDialog();
@@ -99,12 +95,18 @@ describe("CreateProductDialog", () => {
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
-    await user.click(screen.getByRole("button", { name: "Create product" }));
-    await screen.findByRole("heading", { name: "Add a photo" });
-
     const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
-    await user.upload(screen.getByLabelText("Product image"), file);
+    await user.upload(screen.getByLabelText("Image"), file);
+    await user.click(screen.getByRole("button", { name: "Create product" }));
 
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
+        name: "Rice 5kg",
+        description: "",
+        stock: 10,
+        categoryId: "c1",
+      }),
+    );
     await waitFor(() =>
       expect(mockedAxios.post).toHaveBeenCalledWith(
         "/api/products/3/image",
@@ -130,6 +132,8 @@ describe("CreateProductDialog", () => {
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
+    const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Image"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     expect(await screen.findByText("Category not found")).toBeInTheDocument();

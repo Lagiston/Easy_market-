@@ -75,7 +75,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, stock, categoryId } = parsed.data;
+  const { name, description, stock, categoryId } = parsed.data;
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
   if (!category) {
@@ -84,7 +84,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
   }
 
   const product = await prisma.product.create({
-    data: { id: randomUUID(), name, stock, categoryId },
+    data: { id: randomUUID(), name, description: description ?? null, stock, categoryId },
     include: productInclude,
   });
   res.status(201).json({ product });
@@ -96,7 +96,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, stock, categoryId } = parsed.data;
+  const { name, description, stock, categoryId } = parsed.data;
   const productId = req.params.id;
 
   const target = await prisma.product.findUnique({ where: { id: productId } });
@@ -113,7 +113,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
 
   const product = await prisma.product.update({
     where: { id: productId },
-    data: { name, stock, categoryId },
+    data: { name, description: description ?? null, stock, categoryId },
     include: productInclude,
   });
   res.json({ product });
