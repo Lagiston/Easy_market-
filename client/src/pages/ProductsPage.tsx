@@ -1,6 +1,9 @@
+import { useState } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import CreateProductDialog from "./CreateProductDialog";
+import EditProductDialog from "./EditProductDialog";
+import DeleteProductDialog from "./DeleteProductDialog";
 import ProductsTable, { type ProductRow } from "@/components/ProductsTable";
 import {
   Card,
@@ -11,6 +14,8 @@ import {
 } from "@/components/ui/card";
 
 export default function ProductsPage() {
+  const [editingProduct, setEditingProduct] = useState<ProductRow | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<ProductRow | null>(null);
   const { data, isError } = useQuery({
     queryKey: ["products"],
     queryFn: () =>
@@ -38,8 +43,24 @@ export default function ProductsPage() {
             Could not load products. Please try again.
           </p>
         ) : (
-          <ProductsTable products={products} />
+          <ProductsTable
+            products={products}
+            onEdit={setEditingProduct}
+            onDelete={setDeletingProduct}
+          />
         )}
+        <EditProductDialog
+          product={editingProduct}
+          onOpenChange={(open) => {
+            if (!open) setEditingProduct(null);
+          }}
+        />
+        <DeleteProductDialog
+          product={deletingProduct}
+          onOpenChange={(open) => {
+            if (!open) setDeletingProduct(null);
+          }}
+        />
       </CardContent>
     </Card>
   );

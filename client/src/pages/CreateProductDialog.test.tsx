@@ -17,6 +17,7 @@ const createdProduct = {
   id: "3",
   name: "Rice 5kg",
   stock: 10,
+  imageUrl: null,
   category: categories[0],
 };
 
@@ -65,7 +66,7 @@ describe("CreateProductDialog", () => {
     expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
-  it("creates the product and closes the modal on success", async () => {
+  it("creates the product and advances to the required image step", async () => {
     mockedAxios.post.mockResolvedValue({ data: { product: createdProduct } });
 
     const user = await openDialog();
@@ -75,14 +76,44 @@ describe("CreateProductDialog", () => {
     await selectCategory(user, "Groceries");
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
-    );
     expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
       name: "Rice 5kg",
       stock: 10,
       categoryId: "c1",
     });
+    expect(
+      await screen.findByRole("heading", { name: "Add a photo" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("uploads an image for the created product and closes the modal", async () => {
+    mockedAxios.post.mockImplementation((url: string) =>
+      url === "/api/products"
+        ? Promise.resolve({ data: { product: createdProduct } })
+        : Promise.resolve({ data: { product: { ...createdProduct, imageUrl: "/api/uploads/products/3.jpg" } } }),
+    );
+
+    const user = await openDialog();
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.clear(screen.getByLabelText("Stock"));
+    await user.type(screen.getByLabelText("Stock"), "10");
+    await selectCategory(user, "Groceries");
+    await user.click(screen.getByRole("button", { name: "Create product" }));
+    await screen.findByRole("heading", { name: "Add a photo" });
+
+    const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Product image"), file);
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        "/api/products/3/image",
+        expect.any(FormData),
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
   });
 
   it("shows the server error and keeps the modal open on failure", async () => {

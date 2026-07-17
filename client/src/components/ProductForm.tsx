@@ -2,7 +2,11 @@ import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createProductSchema, type CreateProductInput } from "@es-market/core";
+import {
+  createProductSchema,
+  updateProductSchema,
+  type UpdateProductInput,
+} from "@es-market/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,10 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ProductRow } from "@/components/ProductsTable";
 
 type Category = { id: string; name: string };
 
-export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
+export default function ProductForm({
+  product,
+  onSuccess,
+}: {
+  product?: ProductRow;
+  onSuccess?: (product: ProductRow) => void;
+}) {
   const queryClient = useQueryClient();
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -32,24 +43,29 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateProductInput>({
-    resolver: zodResolver(createProductSchema),
-    defaultValues: { name: "", stock: 0, categoryId: "" },
+  } = useForm<UpdateProductInput>({
+    resolver: zodResolver(product ? updateProductSchema : createProductSchema),
+    defaultValues: product
+      ? { name: product.name, stock: product.stock, categoryId: product.category.id }
+      : { name: "", stock: 0, categoryId: "" },
   });
 
   const mutation = useMutation({
-    mutationFn: (input: CreateProductInput) =>
-      axios.post("/api/products", input).then((res) => res.data.product),
-    onSuccess: () => {
+    mutationFn: (input: UpdateProductInput) =>
+      (product
+        ? axios.put(`/api/products/${product.id}`, input)
+        : axios.post("/api/products", input)
+      ).then((res) => res.data.product as ProductRow),
+    onSuccess: (product) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      onSuccess?.();
+      onSuccess?.(product);
     },
   });
 
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not create the product. Please try again."
+      : `Could not ${product ? "update" : "create"} the product. Please try again.`
     : null;
 
   return (
@@ -111,7 +127,13 @@ export default function ProductForm({ onSuccess }: { onSuccess?: () => void }) {
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
       <DialogFooter showCloseButton>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Creating…" : "Create product"}
+          {product
+            ? mutation.isPending
+              ? "Saving…"
+              : "Save changes"
+            : mutation.isPending
+              ? "Creating…"
+              : "Create product"}
         </Button>
       </DialogFooter>
     </form>

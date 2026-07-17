@@ -7,5 +7,7 @@ export {
 } from "./schemas/user";
 export {
   createProductSchema,
+  updateProductSchema,
   type CreateProductInput,
+  type UpdateProductInput,
 } from "./schemas/product";

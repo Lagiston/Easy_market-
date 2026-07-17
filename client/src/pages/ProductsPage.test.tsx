@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
@@ -13,19 +13,29 @@ const products = [
     id: "1",
     name: "Rice 5kg",
     stock: 20,
+    imageUrl: null,
     category: { id: "c1", name: "Groceries" },
   },
   {
     id: "2",
     name: "Orange Juice",
     stock: 5,
+    imageUrl: null,
     category: { id: "c2", name: "Beverages" },
   },
+];
+
+const categories = [
+  { id: "c1", name: "Groceries" },
+  { id: "c2", name: "Beverages" },
 ];
 
 describe("ProductsPage", () => {
   beforeEach(() => {
     mockedAxios.get.mockReset();
+    mockedAxios.put.mockReset();
+    mockedAxios.delete.mockReset();
+    mockedAxios.isAxiosError.mockReset();
   });
 
   it("shows skeleton rows while loading", () => {
@@ -89,5 +99,52 @@ describe("ProductsPage", () => {
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
+  });
+
+  it("opens the edit dialog pre-filled and saves changes", async () => {
+    mockedAxios.get.mockImplementation((url: string) =>
+      url === "/api/categories"
+        ? Promise.resolve({ data: { categories } })
+        : Promise.resolve({ data: { products } }),
+    );
+    mockedAxios.put.mockResolvedValue({
+      data: { product: { ...products[0], name: "Rice 10kg" } },
+    });
+    const user = userEvent.setup();
+    renderWithQuery(<ProductsPage />);
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: "Edit Rice 5kg" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByLabelText("Name")).toHaveValue("Rice 5kg");
+
+    const nameInput = within(dialog).getByLabelText("Name");
+    await user.clear(nameInput);
+    await user.type(nameInput, "Rice 10kg");
+    await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/1", {
+        name: "Rice 10kg",
+        stock: 20,
+        categoryId: "c1",
+      }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("opens the delete confirmation and removes the product on confirm", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products } });
+    mockedAxios.delete.mockResolvedValue({});
+    const user = userEvent.setup();
+    renderWithQuery(<ProductsPage />);
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: "Delete Rice 5kg" }));
+    expect(await screen.findByText("Delete Rice 5kg?")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => expect(mockedAxios.delete).toHaveBeenCalledWith("/api/products/1"));
   });
 });
