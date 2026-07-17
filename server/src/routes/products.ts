@@ -59,7 +59,7 @@ productsRouter.get("/products", requireAuth, requireRole(Role.ADMIN), async (_re
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
     include: productInclude,
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
   });
   res.json({ products });
 });

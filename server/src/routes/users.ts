@@ -26,7 +26,7 @@ usersRouter.get("/users", requireAuth, requireRole(Role.ADMIN), async (_req, res
   const users = await prisma.user.findMany({
     where: { deletedAt: null },
     select: userSelect,
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
   });
   res.json({ users });
 });
