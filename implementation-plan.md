@@ -21,8 +21,8 @@ Goal: repo scaffold, database, and staff auth working end-to-end.
 Goal: staff manage products; data model supports 4 languages.
 
 - [ ] 2.1 Schema: `Product`, `Category`, per-language content (JSON fields for name/description: en/ar/sw/fr; **English required, others optional with English fallback**), stock fields
-- [ ] 2.2 Product CRUD API with validation
-- [ ] 2.3 Product image upload (local disk) + serving
+- [x] 2.2 Product CRUD API with validation
+- [x] 2.3 Product image upload (local disk) + serving
 - [ ] 2.4 Dashboard: product list with search/filter, low-stock flag
 - [ ] 2.5 Dashboard: product create/edit form with per-language tabs, category picker, stock quantity
 - [ ] 2.6 Category management (admin)
