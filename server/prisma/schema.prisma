@@ -77,3 +77,26 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+model Category {
+  id        String    @id
+  name      String
+  createdAt DateTime  @default(now())
+  products  Product[]
+
+  @@unique([name])
+  @@map("category")
+}
+
+model Product {
+  id         String   @id
+  name       String
+  stock      Int
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([categoryId])
+  @@map("product")
+}

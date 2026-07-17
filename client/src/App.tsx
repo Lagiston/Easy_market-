@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
+import ProductsPage from "./pages/ProductsPage";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       </Route>
       <Route element={<ProtectedRoute roles={[Role.ADMIN]} />}>
         <Route path="/users" element={<UsersPage />} />
+        <Route path="/products" element={<ProductsPage />} />
       </Route>
     </Routes>
   );

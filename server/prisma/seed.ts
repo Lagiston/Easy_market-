@@ -43,4 +43,18 @@ async function main() {
   console.log(`Seeded admin user ${email}`);
 }
 
-main().finally(() => prisma.$disconnect());
+async function seedCategories() {
+  const categories = ["Groceries", "Beverages", "Household", "Personal Care", "Snacks"];
+  for (const name of categories) {
+    await prisma.category.upsert({
+      where: { name },
+      update: {},
+      create: { id: randomUUID(), name },
+    });
+  }
+  console.log(`Seeded ${categories.length} categories`);
+}
+
+main()
+  .then(seedCategories)
+  .finally(() => prisma.$disconnect());

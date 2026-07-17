@@ -28,6 +28,14 @@ export default function Layout({ user }: { user: SessionUser }) {
             Users
           </Link>
         )}
+        {user.role === Role.ADMIN && (
+          <Link
+            to="/products"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Products
+          </Link>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">{user.name}</span>
