@@ -35,9 +35,13 @@ Component tests use Vitest + React Testing Library, colocated with the component
 
 This is separate from Playwright E2E (below) — component tests exercise one component in isolation with mocked I/O; E2E drives the real app end-to-end.
 
+**Component tests are the default for new coverage.** Form validation, dialog open/close and confirm/cancel behavior, loading/error/success states, and request payloads built from mocked axios calls all belong here, not in E2E — they don't need a real server, DB, or filesystem to exercise.
+
 ## E2E testing
 
 Playwright E2E tests live in `e2e/` and run against a separate test database (`es_market_test`, never the dev DB).
+
+**Use E2E only when necessary** — reserve it for what actually requires the real stack: real server persistence (a row surviving reload), real filesystem/multer behavior (file-type or size rejection, actual upload/serving), and real auth/session-based routing (role redirects, unauthenticated redirects). If a behavior can be verified by mocking the HTTP layer in a component test, put it there instead and keep the E2E spec to one or two happy-path/integration cases per flow.
 
 **Always delegate writing, extending, or fixing E2E tests to the `e2e-test-writer` subagent** (`.claude/agents/e2e-test-writer.md`) — launch it via the Agent tool rather than editing specs directly in the main conversation. It carries the full setup details (test env, ports, DB lifecycle, auth constraints) and the project's test conventions (locator style, parallel-safety, assertion standards), and it runs the specs it writes. Give it the feature or flow to cover and any acceptance criteria; it handles the rest.
 

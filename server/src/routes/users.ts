@@ -4,7 +4,7 @@ import { hashPassword } from "better-auth/crypto";
 import { Role } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/require-auth";
-import { createUserSchema, updateUserSchema } from "@es-market/core";
+import { createUserSchema, updateUserSchema, userListQuerySchema } from "@es-market/core";
 
 // All user-related endpoints; mounted at /api in index.ts.
 export const usersRouter = Router();
@@ -22,9 +22,16 @@ usersRouter.get("/me", requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
-usersRouter.get("/users", requireAuth, requireRole(Role.ADMIN), async (_req, res) => {
+usersRouter.get("/users", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
+  const parsed = userListQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]!.message });
+    return;
+  }
+  const { status } = parsed.data;
+
   const users = await prisma.user.findMany({
-    where: { deletedAt: null },
+    where: { deletedAt: status === "active" ? null : { not: null } },
     select: userSelect,
     orderBy: { createdAt: "desc" },
   });
@@ -133,3 +140,26 @@ usersRouter.delete<{ id: string }>("/users/:id", requireAuth, requireRole(Role.A
 
   res.status(204).end();
 });
+
+usersRouter.post<{ id: string }>(
+  "/users/:id/reactivate",
+  requireAuth,
+  requireRole(Role.ADMIN),
+  async (req, res) => {
+    const userId = req.params.id;
+
+    const target = await prisma.user.findUnique({ where: { id: userId } });
+    if (!target || !target.deletedAt) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { deletedAt: null },
+      select: userSelect,
+    });
+
+    res.json({ user });
+  },
+);

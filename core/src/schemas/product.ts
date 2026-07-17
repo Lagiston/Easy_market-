@@ -54,3 +54,16 @@ export const updateProductSchema = createProductSchema;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 
 export type UpdateProductFormInput = z.input<typeof updateProductSchema>;
+
+export const PRODUCT_SORT_FIELDS = ["name", "category", "stock", "createdAt"] as const;
+export type ProductSortField = (typeof PRODUCT_SORT_FIELDS)[number];
+
+export const SORT_ORDERS = ["asc", "desc"] as const;
+export type SortOrder = (typeof SORT_ORDERS)[number];
+
+export const productListQuerySchema = z.object({
+  sortBy: z.enum(PRODUCT_SORT_FIELDS).default("createdAt"),
+  sortOrder: z.enum(SORT_ORDERS).default("desc"),
+});
+
+export type ProductListQuery = z.infer<typeof productListQuerySchema>;

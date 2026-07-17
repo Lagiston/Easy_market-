@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import type { SortingState } from "@tanstack/react-table";
 import CreateProductDialog from "./CreateProductDialog";
 import EditProductDialog from "./EditProductDialog";
 import DeleteProductDialog from "./DeleteProductDialog";
@@ -16,10 +17,16 @@ import {
 export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<ProductRow | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductRow | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
+  const sort = sorting[0] ?? { id: "createdAt", desc: true };
   const { data, isError } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", sort.id, sort.desc],
     queryFn: () =>
-      axios.get<{ products: ProductRow[] }>("/api/products").then((res) => res.data.products),
+      axios
+        .get<{ products: ProductRow[] }>("/api/products", {
+          params: { sortBy: sort.id, sortOrder: sort.desc ? "desc" : "asc" },
+        })
+        .then((res) => res.data.products),
   });
   const products = data ?? null;
   const error = isError;
@@ -45,6 +52,8 @@ export default function ProductsPage() {
         ) : (
           <ProductsTable
             products={products}
+            sorting={sorting}
+            onSortingChange={setSorting}
             onEdit={setEditingProduct}
             onDelete={setDeletingProduct}
           />

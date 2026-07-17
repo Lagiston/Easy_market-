@@ -79,7 +79,7 @@ test.describe("User list (ADMIN)", () => {
   test("shows the error message when the users request fails", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
 
-    await page.route("**/api/users", (route) =>
+    await page.route("**/api/users?**", (route) =>
       route.fulfill({ status: 500, body: "Internal Server Error" }),
     );
     await page.goto("/admin/users");
@@ -212,6 +212,92 @@ test.describe("Edit user (ADMIN)", () => {
       await expect(page.getByRole("row").filter({ hasText: email })).not.toBeVisible();
     } finally {
       await hardDeleteUser(newEmail);
+    }
+  });
+});
+
+test.describe("Reactivate user (ADMIN)", () => {
+  test("deactivating then reactivating a user moves it between tabs and restores login", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    const { name, email } = await createThrowawayAgent(page, "reactivate");
+    const password = "throwaway-password-123";
+
+    try {
+      await page.goto("/admin/users");
+
+      const activeTab = page.getByRole("tab", { name: "Active" });
+      const deactivatedTab = page.getByRole("tab", { name: "Deactivated" });
+
+      const row = page.getByRole("row").filter({ hasText: email });
+      await expect(row).toBeVisible();
+
+      // Deactivate (soft-delete) the throwaway user from the Active tab.
+      await row.getByRole("button", { name: `Delete ${name}` }).click();
+      const deleteDialog = page.getByRole("alertdialog");
+      await expect(deleteDialog).toBeVisible();
+      await deleteDialog.getByRole("button", { name: "Delete" }).click();
+      await expect(deleteDialog).not.toBeVisible();
+      await expect(row).not.toBeVisible();
+
+      // Switch to the Deactivated tab: the user shows up with a Reactivate button.
+      await deactivatedTab.click();
+      const deactivatedRow = page.getByRole("row").filter({ hasText: email });
+      await expect(deactivatedRow).toBeVisible();
+      const reactivateButton = deactivatedRow.getByRole("button", {
+        name: `Reactivate ${name}`,
+      });
+      await expect(reactivateButton).toBeVisible();
+
+      // Not on the Active tab while deactivated.
+      await activeTab.click();
+      await expect(page.getByRole("row").filter({ hasText: email })).not.toBeVisible();
+
+      // A deactivated user cannot log in — the credentials are correct, but
+      // the Better Auth `before` session hook in server/src/lib/auth.ts
+      // blocks session creation for a soft-deleted user, which surfaces as a
+      // "Failed to create session" error rather than an invalid-credentials one.
+      await page.getByRole("button", { name: "Sign out" }).click();
+      await expect(page).toHaveURL(/\/admin\/login$/);
+      await page.getByLabel("Email").fill(email);
+      await page.getByLabel("Password").fill(password);
+      await page.getByRole("button", { name: "Sign in" }).click();
+      await expect(page.getByText(/failed to create session/i)).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/login$/);
+
+      // Log back in as admin and reactivate the user.
+      await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+      await page.goto("/admin/users");
+      await deactivatedTab.click();
+      await expect(
+        page.getByRole("row").filter({ hasText: email }),
+      ).toBeVisible();
+      await page
+        .getByRole("row")
+        .filter({ hasText: email })
+        .getByRole("button", { name: `Reactivate ${name}` })
+        .click();
+      await expect(page.getByRole("row").filter({ hasText: email })).not.toBeVisible();
+
+      // Reappears on the Active tab.
+      await activeTab.click();
+      await expect(page.getByRole("row").filter({ hasText: email })).toBeVisible();
+
+      // The reactivated user can log in again.
+      await page.getByRole("button", { name: "Sign out" }).click();
+      await expect(page).toHaveURL(/\/admin\/login$/);
+      await page.getByLabel("Email").fill(email);
+      await page.getByLabel("Password").fill(password);
+      await page.getByRole("button", { name: "Sign in" }).click();
+      await expect(page).toHaveURL("/admin");
+
+      const meResponse = await page.request.get("/api/me");
+      expect(meResponse.status()).toBe(200);
+      const meBody = await meResponse.json();
+      expect(meBody.user.email).toBe(email);
+    } finally {
+      await hardDeleteUser(email);
     }
   });
 });

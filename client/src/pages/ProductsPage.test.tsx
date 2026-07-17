@@ -139,6 +139,40 @@ describe("ProductsPage", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
+  it("fetches products sorted by createdAt desc by default", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products } });
+    renderWithQuery(<ProductsPage />);
+    await screen.findByText("Rice 5kg");
+
+    expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
+      params: { sortBy: "createdAt", sortOrder: "desc" },
+    });
+  });
+
+  it("clicking a column header refetches with the new sort params", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products } });
+    const user = userEvent.setup();
+    renderWithQuery(<ProductsPage />);
+    await screen.findByText("Rice 5kg");
+
+    // Stock is a numeric column, so its first click sorts descending.
+    await user.click(screen.getByRole("button", { name: "Stock" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
+        params: { sortBy: "stock", sortOrder: "desc" },
+      }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Stock" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
+        params: { sortBy: "stock", sortOrder: "asc" },
+      }),
+    );
+  });
+
   it("opens the delete confirmation and removes the product on confirm", async () => {
     mockedAxios.get.mockResolvedValue({ data: { products } });
     mockedAxios.delete.mockResolvedValue({});

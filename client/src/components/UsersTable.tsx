@@ -1,4 +1,4 @@
-import { Check, Minus, Pencil, Trash2 } from "lucide-react";
+import { Check, Minus, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { Role } from "@es-market/core";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,12 +38,16 @@ function initials(name: string) {
 
 export default function UsersTable({
   users,
+  status,
   onEdit,
   onDelete,
+  onReactivate,
 }: {
   users: UserRow[] | null;
+  status: "active" | "deactivated";
   onEdit: (user: UserRow) => void;
   onDelete: (user: UserRow) => void;
+  onReactivate: (user: UserRow) => void;
 }) {
   return (
     <Table>
@@ -115,22 +119,35 @@ export default function UsersTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Edit ${user.name}`}
-                      onClick={() => onEdit(user)}
-                    >
-                      <Pencil />
-                    </Button>
-                    {user.role !== Role.ADMIN && (
+                    {status === "active" ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Edit ${user.name}`}
+                          onClick={() => onEdit(user)}
+                        >
+                          <Pencil />
+                        </Button>
+                        {user.role !== Role.ADMIN && (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Delete ${user.name}`}
+                            onClick={() => onDelete(user)}
+                          >
+                            <Trash2 />
+                          </Button>
+                        )}
+                      </>
+                    ) : (
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label={`Delete ${user.name}`}
-                        onClick={() => onDelete(user)}
+                        aria-label={`Reactivate ${user.name}`}
+                        onClick={() => onReactivate(user)}
                       >
-                        <Trash2 />
+                        <RotateCcw />
                       </Button>
                     )}
                   </div>

@@ -78,6 +78,27 @@ describe("ProductForm (create mode)", () => {
     expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
+  it("rejects a description longer than 1000 characters and does not submit", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    // Uses spaces so the textarea wraps normally instead of rendering as one
+    // unbroken line.
+    await user.type(screen.getByLabelText("Description"), "lorem ipsum ".repeat(90));
+    await user.clear(screen.getByLabelText("Stock"));
+    await user.type(screen.getByLabelText("Stock"), "10");
+    await selectCategory(user, "Groceries");
+    const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Image"), file);
+    await user.click(screen.getByRole("button", { name: "Create product" }));
+
+    expect(
+      await screen.findByText("Description must be 1000 characters or fewer"),
+    ).toBeInTheDocument();
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
   it("creates the product, uploads the image, and calls onSuccess", async () => {
     const createdProduct = {
       id: "3",
@@ -225,6 +246,20 @@ describe("ProductForm (edit mode)", () => {
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(await screen.findByText("Category not found")).toBeInTheDocument();
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty name and does not submit", async () => {
+    const user = userEvent.setup();
+    const { onSuccess } = renderForm(vi.fn(), existingProduct);
+
+    await user.clear(screen.getByLabelText("Name"));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(
+      await screen.findByText("Name must be at least 2 characters"),
+    ).toBeInTheDocument();
+    expect(mockedAxios.put).not.toHaveBeenCalled();
     expect(onSuccess).not.toHaveBeenCalled();
   });
 });

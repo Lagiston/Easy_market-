@@ -1,4 +1,13 @@
-import { ImageOff, Pencil, Trash2 } from "lucide-react";
+import { useMemo } from "react";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  type OnChangeFn,
+  type SortingState,
+} from "@tanstack/react-table";
+import { ArrowDown, ArrowUp, ArrowUpDown, ImageOff, Pencil, Trash2 } from "lucide-react";
 import type { LocalizedDescription, LocalizedName } from "@es-market/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,29 +31,128 @@ export type ProductRow = {
   category: { id: string; name: LocalizedName };
 };
 
+const columnHelper = createColumnHelper<ProductRow>();
+
 export default function ProductsTable({
   products,
+  sorting,
+  onSortingChange,
   onEdit,
   onDelete,
 }: {
   products: ProductRow[] | null;
+  sorting: SortingState;
+  onSortingChange: OnChangeFn<SortingState>;
   onEdit: (product: ProductRow) => void;
   onDelete: (product: ProductRow) => void;
 }) {
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "image",
+        header: () => <span className="sr-only">Image</span>,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <Avatar>
+            {row.original.imageUrl && <AvatarImage src={row.original.imageUrl} alt="" />}
+            <AvatarFallback aria-label="No image">
+              <ImageOff className="size-4" />
+            </AvatarFallback>
+          </Avatar>
+        ),
+      }),
+      columnHelper.accessor((row) => row.name.en, {
+        id: "name",
+        header: "Name",
+        cell: ({ row }) => <span className="font-medium">{row.original.name.en}</span>,
+      }),
+      columnHelper.accessor((row) => row.category.name.en, {
+        id: "category",
+        header: "Category",
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">{row.original.category.name.en}</span>
+        ),
+      }),
+      columnHelper.accessor("stock", {
+        id: "stock",
+        header: "Stock",
+        cell: ({ getValue }) => <div className="text-right">{getValue()}</div>,
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: () => <span className="sr-only">Actions</span>,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Edit ${row.original.name.en}`}
+              onClick={() => onEdit(row.original)}
+            >
+              <Pencil />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Delete ${row.original.name.en}`}
+              onClick={() => onDelete(row.original)}
+            >
+              <Trash2 />
+            </Button>
+          </div>
+        ),
+      }),
+    ],
+    [onEdit, onDelete],
+  );
+
+  const table = useReactTable({
+    data: products ?? [],
+    columns,
+    state: { sorting },
+    onSortingChange,
+    // The server always needs a sortBy/sortOrder to query with, so a column
+    // stays sorted rather than cycling to an "unsorted" third state.
+    enableSortingRemoval: false,
+    enableMultiSort: false,
+    manualSorting: true,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const sortIcon = {
+    asc: <ArrowUp className="ml-1.5 size-3.5" />,
+    desc: <ArrowDown className="ml-1.5 size-3.5" />,
+    false: <ArrowUpDown className="ml-1.5 size-3.5 text-muted-foreground" />,
+  } as const;
+
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>
-            <span className="sr-only">Image</span>
-          </TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead className="text-right">Stock</TableHead>
-          <TableHead>
-            <span className="sr-only">Actions</span>
-          </TableHead>
-        </TableRow>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <TableHead
+                key={header.id}
+                className={header.column.id === "stock" ? "text-right" : undefined}
+              >
+                {header.column.getCanSort() ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-3 h-8 has-[>svg]:px-2"
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {sortIcon[header.column.getIsSorted().toString() as "asc" | "desc" | "false"]}
+                  </Button>
+                ) : (
+                  flexRender(header.column.columnDef.header, header.getContext())
+                )}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
       </TableHeader>
       <TableBody>
         {products === null
@@ -67,43 +175,13 @@ export default function ProductsTable({
                 </TableCell>
               </TableRow>
             ))
-          : products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>
-                  <Avatar>
-                    {product.imageUrl && (
-                      <AvatarImage src={product.imageUrl} alt="" />
-                    )}
-                    <AvatarFallback aria-label="No image">
-                      <ImageOff className="size-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </TableCell>
-                <TableCell className="font-medium">{product.name.en}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {product.category.name.en}
-                </TableCell>
-                <TableCell className="text-right">{product.stock}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Edit ${product.name.en}`}
-                      onClick={() => onEdit(product)}
-                    >
-                      <Pencil />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Delete ${product.name.en}`}
-                      onClick={() => onDelete(product)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </TableCell>
+          : table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
             ))}
       </TableBody>

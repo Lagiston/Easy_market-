@@ -11,7 +11,6 @@ import {
 import { loginAs } from "./helpers";
 
 const SAMPLE_JPEG = path.join(import.meta.dirname, "fixtures/sample-product.jpg");
-const SAMPLE_PNG = path.join(import.meta.dirname, "fixtures/sample-product-2.png");
 
 // Hard-deletes a throwaway product by name so repeated local/CI runs against
 // the shared test DB don't accumulate rows.
@@ -101,69 +100,11 @@ test.describe("Create product (ADMIN)", () => {
       await expect(row).toBeVisible();
       await expect(row.getByText("Beverages", { exact: true })).toBeVisible();
       await expect(row.getByText("42", { exact: true })).toBeVisible();
+      await expect(row.getByLabel("No image")).not.toBeVisible();
+      await expect(row.locator("img")).toHaveAttribute("src", /\/api\/uploads\/products\//);
     } finally {
       await hardDeleteProduct(name);
     }
-  });
-
-  test("submitting with an empty name shows a validation error and creates no product", async ({
-    page,
-  }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    let createRequestSent = false;
-    await page.route("**/api/products", (route) => {
-      if (route.request().method() === "POST") createRequestSent = true;
-      return route.continue();
-    });
-
-    await page.getByRole("button", { name: "Create product" }).click();
-
-    const dialog = page.getByRole("dialog");
-    await expect(dialog.getByRole("heading", { name: "Create product" })).toBeVisible();
-
-    await dialog.getByLabel("Stock", { exact: true }).fill("5");
-    await dialog.getByLabel("Category").click();
-    await page.getByRole("option", { name: "Groceries" }).click();
-    await dialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
-
-    await dialog.getByRole("button", { name: "Create product" }).click();
-
-    await expect(dialog.getByText("Name must be at least 2 characters")).toBeVisible();
-    await expect(dialog).toBeVisible();
-    expect(createRequestSent).toBe(false);
-  });
-
-  test("submitting without selecting an image shows a validation error and creates no product", async ({
-    page,
-  }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    let createRequestSent = false;
-    await page.route("**/api/products", (route) => {
-      if (route.request().method() === "POST") createRequestSent = true;
-      return route.continue();
-    });
-
-    const name = `No Image Selected ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    await page.getByRole("button", { name: "Create product" }).click();
-
-    const dialog = page.getByRole("dialog");
-    await expect(dialog.getByRole("heading", { name: "Create product" })).toBeVisible();
-
-    await dialog.getByLabel("Name").fill(name);
-    await dialog.getByLabel("Stock", { exact: true }).fill("5");
-    await dialog.getByLabel("Category").click();
-    await page.getByRole("option", { name: "Groceries" }).click();
-
-    await dialog.getByRole("button", { name: "Create product" }).click();
-
-    await expect(dialog.getByText("An image is required")).toBeVisible();
-    await expect(dialog).toBeVisible();
-    expect(createRequestSent).toBe(false);
   });
 });
 
@@ -206,44 +147,6 @@ test.describe("Edit product (ADMIN)", () => {
       await hardDeleteProduct(updatedName);
     }
   });
-
-  test("submitting the edit form with an empty name shows a validation error and leaves the row unchanged", async ({
-    page,
-  }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    const name = `Edit Validation ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    try {
-      await createProduct(page, { name, stock: "5", category: "Groceries" });
-
-      const row = page.getByRole("row").filter({ hasText: name });
-      await row.getByRole("button", { name: `Edit ${name}` }).click();
-
-      const dialog = page.getByRole("dialog");
-      await expect(dialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
-
-      let putRequestSent = false;
-      await page.route("**/api/products/*", (route) => {
-        if (route.request().method() === "PUT") putRequestSent = true;
-        return route.continue();
-      });
-
-      await dialog.getByLabel("Name").fill("");
-      await dialog.getByRole("button", { name: "Save changes" }).click();
-
-      await expect(dialog.getByText("Name must be at least 2 characters")).toBeVisible();
-      await expect(dialog).toBeVisible();
-      expect(putRequestSent).toBe(false);
-
-      await page.keyboard.press("Escape");
-      await expect(dialog).not.toBeVisible();
-      await expect(page.getByRole("row").filter({ hasText: name })).toBeVisible();
-    } finally {
-      await hardDeleteProduct(name);
-    }
-  });
 });
 
 test.describe("Product description (ADMIN)", () => {
@@ -267,64 +170,6 @@ test.describe("Product description (ADMIN)", () => {
       const dialog = page.getByRole("dialog");
       await expect(dialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
       await expect(dialog.getByLabel("Description")).toHaveValue(description);
-    } finally {
-      await hardDeleteProduct(name);
-    }
-  });
-
-  test("creating a product with the description left blank succeeds", async ({ page }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    const name = `Blank Description ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    try {
-      await createProduct(page, { name, stock: "6", category: "Groceries" });
-
-      const row = page.getByRole("row").filter({ hasText: name });
-      await expect(row).toBeVisible();
-    } finally {
-      await hardDeleteProduct(name);
-    }
-  });
-
-  test("a description longer than 1000 characters shows a validation error and creates no product", async ({
-    page,
-  }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    let createRequestSent = false;
-    await page.route("**/api/products", (route) => {
-      if (route.request().method() === "POST") createRequestSent = true;
-      return route.continue();
-    });
-
-    const name = `Description Too Long ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    // Uses spaces so the textarea wraps normally instead of rendering as one
-    // unbroken line.
-    const longDescription = "lorem ipsum ".repeat(90);
-
-    try {
-      await page.getByRole("button", { name: "Create product" }).click();
-
-      const dialog = page.getByRole("dialog");
-      await expect(dialog.getByRole("heading", { name: "Create product" })).toBeVisible();
-
-      await dialog.getByLabel("Name").fill(name);
-      await dialog.getByLabel("Description").fill(longDescription);
-      await dialog.getByLabel("Stock", { exact: true }).fill("6");
-      await dialog.getByLabel("Category").click();
-      await page.getByRole("option", { name: "Groceries" }).click();
-      await dialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
-
-      await dialog.getByRole("button", { name: "Create product" }).click();
-
-      await expect(
-        dialog.getByText("Description must be 1000 characters or fewer"),
-      ).toBeVisible();
-      await expect(dialog).toBeVisible();
-      expect(createRequestSent).toBe(false);
     } finally {
       await hardDeleteProduct(name);
     }
@@ -362,29 +207,6 @@ test.describe("Delete product (ADMIN)", () => {
       await hardDeleteProduct(name);
     }
   });
-
-  test("cancelling the delete confirmation keeps the product in the table", async ({ page }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    const name = `Delete Cancel ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    try {
-      await createProduct(page, { name, stock: "3", category: "Groceries" });
-
-      const row = page.getByRole("row").filter({ hasText: name });
-      await row.getByRole("button", { name: `Delete ${name}` }).click();
-
-      const alertDialog = page.getByRole("alertdialog");
-      await expect(alertDialog).toBeVisible();
-      await alertDialog.getByRole("button", { name: "Cancel" }).click();
-      await expect(alertDialog).not.toBeVisible();
-
-      await expect(page.getByRole("row").filter({ hasText: name })).toBeVisible();
-    } finally {
-      await hardDeleteProduct(name);
-    }
-  });
 });
 
 test.describe("Product image upload (ADMIN)", () => {
@@ -392,72 +214,6 @@ test.describe("Product image upload (ADMIN)", () => {
   // uploaded file from server/uploads/products/. Left out of scope here since
   // this runs against a local/test-only DB and disk, and stray fixture-sized
   // files don't affect other tests.
-
-  test("creating a product with an image shows the thumbnail in the table", async ({ page }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    const name = `Photo On Create ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    try {
-      await createProduct(page, {
-        name,
-        stock: "15",
-        category: "Groceries",
-        imagePath: SAMPLE_JPEG,
-      });
-
-      const row = page.getByRole("row").filter({ hasText: name });
-      await expect(row).toBeVisible();
-      await expect(row.getByLabel("No image")).not.toBeVisible();
-      await expect(row.locator("img")).toHaveAttribute("src", /\/api\/uploads\/products\//);
-    } finally {
-      await hardDeleteProduct(name);
-    }
-  });
-
-  test("replacing an existing product's image from the Edit dialog updates the table thumbnail", async ({
-    page,
-  }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    const name = `Photo On Edit ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    try {
-      // Create the product with an initial image via the (single-step) create flow.
-      await createProduct(page, {
-        name,
-        stock: "8",
-        category: "Groceries",
-        imagePath: SAMPLE_JPEG,
-      });
-
-      const row = page.getByRole("row").filter({ hasText: name });
-      await expect(row).toBeVisible();
-      const initialSrc = await row.locator("img").getAttribute("src");
-      expect(initialSrc).toMatch(/\/api\/uploads\/products\//);
-
-      // Replace the image from the Edit dialog.
-      await row.getByRole("button", { name: `Edit ${name}` }).click();
-      const dialog = page.getByRole("dialog");
-      await expect(dialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
-      await expect(dialog.getByRole("button", { name: "Change image" })).toBeVisible();
-
-      await dialog.getByLabel("Product image").setInputFiles(SAMPLE_PNG);
-      await expect(dialog.getByText("Uploading…")).not.toBeVisible();
-
-      // Editing the image doesn't gate/close the dialog; close it explicitly.
-      await page.keyboard.press("Escape");
-      await expect(dialog).not.toBeVisible();
-
-      await expect(row.locator("img")).toHaveAttribute("src", /\/api\/uploads\/products\//);
-      const updatedSrc = await row.locator("img").getAttribute("src");
-      expect(updatedSrc).not.toBe(initialSrc);
-    } finally {
-      await hardDeleteProduct(name);
-    }
-  });
 
   test("uploading a non-image file on the create form shows an error, leaves the dialog open, and doesn't attach an image", async ({
     page,
@@ -546,50 +302,6 @@ test.describe("Product image upload (ADMIN)", () => {
       const row = page.getByRole("row").filter({ hasText: name });
       await expect(row).toBeVisible();
       await expect(row.getByLabel("No image")).toBeVisible();
-    } finally {
-      await hardDeleteProduct(name);
-    }
-  });
-
-  test("uploading a non-image file on the Edit dialog's image control shows an error and leaves the existing image intact", async ({
-    page,
-  }) => {
-    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    await page.goto("/admin/products");
-
-    const name = `Photo Edit Invalid ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    try {
-      await createProduct(page, {
-        name,
-        stock: "4",
-        category: "Groceries",
-        imagePath: SAMPLE_JPEG,
-      });
-
-      const row = page.getByRole("row").filter({ hasText: name });
-      const initialSrc = await row.locator("img").getAttribute("src");
-      expect(initialSrc).toMatch(/\/api\/uploads\/products\//);
-
-      await row.getByRole("button", { name: `Edit ${name}` }).click();
-      const dialog = page.getByRole("dialog");
-      await expect(dialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
-
-      await dialog.getByLabel("Product image").setInputFiles({
-        name: "not-an-image.txt",
-        mimeType: "text/plain",
-        buffer: Buffer.from("this is not an image"),
-      });
-
-      await expect(
-        dialog.getByText("Image must be a JPEG, PNG, or WebP file"),
-      ).toBeVisible();
-      await expect(dialog).toBeVisible();
-
-      await page.keyboard.press("Escape");
-      await expect(dialog).not.toBeVisible();
-
-      await expect(row.locator("img")).toHaveAttribute("src", initialSrc!);
     } finally {
       await hardDeleteProduct(name);
     }

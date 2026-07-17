@@ -31,3 +31,9 @@ export const updateUserSchema = createUserSchema.extend({
 });
 
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+
+export const userListQuerySchema = z.object({
+  status: z.enum(["active", "deactivated"]).default("active"),
+});
+
+export type UserListQuery = z.infer<typeof userListQuerySchema>;

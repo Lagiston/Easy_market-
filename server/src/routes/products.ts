@@ -7,7 +7,12 @@ import { Role, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { productImagesDir } from "../lib/uploads";
 import { requireAuth, requireRole } from "../middleware/require-auth";
-import { createProductSchema, updateProductSchema } from "@es-market/core";
+import {
+  createProductSchema,
+  updateProductSchema,
+  productListQuerySchema,
+  type ProductSortField,
+} from "@es-market/core";
 
 // Product endpoints; mounted at /api in index.ts.
 export const productsRouter = Router();
@@ -55,13 +60,44 @@ function uploadImage(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-productsRouter.get("/products", requireAuth, requireRole(Role.ADMIN), async (_req, res) => {
+// `name` (and `category.name`) are stored as localized JSON, which Postgres/Prisma
+// can't order by directly — sorting on those fields is done in JS below instead.
+function localizedEn(value: Prisma.JsonValue): string {
+  return typeof value === "object" && value !== null && "en" in value
+    ? String((value as { en: unknown }).en)
+    : "";
+}
+
+const PRODUCT_SORT_COMPARATORS: Record<
+  ProductSortField,
+  (a: Prisma.ProductGetPayload<{ include: typeof productInclude }>, b: (typeof a)) => number
+> = {
+  name: (a, b) => localizedEn(a.name).localeCompare(localizedEn(b.name)),
+  category: (a, b) => localizedEn(a.category.name).localeCompare(localizedEn(b.category.name)),
+  stock: (a, b) => a.stock - b.stock,
+  createdAt: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+};
+
+productsRouter.get("/products", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
+  const parsed = productListQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]!.message });
+    return;
+  }
+  const { sortBy, sortOrder } = parsed.data;
+
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
     include: productInclude,
     orderBy: { createdAt: "desc" },
   });
-  res.json({ products });
+
+  const direction = sortOrder === "asc" ? 1 : -1;
+  const sorted = [...products].sort(
+    (a, b) => direction * PRODUCT_SORT_COMPARATORS[sortBy](a, b),
+  );
+
+  res.json({ products: sorted });
 });
 
 productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (req, res) => {

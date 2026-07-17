@@ -31,6 +31,7 @@ const users = [
 describe("UsersPage", () => {
   beforeEach(() => {
     mockedAxios.get.mockReset();
+    mockedAxios.post.mockReset();
     mockedAxios.delete.mockReset();
     mockedAxios.isAxiosError.mockReset();
   });
@@ -186,6 +187,113 @@ describe("UsersPage", () => {
       expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
     );
     expect(mockedAxios.delete).toHaveBeenCalledWith("/api/users/2");
+  });
+
+  it("fetches active users by default", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    expect(mockedAxios.get).toHaveBeenCalledWith("/api/users", {
+      params: { status: "active" },
+    });
+  });
+
+  it("switching to the Deactivated tab fetches deactivated users and hides Create user", async () => {
+    const deactivatedUsers = [
+      {
+        id: "3",
+        name: "Margaret Hamilton",
+        email: "margaret@es-market.test",
+        role: Role.AGENT,
+        emailVerified: true,
+        createdAt: "2026-03-01T00:00:00.000Z",
+      },
+    ];
+    mockedAxios.get.mockImplementation((_url: string, config?: { params?: { status?: string } }) =>
+      config?.params?.status === "deactivated"
+        ? Promise.resolve({ data: { users: deactivatedUsers } })
+        : Promise.resolve({ data: { users } }),
+    );
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("tab", { name: "Deactivated" }));
+
+    expect(await screen.findByText("Margaret Hamilton")).toBeInTheDocument();
+    expect(mockedAxios.get).toHaveBeenCalledWith("/api/users", {
+      params: { status: "deactivated" },
+    });
+    expect(screen.queryByRole("button", { name: /create user/i })).not.toBeInTheDocument();
+  });
+
+  it("shows a Reactivate button instead of Edit/Delete for deactivated users", async () => {
+    const deactivatedUsers = [
+      {
+        id: "3",
+        name: "Margaret Hamilton",
+        email: "margaret@es-market.test",
+        role: Role.AGENT,
+        emailVerified: true,
+        createdAt: "2026-03-01T00:00:00.000Z",
+      },
+    ];
+    mockedAxios.get.mockImplementation((_url: string, config?: { params?: { status?: string } }) =>
+      config?.params?.status === "deactivated"
+        ? Promise.resolve({ data: { users: deactivatedUsers } })
+        : Promise.resolve({ data: { users } }),
+    );
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("tab", { name: "Deactivated" }));
+    await screen.findByText("Margaret Hamilton");
+
+    expect(
+      screen.getByRole("button", { name: "Reactivate Margaret Hamilton" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edit Margaret Hamilton" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clicking Reactivate calls the reactivate endpoint and refreshes the list", async () => {
+    const deactivatedUsers = [
+      {
+        id: "3",
+        name: "Margaret Hamilton",
+        email: "margaret@es-market.test",
+        role: Role.AGENT,
+        emailVerified: true,
+        createdAt: "2026-03-01T00:00:00.000Z",
+      },
+    ];
+    mockedAxios.get.mockImplementation((_url: string, config?: { params?: { status?: string } }) =>
+      config?.params?.status === "deactivated"
+        ? Promise.resolve({ data: { users: deactivatedUsers } })
+        : Promise.resolve({ data: { users } }),
+    );
+    mockedAxios.post.mockResolvedValue({ data: { user: deactivatedUsers[0] } });
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("tab", { name: "Deactivated" }));
+    await screen.findByText("Margaret Hamilton");
+
+    await user.click(screen.getByRole("button", { name: "Reactivate Margaret Hamilton" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/users/3/reactivate"),
+    );
+    // Refetch is triggered for the currently active tab's query key.
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/users", {
+        params: { status: "deactivated" },
+      }),
+    );
   });
 
   it("shows the server error and keeps the dialog open when deletion fails", async () => {
