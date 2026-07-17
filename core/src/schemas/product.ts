@@ -35,7 +35,10 @@ export type LocalizedDescription = { en: string } & Partial<Record<Exclude<Langu
 
 export const createProductSchema = z.object({
   name: localizedNameSchema,
-  description: localizedDescriptionSchema,
+  // The transform collapses an all-empty description to `undefined`, and the
+  // client submits that post-transform value — so the server must accept a
+  // missing description too.
+  description: localizedDescriptionSchema.optional(),
   stock: z.number(STOCK_ERROR).int(STOCK_ERROR).min(0, STOCK_ERROR),
   lowStockThreshold: z.number(THRESHOLD_ERROR).int(THRESHOLD_ERROR).min(0, THRESHOLD_ERROR),
   categoryId: z.string(CATEGORY_ERROR).trim().min(1, CATEGORY_ERROR),
