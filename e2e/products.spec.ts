@@ -5,6 +5,7 @@ import {
   TEST_ADMIN_EMAIL,
   TEST_ADMIN_PASSWORD,
   TEST_AGENT_EMAIL,
+  TEST_AGENT_NAME,
   TEST_AGENT_PASSWORD,
   TEST_DATABASE_URL,
 } from "./test-env";
@@ -302,6 +303,108 @@ test.describe("Product image upload (ADMIN)", () => {
       const row = page.getByRole("row").filter({ hasText: name });
       await expect(row).toBeVisible();
       await expect(row.getByLabel("No image")).toBeVisible();
+    } finally {
+      await hardDeleteProduct(name);
+    }
+  });
+});
+
+test.describe("Assign agent (ADMIN)", () => {
+  test("assigning an agent on create persists and un-assigning on edit persists, both across reload", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    await page.goto("/admin/products");
+
+    const name = `Assignable Product ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      await page.getByRole("button", { name: "Create product" }).click();
+      const createDialog = page.getByRole("dialog");
+      await createDialog.getByLabel("Name").fill(name);
+      await createDialog.getByLabel("Stock", { exact: true }).fill("5");
+      await createDialog.getByLabel("Category").click();
+      await page.getByRole("option", { name: "Groceries" }).click();
+      await createDialog.getByLabel("Assigned agent").click();
+      await page.getByRole("option", { name: TEST_AGENT_NAME }).click();
+      await createDialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
+      await createDialog.getByRole("button", { name: "Create product" }).click();
+      await expect(createDialog).not.toBeVisible();
+
+      const row = page.getByRole("row").filter({ hasText: name });
+      await expect(row).toBeVisible();
+      await expect(row.getByText(TEST_AGENT_NAME, { exact: true })).toBeVisible();
+
+      // Reload and confirm the assignment actually persisted server-side,
+      // not just optimistic client state.
+      await page.reload();
+      const rowAfterReload = page.getByRole("row").filter({ hasText: name });
+      await expect(rowAfterReload.getByText(TEST_AGENT_NAME, { exact: true })).toBeVisible();
+
+      await rowAfterReload.getByRole("button", { name: `Edit ${name}` }).click();
+      const editDialog = page.getByRole("dialog");
+      await expect(editDialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
+      await expect(editDialog.getByLabel("Assigned agent")).toContainText(TEST_AGENT_NAME);
+
+      // Un-assign and confirm it persists as null, not just cleared client-side.
+      await editDialog.getByLabel("Assigned agent").click();
+      await page.getByRole("option", { name: "Unassigned" }).click();
+      await editDialog.getByRole("button", { name: "Save changes" }).click();
+      await expect(editDialog).not.toBeVisible();
+
+      const rowAfterUnassign = page.getByRole("row").filter({ hasText: name });
+      await expect(rowAfterUnassign.getByText("Unassigned", { exact: true })).toBeVisible();
+
+      await page.reload();
+      const rowAfterUnassignReload = page.getByRole("row").filter({ hasText: name });
+      await expect(rowAfterUnassignReload.getByText("Unassigned", { exact: true })).toBeVisible();
+      await expect(
+        rowAfterUnassignReload.getByText(TEST_AGENT_NAME, { exact: true }),
+      ).not.toBeVisible();
+    } finally {
+      await hardDeleteProduct(name);
+    }
+  });
+
+  test("assigning a product to a non-agent user via the API is rejected with 404", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+
+    const name = `API Assign Reject ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      await page.goto("/admin/products");
+      await createProduct(page, { name, stock: "3", category: "Groceries" });
+
+      const usersResponse = await page.request.get("/api/users");
+      expect(usersResponse.ok()).toBe(true);
+      const { users } = await usersResponse.json();
+      const admin = users.find((u: { email: string }) => u.email === TEST_ADMIN_EMAIL);
+      expect(admin).toBeTruthy();
+
+      const productsResponse = await page.request.get("/api/products");
+      expect(productsResponse.ok()).toBe(true);
+      const { products } = await productsResponse.json();
+      const product = products.find((p: { name: { en: string } }) => p.name.en === name);
+      expect(product).toBeTruthy();
+
+      // The client's agent dropdown is already filtered to AGENT-role users,
+      // so this rejection can only be exercised via a direct API call.
+      const putResponse = await page.request.put(`/api/products/${product.id}`, {
+        data: {
+          name: { en: name },
+          price: 0,
+          stock: 3,
+          lowStockThreshold: 10,
+          categoryId: product.category.id,
+          assignedAgentId: admin.id,
+        },
+      });
+
+      expect(putResponse.status()).toBe(404);
+      const body = await putResponse.json();
+      expect(body.error).toBe("Agent not found");
     } finally {
       await hardDeleteProduct(name);
     }
