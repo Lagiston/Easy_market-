@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { HandCoins, Store, Truck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const FEATURES = [
@@ -18,9 +18,9 @@ export default function HomePage() {
       <section className="space-y-4 py-8 text-center">
         <h1 className="text-4xl font-semibold">{t("home.title")}</h1>
         <p className="text-lg text-muted-foreground">{t("home.subtitle")}</p>
-        <Button size="lg" render={<Link to="/products" />}>
+        <Link to="/products" className={buttonVariants({ size: "lg" })}>
           {t("home.cta")}
-        </Button>
+        </Link>
       </section>
       <section className="grid gap-4 sm:grid-cols-3">
         {FEATURES.map(({ key, Icon }) => (

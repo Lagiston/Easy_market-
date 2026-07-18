@@ -69,6 +69,32 @@
     "subtotal": "Sous-total",
     "checkout": "Passer la commande"
   },
+  "checkout": {
+    "title": "Commande",
+    "name": "Nom",
+    "phone": "Téléphone",
+    "fulfillment": "Livraison ou retrait",
+    "delivery": "Livraison",
+    "pickup": "Retrait en magasin",
+    "address": "Adresse",
+    "cityOnly": "Livraison disponible uniquement en ville, sous 24–48 heures.",
+    "payNote": "Paiement en espèces à la livraison ou au retrait — pas de paiement en ligne.",
+    "summary": "Récapitulatif de la commande",
+    "deliveryFee": "Frais de livraison",
+    "free": "Gratuit",
+    "total": "Total",
+    "placeOrder": "Passer la commande",
+    "placing": "Envoi de la commande…",
+    "error": "Impossible d'envoyer la commande. Veuillez réessayer."
+  },
+  "confirmation": {
+    "title": "Merci pour votre commande !",
+    "callNote": "Nous vous appellerons bientôt pour confirmer votre commande.",
+    "pickupNote": "Nous vous appellerons bientôt pour vous prévenir quand votre commande sera prête à être retirée.",
+    "yourCode": "Votre code de commande",
+    "keepCode": "Conservez ce code — avec votre numéro de téléphone, il vous permet de suivre l'état de votre commande.",
+    "continueShopping": "Continuer vos achats"
+  },
   "footer": {
     "copyright": "© {{year}} ES-Market"
   }

@@ -7,6 +7,9 @@ import StorefrontProductsPage from "./pages/storefront/ProductsPage";
 import StorefrontProductDetailPage from "./pages/storefront/ProductDetailPage";
 import StorefrontContactPage from "./pages/storefront/ContactPage";
 import StorefrontCartPage from "./pages/storefront/CartPage";
+import StorefrontCheckoutPage from "./pages/storefront/CheckoutPage";
+import StorefrontOrderConfirmationPage from "./pages/storefront/OrderConfirmationPage";
+import SettingsPage from "./pages/SettingsPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
@@ -24,6 +27,8 @@ function App() {
         <Route path="products/:id" element={<StorefrontProductDetailPage />} />
         <Route path="contact" element={<StorefrontContactPage />} />
         <Route path="cart" element={<StorefrontCartPage />} />
+        <Route path="checkout" element={<StorefrontCheckoutPage />} />
+        <Route path="checkout/confirmation" element={<StorefrontOrderConfirmationPage />} />
       </Route>
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/admin" element={<ProtectedRoute />}>
@@ -35,6 +40,7 @@ function App() {
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>
   );

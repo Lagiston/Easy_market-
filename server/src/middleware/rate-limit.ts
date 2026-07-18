@@ -9,6 +9,14 @@ export const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Stricter limit on public order placement to slow spam orders.
+export const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});
+
 // Stricter limit on auth endpoints to slow credential brute-forcing.
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

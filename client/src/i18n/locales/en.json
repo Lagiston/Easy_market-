@@ -69,6 +69,32 @@
     "subtotal": "Subtotal",
     "checkout": "Proceed to checkout"
   },
+  "checkout": {
+    "title": "Checkout",
+    "name": "Name",
+    "phone": "Phone",
+    "fulfillment": "Delivery or pickup",
+    "delivery": "Delivery",
+    "pickup": "Pickup",
+    "address": "Address",
+    "cityOnly": "Delivery is available within the city only, in 24–48 hours.",
+    "payNote": "You pay in cash on delivery or pickup — no online payment.",
+    "summary": "Order summary",
+    "deliveryFee": "Delivery fee",
+    "free": "Free",
+    "total": "Total",
+    "placeOrder": "Place order",
+    "placing": "Placing order…",
+    "error": "Could not place the order. Please try again."
+  },
+  "confirmation": {
+    "title": "Thank you for your order!",
+    "callNote": "We'll call you shortly to confirm your order.",
+    "pickupNote": "We'll call you shortly to confirm when your order is ready for pickup.",
+    "yourCode": "Your order code",
+    "keepCode": "Keep this code — together with your phone number it lets you check your order status.",
+    "continueShopping": "Continue shopping"
+  },
   "footer": {
     "copyright": "© {{year}} ES-Market"
   }

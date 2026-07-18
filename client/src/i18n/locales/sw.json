@@ -69,6 +69,32 @@
     "subtotal": "Jumla ndogo",
     "checkout": "Endelea na oda"
   },
+  "checkout": {
+    "title": "Kamilisha oda",
+    "name": "Jina",
+    "phone": "Simu",
+    "fulfillment": "Uwasilishaji au kuchukua",
+    "delivery": "Uwasilishaji",
+    "pickup": "Kuchukua dukani",
+    "address": "Anwani",
+    "cityOnly": "Uwasilishaji unapatikana ndani ya jiji tu, ndani ya saa 24–48.",
+    "payNote": "Unalipa kwa fedha taslimu wakati wa kupokea — hakuna malipo mtandaoni.",
+    "summary": "Muhtasari wa oda",
+    "deliveryFee": "Ada ya uwasilishaji",
+    "free": "Bure",
+    "total": "Jumla",
+    "placeOrder": "Weka oda",
+    "placing": "Inatuma oda…",
+    "error": "Imeshindwa kutuma oda. Tafadhali jaribu tena."
+  },
+  "confirmation": {
+    "title": "Asante kwa oda yako!",
+    "callNote": "Tutakupigia simu hivi karibuni kuthibitisha oda yako.",
+    "pickupNote": "Tutakupigia simu hivi karibuni oda yako itakapokuwa tayari kuchukuliwa.",
+    "yourCode": "Msimbo wa oda yako",
+    "keepCode": "Hifadhi msimbo huu — pamoja na namba yako ya simu unaweza kufuatilia hali ya oda yako.",
+    "continueShopping": "Endelea kununua"
+  },
   "footer": {
     "copyright": "© {{year}} ES-Market"
   }

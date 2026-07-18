@@ -52,6 +52,14 @@ export default function Layout({ user }: { user: SessionUser }) {
             Categories
           </Link>
         )}
+        {user.role === Role.ADMIN && (
+          <Link
+            to="/admin/settings"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Settings
+          </Link>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">{user.name}</span>

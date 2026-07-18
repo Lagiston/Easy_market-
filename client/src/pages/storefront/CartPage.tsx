@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ImageOff, Minus, Plus, Trash2 } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function CartPage() {
@@ -18,9 +18,9 @@ export default function CartPage() {
       {items.length === 0 ? (
         <div className="space-y-4 py-12 text-center">
           <p className="text-sm text-muted-foreground">{t("cart.empty")}</p>
-          <Button variant="outline" render={<Link to="/products" />}>
+          <Link to="/products" className={buttonVariants({ variant: "outline" })}>
             {t("cart.browseProducts")}
-          </Button>
+          </Link>
         </div>
       ) : (
         <>
@@ -102,10 +102,12 @@ export default function CartPage() {
           </div>
 
           <div className="flex items-center justify-between gap-4">
-            <Button variant="outline" render={<Link to="/products" />}>
+            <Link to="/products" className={buttonVariants({ variant: "outline" })}>
               {t("cart.browseProducts")}
-            </Button>
-            <Button render={<Link to="/checkout" />}>{t("cart.checkout")}</Button>
+            </Link>
+            <Link to="/checkout" className={buttonVariants({})}>
+              {t("cart.checkout")}
+            </Link>
           </div>
         </>
       )}
