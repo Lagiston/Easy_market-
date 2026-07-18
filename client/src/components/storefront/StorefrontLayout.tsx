@@ -1,9 +1,12 @@
 import { Link, Outlet } from "react-router";
 import { useTranslation } from "react-i18next";
+import { ShoppingCart } from "lucide-react";
+import { useCart } from "@/lib/cart";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function StorefrontLayout() {
   const { t } = useTranslation();
+  const { totalQuantity } = useCart();
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -31,7 +34,19 @@ export default function StorefrontLayout() {
             {t("nav.contact")}
           </Link>
         </nav>
-        <div className="ms-auto">
+        <div className="ms-auto flex items-center gap-4">
+          <Link
+            to="/cart"
+            aria-label={t("cart.nav")}
+            className="relative text-muted-foreground hover:text-foreground"
+          >
+            <ShoppingCart className="size-5" />
+            {totalQuantity > 0 && (
+              <span className="absolute -top-1.5 -end-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                {totalQuantity}
+              </span>
+            )}
+          </Link>
           <LanguageSwitcher />
         </div>
       </header>

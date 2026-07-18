@@ -117,7 +117,10 @@ export default function ProductsPage() {
       <div className="flex flex-wrap items-end gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="category-filter">{t("products.filters.category")}</Label>
-          <Select value={categoryId} onValueChange={setCategoryId}>
+          <Select
+            value={categoryId}
+            onValueChange={(value) => setCategoryId(value ?? ALL_CATEGORIES)}
+          >
             <SelectTrigger id="category-filter" className="min-w-40">
               <SelectValue />
             </SelectTrigger>

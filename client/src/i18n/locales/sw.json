@@ -57,6 +57,18 @@
     "noImage": "Hakuna picha",
     "pagination": "Ukurasa {{page}} kati ya {{totalPages}}"
   },
+  "cart": {
+    "nav": "Kikapu",
+    "title": "Kikapu chako",
+    "empty": "Kikapu chako ni tupu.",
+    "browseProducts": "Vinjari bidhaa",
+    "addToCart": "Weka kikapuni",
+    "increase": "Ongeza idadi ya {{name}}",
+    "decrease": "Punguza idadi ya {{name}}",
+    "remove": "Ondoa {{name}} kutoka kikapuni",
+    "subtotal": "Jumla ndogo",
+    "checkout": "Endelea na oda"
+  },
   "footer": {
     "copyright": "© {{year}} ES-Market"
   }

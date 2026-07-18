@@ -6,6 +6,7 @@ import StorefrontHomePage from "./pages/storefront/HomePage";
 import StorefrontProductsPage from "./pages/storefront/ProductsPage";
 import StorefrontProductDetailPage from "./pages/storefront/ProductDetailPage";
 import StorefrontContactPage from "./pages/storefront/ContactPage";
+import StorefrontCartPage from "./pages/storefront/CartPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
@@ -22,6 +23,7 @@ function App() {
         <Route path="products" element={<StorefrontProductsPage />} />
         <Route path="products/:id" element={<StorefrontProductDetailPage />} />
         <Route path="contact" element={<StorefrontContactPage />} />
+        <Route path="cart" element={<StorefrontCartPage />} />
       </Route>
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/admin" element={<ProtectedRoute />}>

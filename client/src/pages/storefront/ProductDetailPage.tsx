@@ -2,9 +2,11 @@ import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ImageOff } from "lucide-react";
+import { ArrowLeft, ImageOff, ShoppingCart } from "lucide-react";
 import { localize } from "@/lib/localize";
+import { useCart } from "@/lib/cart";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { StorefrontProduct } from "./ProductsPage";
 
@@ -12,6 +14,7 @@ export default function ProductDetailPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
   const { id } = useParams<{ id: string }>();
+  const { addItem } = useCart();
 
   const { data: product, isPending, error } = useQuery({
     queryKey: ["storefront", "product", id],
@@ -83,6 +86,21 @@ export default function ProductDetailPage() {
                 {localize(product.description, language)}
               </p>
             )}
+            <Button
+              disabled={product.stock === 0}
+              onClick={() =>
+                addItem({
+                  productId: product.id,
+                  name: product.name,
+                  price: product.price,
+                  imageUrl: product.imageUrl,
+                  stock: product.stock,
+                })
+              }
+            >
+              <ShoppingCart />
+              {t("cart.addToCart")}
+            </Button>
           </div>
         </div>
       )}

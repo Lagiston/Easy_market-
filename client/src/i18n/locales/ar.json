@@ -57,6 +57,18 @@
     "noImage": "بدون صورة",
     "pagination": "صفحة {{page}} من {{totalPages}}"
   },
+  "cart": {
+    "nav": "السلة",
+    "title": "سلة التسوق",
+    "empty": "سلتك فارغة.",
+    "browseProducts": "تصفح المنتجات",
+    "addToCart": "أضف إلى السلة",
+    "increase": "زيادة كمية {{name}}",
+    "decrease": "تقليل كمية {{name}}",
+    "remove": "إزالة {{name}} من السلة",
+    "subtotal": "المجموع الفرعي",
+    "checkout": "متابعة إتمام الطلب"
+  },
   "footer": {
     "copyright": "© {{year}} إي إس ماركت"
   }

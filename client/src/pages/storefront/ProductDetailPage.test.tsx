@@ -1,8 +1,10 @@
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios, { AxiosError, AxiosHeaders } from "axios";
 import { MemoryRouter, Route, Routes } from "react-router";
 import i18n from "@/i18n";
+import { CartProvider } from "@/lib/cart";
 import { renderWithQuery } from "@/test/render-with-query";
 import ProductDetailPage from "./ProductDetailPage";
 import type { StorefrontProduct } from "./ProductsPage";
@@ -29,9 +31,11 @@ const product: StorefrontProduct = {
 function renderPage() {
   renderWithQuery(
     <MemoryRouter initialEntries={["/products/p1"]}>
-      <Routes>
-        <Route path="/products/:id" element={<ProductDetailPage />} />
-      </Routes>
+      <CartProvider>
+        <Routes>
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+        </Routes>
+      </CartProvider>
     </MemoryRouter>,
   );
 }
@@ -99,6 +103,34 @@ describe("storefront ProductDetailPage", () => {
     renderPage();
 
     expect(await screen.findByText("Product not found.")).toBeInTheDocument();
+  });
+
+  it("adds the product to the cart persisted in localStorage", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    const button = await screen.findByRole("button", { name: /add to cart/i });
+    await userEvent.click(button);
+    await userEvent.click(button);
+
+    const stored = JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]");
+    expect(stored).toEqual([
+      {
+        productId: "p1",
+        name: product.name,
+        price: 1500,
+        imageUrl: null,
+        stock: 20,
+        quantity: 2,
+      },
+    ]);
+  });
+
+  it("disables the add-to-cart button when the product is out of stock", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product: { ...product, stock: 0 } } });
+    renderPage();
+
+    expect(await screen.findByRole("button", { name: /add to cart/i })).toBeDisabled();
   });
 
   it("shows an error message when the request fails", async () => {

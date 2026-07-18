@@ -103,8 +103,62 @@ model Product {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
+  orderItems        OrderItem[]
 
   @@index([categoryId])
   @@index([assignedAgentId])
   @@map("product")
+}
+
+enum OrderStatus {
+  RECEIVED
+  CONFIRMED
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+}
+
+enum FulfillmentType {
+  DELIVERY
+  PICKUP
+}
+
+enum CancelReason {
+  CUSTOMER_UNREACHABLE
+  OUTSIDE_DELIVERY_AREA
+  CUSTOMER_REQUEST
+  OTHER
+}
+
+model Order {
+  id              String          @id
+  code            String          @unique
+  status          OrderStatus     @default(RECEIVED)
+  fulfillmentType FulfillmentType
+  customerName    String
+  customerPhone   String
+  address         String?
+  deliveryFee     Int             @default(0)
+  cancelReason    CancelReason?
+  callAttempts    Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  items           OrderItem[]
+
+  @@map("order")
+}
+
+model OrderItem {
+  id          String  @id
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName Json
+  unitPrice   Int
+  quantity    Int
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_item")
 }

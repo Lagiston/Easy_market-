@@ -18,8 +18,8 @@ export default function HomePage() {
       <section className="space-y-4 py-8 text-center">
         <h1 className="text-4xl font-semibold">{t("home.title")}</h1>
         <p className="text-lg text-muted-foreground">{t("home.subtitle")}</p>
-        <Button asChild size="lg">
-          <Link to="/products">{t("home.cta")}</Link>
+        <Button size="lg" render={<Link to="/products" />}>
+          {t("home.cta")}
         </Button>
       </section>
       <section className="grid gap-4 sm:grid-cols-3">

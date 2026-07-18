@@ -57,6 +57,18 @@
     "noImage": "Pas d'image",
     "pagination": "Page {{page}} sur {{totalPages}}"
   },
+  "cart": {
+    "nav": "Panier",
+    "title": "Votre panier",
+    "empty": "Votre panier est vide.",
+    "browseProducts": "Parcourir les produits",
+    "addToCart": "Ajouter au panier",
+    "increase": "Augmenter la quantité de {{name}}",
+    "decrease": "Diminuer la quantité de {{name}}",
+    "remove": "Retirer {{name}} du panier",
+    "subtotal": "Sous-total",
+    "checkout": "Passer la commande"
+  },
   "footer": {
     "copyright": "© {{year}} ES-Market"
   }
