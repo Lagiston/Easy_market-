@@ -3,6 +3,7 @@
   "nav": {
     "home": "Home",
     "products": "Products",
+    "orderStatus": "Order status",
     "contact": "Contact"
   },
   "language": {
@@ -93,7 +94,25 @@
     "pickupNote": "We'll call you shortly to confirm when your order is ready for pickup.",
     "yourCode": "Your order code",
     "keepCode": "Keep this code — together with your phone number it lets you check your order status.",
+    "trackOrder": "Check order status",
     "continueShopping": "Continue shopping"
+  },
+  "orderStatus": {
+    "title": "Track your order",
+    "subtitle": "Enter your order code and the phone number you ordered with.",
+    "code": "Order code",
+    "phone": "Phone",
+    "check": "Check status",
+    "checking": "Checking…",
+    "notFound": "No order found for this code and phone number.",
+    "error": "Could not check the order status. Please try again.",
+    "statuses": {
+      "received": "Received — awaiting phone confirmation",
+      "confirmed": "Confirmed",
+      "outForDelivery": "Out for delivery",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
   },
   "footer": {
     "copyright": "© {{year}} ES-Market"

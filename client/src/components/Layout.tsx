@@ -20,6 +20,12 @@ export default function Layout({ user }: { user: SessionUser }) {
         <Link to="/admin" className="text-lg font-semibold">
           ES-Market
         </Link>
+        <Link
+          to="/admin/orders"
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          Orders
+        </Link>
         {user.role === Role.ADMIN && (
           <Link
             to="/admin/users"

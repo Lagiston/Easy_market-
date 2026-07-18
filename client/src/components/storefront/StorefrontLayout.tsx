@@ -28,6 +28,12 @@ export default function StorefrontLayout() {
             {t("nav.products")}
           </Link>
           <Link
+            to="/order-status"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            {t("nav.orderStatus")}
+          </Link>
+          <Link
             to="/contact"
             className="text-sm text-muted-foreground hover:text-foreground"
           >

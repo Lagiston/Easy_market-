@@ -12,6 +12,71 @@ export type FulfillmentType = (typeof FulfillmentType)[keyof typeof FulfillmentT
 
 export const FULFILLMENT_TYPES = [FulfillmentType.DELIVERY, FulfillmentType.PICKUP] as const;
 
+// Mirrors the `OrderStatus` Prisma enum.
+export const OrderStatus = {
+  RECEIVED: "RECEIVED",
+  CONFIRMED: "CONFIRMED",
+  OUT_FOR_DELIVERY: "OUT_FOR_DELIVERY",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
+} as const;
+
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
+
+export const ORDER_STATUSES = [
+  OrderStatus.RECEIVED,
+  OrderStatus.CONFIRMED,
+  OrderStatus.OUT_FOR_DELIVERY,
+  OrderStatus.COMPLETED,
+  OrderStatus.CANCELLED,
+] as const;
+
+// Mirrors the `CancelReason` Prisma enum.
+export const CancelReason = {
+  CUSTOMER_UNREACHABLE: "CUSTOMER_UNREACHABLE",
+  OUTSIDE_DELIVERY_AREA: "OUTSIDE_DELIVERY_AREA",
+  CUSTOMER_REQUEST: "CUSTOMER_REQUEST",
+  OTHER: "OTHER",
+} as const;
+
+export type CancelReason = (typeof CancelReason)[keyof typeof CancelReason];
+
+export const CANCEL_REASONS = [
+  CancelReason.CUSTOMER_UNREACHABLE,
+  CancelReason.OUTSIDE_DELIVERY_AREA,
+  CancelReason.CUSTOMER_REQUEST,
+  CancelReason.OTHER,
+] as const;
+
+// Failed call attempts on a RECEIVED order before staff may cancel it as
+// "customer unreachable" (Project-Scope resolved decision).
+export const CALL_ATTEMPTS_BEFORE_CANCEL = 3;
+
+export const cancelOrderSchema = z.object({
+  reason: z.enum(CANCEL_REASONS, "A cancel reason is required"),
+});
+
+export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;
+
+const LOOKUP_CODE_ERROR = "Order code is required";
+const LOOKUP_PHONE_ERROR = "Phone number is required";
+
+// Customer status lookup: order code + the phone the order was placed with
+// (non-enumerable — both must match).
+export const orderLookupSchema = z.object({
+  code: z
+    .string(LOOKUP_CODE_ERROR)
+    .trim()
+    .min(1, LOOKUP_CODE_ERROR)
+    .transform((value) => value.toUpperCase()),
+  phone: z.string(LOOKUP_PHONE_ERROR).trim().min(1, LOOKUP_PHONE_ERROR),
+});
+
+export type OrderLookupInput = z.infer<typeof orderLookupSchema>;
+
+// Pre-transform shape (what the form fields hold).
+export type OrderLookupFormInput = z.input<typeof orderLookupSchema>;
+
 const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
 const PHONE_ERROR = "A valid phone number is required";
 const ADDRESS_ERROR = "Address is required for delivery";

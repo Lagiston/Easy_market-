@@ -3,6 +3,7 @@
   "nav": {
     "home": "Nyumbani",
     "products": "Bidhaa",
+    "orderStatus": "Hali ya oda",
     "contact": "Wasiliana"
   },
   "language": {
@@ -93,7 +94,25 @@
     "pickupNote": "Tutakupigia simu hivi karibuni oda yako itakapokuwa tayari kuchukuliwa.",
     "yourCode": "Msimbo wa oda yako",
     "keepCode": "Hifadhi msimbo huu — pamoja na namba yako ya simu unaweza kufuatilia hali ya oda yako.",
+    "trackOrder": "Angalia hali ya oda",
     "continueShopping": "Endelea kununua"
+  },
+  "orderStatus": {
+    "title": "Fuatilia oda yako",
+    "subtitle": "Weka msimbo wa oda na namba ya simu uliyotumia kuagiza.",
+    "code": "Msimbo wa oda",
+    "phone": "Simu",
+    "check": "Angalia hali",
+    "checking": "Inaangalia…",
+    "notFound": "Hakuna oda iliyopatikana kwa msimbo huu na namba hii ya simu.",
+    "error": "Imeshindwa kuangalia hali ya oda. Tafadhali jaribu tena.",
+    "statuses": {
+      "received": "Imepokelewa — inasubiri uthibitisho kwa simu",
+      "confirmed": "Imethibitishwa",
+      "outForDelivery": "Inasafirishwa",
+      "completed": "Imekamilika",
+      "cancelled": "Imeghairiwa"
+    }
   },
   "footer": {
     "copyright": "© {{year}} ES-Market"

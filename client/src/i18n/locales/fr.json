@@ -3,6 +3,7 @@
   "nav": {
     "home": "Accueil",
     "products": "Produits",
+    "orderStatus": "Suivi de commande",
     "contact": "Contact"
   },
   "language": {
@@ -93,7 +94,25 @@
     "pickupNote": "Nous vous appellerons bientôt pour vous prévenir quand votre commande sera prête à être retirée.",
     "yourCode": "Votre code de commande",
     "keepCode": "Conservez ce code — avec votre numéro de téléphone, il vous permet de suivre l'état de votre commande.",
+    "trackOrder": "Vérifier l'état de la commande",
     "continueShopping": "Continuer vos achats"
+  },
+  "orderStatus": {
+    "title": "Suivre votre commande",
+    "subtitle": "Saisissez votre code de commande et le numéro de téléphone utilisé.",
+    "code": "Code de commande",
+    "phone": "Téléphone",
+    "check": "Vérifier l'état",
+    "checking": "Vérification…",
+    "notFound": "Aucune commande trouvée pour ce code et ce numéro de téléphone.",
+    "error": "Impossible de vérifier l'état de la commande. Veuillez réessayer.",
+    "statuses": {
+      "received": "Reçue — en attente de confirmation téléphonique",
+      "confirmed": "Confirmée",
+      "outForDelivery": "En cours de livraison",
+      "completed": "Terminée",
+      "cancelled": "Annulée"
+    }
   },
   "footer": {
     "copyright": "© {{year}} ES-Market"

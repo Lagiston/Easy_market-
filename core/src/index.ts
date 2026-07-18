@@ -37,10 +37,20 @@ export {
 export {
   FulfillmentType,
   FULFILLMENT_TYPES,
+  OrderStatus,
+  ORDER_STATUSES,
+  CancelReason,
+  CANCEL_REASONS,
+  CALL_ATTEMPTS_BEFORE_CANCEL,
   checkoutFormSchema,
   placeOrderSchema,
+  cancelOrderSchema,
+  orderLookupSchema,
   type CheckoutFormInput,
   type PlaceOrderInput,
+  type CancelOrderInput,
+  type OrderLookupInput,
+  type OrderLookupFormInput,
 } from "./schemas/order";
 export {
   DEFAULT_SETTINGS,

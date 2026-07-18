@@ -9,7 +9,9 @@ import StorefrontContactPage from "./pages/storefront/ContactPage";
 import StorefrontCartPage from "./pages/storefront/CartPage";
 import StorefrontCheckoutPage from "./pages/storefront/CheckoutPage";
 import StorefrontOrderConfirmationPage from "./pages/storefront/OrderConfirmationPage";
+import StorefrontOrderStatusPage from "./pages/storefront/OrderStatusPage";
 import SettingsPage from "./pages/SettingsPage";
+import OrdersPage from "./pages/OrdersPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
@@ -29,10 +31,12 @@ function App() {
         <Route path="cart" element={<StorefrontCartPage />} />
         <Route path="checkout" element={<StorefrontCheckoutPage />} />
         <Route path="checkout/confirmation" element={<StorefrontOrderConfirmationPage />} />
+        <Route path="order-status" element={<StorefrontOrderStatusPage />} />
       </Route>
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/admin" element={<ProtectedRoute />}>
         <Route index element={<HomePage />} />
+        <Route path="orders" element={<OrdersPage />} />
       </Route>
       <Route path="/admin" element={<ProtectedRoute roles={[Role.ADMIN]} />}>
         <Route path="users" element={<UsersPage />} />

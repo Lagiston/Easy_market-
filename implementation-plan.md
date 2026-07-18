@@ -48,9 +48,9 @@ Goal: customer places a pay-on-delivery order; staff manage it.
 - [x] 4.1 Schema: `Order`, `OrderItem`, status enum (received → confirmed → out for delivery → completed / cancelled); order stores fulfillment type (delivery/pickup), a snapshot of the delivery fee charged, a cancel reason (customer unreachable / outside delivery area / customer request / other), a call-attempt count, and a **non-sequential random short order code** used for customer lookup
 - [x] 4.2 Cart (client-side state, persisted to localStorage) + cart UI
 - [x] 4.3 Checkout: guest form (name, phone, address, delivery/pickup), order placement API with stock validation — no customer accounts in v1. Delivery adds a flat fee (admin-configurable setting) shown in the order total; pickup is free; city-only delivery stated on the form
-- [ ] 4.3b Phone confirmation: staff call the customer's number to confirm the order — the received → confirmed transition in the dashboard records it. No SMS OTP / no SMS provider in v1
-- [ ] 4.4 Order confirmation page + order status lookup (order number + phone)
-- [ ] 4.5 Stock decrement on order placement; restore on cancellation
+- [x] 4.3b Phone confirmation: staff call the customer's number to confirm the order — the received → confirmed transition in the dashboard records it. No SMS OTP / no SMS provider in v1
+- [x] 4.4 Order confirmation page + order status lookup (order number + phone)
+- [x] 4.5 Stock decrement on order placement; restore on cancellation
 - [ ] 4.6 Dashboard: order list with status filter, order detail, status transitions, cancel
 - [ ] 4.7 Dashboard overview page: counts of products, orders, low-stock items
 

@@ -117,6 +117,22 @@ test.describe("Guest checkout", () => {
       // The cart was cleared — no count badge on the cart icon anymore.
       await expect(cartLink).not.toContainText("2");
 
+      // Public order-status lookup: the code from the confirmation page plus
+      // the checkout phone resolves to the order, end to end.
+      await page.getByRole("link", { name: "Order status", exact: true }).click();
+      await expect(page).toHaveURL("/order-status");
+      await page.getByLabel("Order code").fill(code!);
+      await page.getByLabel("Phone").fill("+255700123456");
+      await page.getByRole("button", { name: "Check status" }).click();
+      await expect(
+        page.getByText("Received — awaiting phone confirmation"),
+      ).toBeVisible();
+      await expect(page.getByText(code!, { exact: true })).toBeVisible();
+      await expect(page.getByText(`${name} × 2`)).toBeVisible();
+      await expect(
+        page.getByText("Total", { exact: true }).locator(".."),
+      ).toContainText(String(price * 2));
+
       // Real persistence: the order row exists with a snapshot item, and the
       // product's stock was atomically decremented by the ordered quantity.
       const persisted = await withDb((client) =>
