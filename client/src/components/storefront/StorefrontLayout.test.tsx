@@ -38,6 +38,14 @@ describe("StorefrontLayout", () => {
     );
   });
 
+  it("renders a nav link to the contact page", () => {
+    renderLayout();
+    expect(screen.getByRole("link", { name: "Contact" })).toHaveAttribute(
+      "href",
+      "/contact",
+    );
+  });
+
   it("renders the language switcher", () => {
     renderLayout();
     expect(screen.getByRole("combobox")).toBeInTheDocument();

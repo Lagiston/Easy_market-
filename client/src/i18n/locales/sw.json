@@ -2,14 +2,40 @@
   "brand": "ES-Market",
   "nav": {
     "home": "Nyumbani",
-    "products": "Bidhaa"
+    "products": "Bidhaa",
+    "contact": "Wasiliana"
   },
   "language": {
     "label": "Lugha"
   },
   "home": {
     "title": "Karibu ES-Market",
-    "subtitle": "Vinjari bidhaa zetu"
+    "subtitle": "Vinjari bidhaa zetu",
+    "cta": "Vinjari bidhaa",
+    "features": {
+      "payOnDelivery": {
+        "title": "Lipa ukipokea",
+        "text": "Hakuna malipo ya mtandaoni — lipa taslimu oda yako ikifika au unapoichukua."
+      },
+      "delivery": {
+        "title": "Uwasilishaji wa haraka mjini",
+        "text": "Inawasilishwa ndani ya saa 24–48 popote mjini kwa ada isiyobadilika."
+      },
+      "pickup": {
+        "title": "Kuchukua bila malipo",
+        "text": "Agiza mtandaoni na uchukue dukani kwetu bila malipo."
+      }
+    }
+  },
+  "contact": {
+    "title": "Wasiliana nasi",
+    "subtitle": "Tunafurahi kukusaidia — tufikie kwa njia yoyote kati ya hizi.",
+    "phone": "Simu",
+    "email": "Barua pepe",
+    "address": "Anwani",
+    "addressValue": "Barabara ya Sokoni 12, Katikati ya Jiji",
+    "hours": "Saa za kazi",
+    "hoursValue": "Jumatatu–Jumamosi: 8:00–20:00, Jumapili: 9:00–14:00"
   },
   "products": {
     "title": "Bidhaa",
@@ -25,6 +51,8 @@
     },
     "empty": "Hakuna bidhaa zilizopatikana.",
     "error": "Imeshindwa kupakia bidhaa. Tafadhali jaribu tena.",
+    "notFound": "Bidhaa haikupatikana.",
+    "backToList": "Rudi kwenye bidhaa",
     "outOfStock": "Imeisha",
     "noImage": "Hakuna picha",
     "pagination": "Ukurasa {{page}} kati ya {{totalPages}}"

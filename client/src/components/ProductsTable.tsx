@@ -31,6 +31,7 @@ export type ProductRow = {
   lowStockThreshold: number;
   imageUrl: string | null;
   category: { id: string; name: LocalizedName };
+  assignedAgent: { id: string; name: string } | null;
 };
 
 export const STOCK_STATUSES = ["in-stock", "low-stock", "out-of-stock"] as const;
@@ -92,6 +93,16 @@ export default function ProductsTable({
         header: "Category",
         cell: ({ row }) => (
           <span className="text-muted-foreground">{row.original.category.name.en}</span>
+        ),
+      }),
+      columnHelper.accessor((row) => row.assignedAgent?.name ?? "", {
+        id: "agent",
+        header: "Agent",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {row.original.assignedAgent?.name ?? "Unassigned"}
+          </span>
         ),
       }),
       columnHelper.accessor("price", {
@@ -193,6 +204,9 @@ export default function ProductsTable({
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-3 w-32" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-3 w-20" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-3 w-20" />

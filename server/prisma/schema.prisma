@@ -24,6 +24,7 @@ model User {
   deletedAt     DateTime?
   sessions      Session[]
   accounts      Account[]
+  assignedProducts Product[] @relation("ProductAssignedAgent")
 
   @@unique([email])
   @@map("user")
@@ -97,10 +98,13 @@ model Product {
   imageUrl          String?
   categoryId        String
   category          Category  @relation(fields: [categoryId], references: [id])
+  assignedAgentId   String?
+  assignedAgent     User?     @relation("ProductAssignedAgent", fields: [assignedAgentId], references: [id])
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
 
   @@index([categoryId])
+  @@index([assignedAgentId])
   @@map("product")
 }

@@ -2,14 +2,40 @@
   "brand": "ES-Market",
   "nav": {
     "home": "Home",
-    "products": "Products"
+    "products": "Products",
+    "contact": "Contact"
   },
   "language": {
     "label": "Language"
   },
   "home": {
     "title": "Welcome to ES-Market",
-    "subtitle": "Browse our products"
+    "subtitle": "Browse our products",
+    "cta": "Browse products",
+    "features": {
+      "payOnDelivery": {
+        "title": "Pay on delivery",
+        "text": "No online payment needed — pay cash when your order arrives or when you pick it up."
+      },
+      "delivery": {
+        "title": "Fast city delivery",
+        "text": "Delivered within 24–48 hours anywhere in the city for a flat fee."
+      },
+      "pickup": {
+        "title": "Free pickup",
+        "text": "Order online and pick up at our store for free."
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact us",
+    "subtitle": "We're happy to help — reach us any of these ways.",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "addressValue": "12 Market Street, City Center",
+    "hours": "Opening hours",
+    "hoursValue": "Mon–Sat: 8:00–20:00, Sun: 9:00–14:00"
   },
   "products": {
     "title": "Products",
@@ -25,6 +51,8 @@
     },
     "empty": "No products found.",
     "error": "Could not load products. Please try again.",
+    "notFound": "Product not found.",
+    "backToList": "Back to products",
     "outOfStock": "Out of stock",
     "noImage": "No image",
     "pagination": "Page {{page}} of {{totalPages}}"

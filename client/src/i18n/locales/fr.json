@@ -2,14 +2,40 @@
   "brand": "ES-Market",
   "nav": {
     "home": "Accueil",
-    "products": "Produits"
+    "products": "Produits",
+    "contact": "Contact"
   },
   "language": {
     "label": "Langue"
   },
   "home": {
     "title": "Bienvenue chez ES-Market",
-    "subtitle": "Parcourez nos produits"
+    "subtitle": "Parcourez nos produits",
+    "cta": "Parcourir les produits",
+    "features": {
+      "payOnDelivery": {
+        "title": "Paiement à la livraison",
+        "text": "Aucun paiement en ligne — payez en espèces à la réception de votre commande ou lors du retrait."
+      },
+      "delivery": {
+        "title": "Livraison rapide en ville",
+        "text": "Livré sous 24–48 h partout en ville pour un tarif fixe."
+      },
+      "pickup": {
+        "title": "Retrait gratuit",
+        "text": "Commandez en ligne et retirez gratuitement en magasin."
+      }
+    }
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "subtitle": "Nous serons ravis de vous aider — contactez-nous par l'un de ces moyens.",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "address": "Adresse",
+    "addressValue": "12 rue du Marché, centre-ville",
+    "hours": "Horaires d'ouverture",
+    "hoursValue": "Lun–Sam : 8h00–20h00, Dim : 9h00–14h00"
   },
   "products": {
     "title": "Produits",
@@ -25,6 +51,8 @@
     },
     "empty": "Aucun produit trouvé.",
     "error": "Impossible de charger les produits. Veuillez réessayer.",
+    "notFound": "Produit introuvable.",
+    "backToList": "Retour aux produits",
     "outOfStock": "Rupture de stock",
     "noImage": "Pas d'image",
     "pagination": "Page {{page}} sur {{totalPages}}"

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createProductSchema,
   updateProductSchema,
+  Role,
   type LocalizedName,
   type UpdateProductFormInput,
   type UpdateProductInput,
@@ -26,6 +27,7 @@ import {
 import type { ProductRow } from "@/components/ProductsTable";
 
 type Category = { id: string; name: LocalizedName };
+type Agent = { id: string; name: string; role: Role };
 
 export default function ProductForm({
   product,
@@ -44,6 +46,13 @@ export default function ProductForm({
       axios
         .get<{ categories: Category[] }>("/api/categories")
         .then((res) => res.data.categories),
+  });
+  const { data: agents } = useQuery({
+    queryKey: ["users"],
+    queryFn: () =>
+      axios
+        .get<{ users: Agent[] }>("/api/users")
+        .then((res) => res.data.users.filter((user) => user.role === Role.AGENT)),
   });
 
   const {
@@ -64,6 +73,7 @@ export default function ProductForm({
           stock: product.stock,
           lowStockThreshold: product.lowStockThreshold,
           categoryId: product.category.id,
+          assignedAgentId: product.assignedAgent?.id ?? "",
         }
       : {
           name: { en: "", ar: "" },
@@ -72,6 +82,7 @@ export default function ProductForm({
           stock: 0,
           lowStockThreshold: 10,
           categoryId: "",
+          assignedAgentId: "",
         },
   });
 
@@ -265,6 +276,41 @@ export default function ProductForm({
         />
         {errors.categoryId && (
           <p className="text-sm text-destructive">{errors.categoryId.message}</p>
+        )}
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="product-form-assigned-agent">Assigned agent</Label>
+        <Controller
+          name="assignedAgentId"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value || "unassigned"}
+              onValueChange={(value) => field.onChange(value === "unassigned" ? "" : value)}
+            >
+              <SelectTrigger
+                id="product-form-assigned-agent"
+                aria-invalid={!!errors.assignedAgentId}
+              >
+                <SelectValue placeholder="Unassigned">
+                  {(value: string) =>
+                    agents?.find((agent) => agent.id === value)?.name ?? "Unassigned"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {agents?.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.assignedAgentId && (
+          <p className="text-sm text-destructive">{errors.assignedAgentId.message}</p>
         )}
       </div>
       {!product && (

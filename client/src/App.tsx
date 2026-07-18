@@ -4,6 +4,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import StorefrontLayout from "./components/storefront/StorefrontLayout";
 import StorefrontHomePage from "./pages/storefront/HomePage";
 import StorefrontProductsPage from "./pages/storefront/ProductsPage";
+import StorefrontProductDetailPage from "./pages/storefront/ProductDetailPage";
+import StorefrontContactPage from "./pages/storefront/ContactPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
@@ -18,6 +20,8 @@ function App() {
       <Route element={<StorefrontLayout />}>
         <Route index element={<StorefrontHomePage />} />
         <Route path="products" element={<StorefrontProductsPage />} />
+        <Route path="products/:id" element={<StorefrontProductDetailPage />} />
+        <Route path="contact" element={<StorefrontContactPage />} />
       </Route>
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/admin" element={<ProtectedRoute />}>

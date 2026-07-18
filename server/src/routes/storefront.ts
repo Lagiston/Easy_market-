@@ -63,6 +63,18 @@ storefrontRouter.get("/storefront/products", async (req, res) => {
   res.json({ products, total, page, pageSize: STOREFRONT_PAGE_SIZE });
 });
 
+storefrontRouter.get<{ id: string }>("/storefront/products/:id", async (req, res) => {
+  const product = await prisma.product.findFirst({
+    where: { id: req.params.id, deletedAt: null },
+    select: publicProductSelect,
+  });
+  if (!product) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+  res.json({ product });
+});
+
 storefrontRouter.get("/storefront/categories", async (_req, res) => {
   const categories = await prisma.category.findMany({
     where: { deletedAt: null },

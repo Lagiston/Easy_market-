@@ -15,6 +15,7 @@ const products: ProductRow[] = [
     lowStockThreshold: 10,
     imageUrl: null,
     category: { id: "c1", name: { en: "Groceries" } },
+    assignedAgent: null,
   },
   {
     id: "2",
@@ -25,6 +26,7 @@ const products: ProductRow[] = [
     lowStockThreshold: 10,
     imageUrl: null,
     category: { id: "c2", name: { en: "Beverages" } },
+    assignedAgent: { id: "a1", name: "Alice Agent" },
   },
 ];
 
@@ -111,5 +113,13 @@ describe("ProductsTable sorting", () => {
 
     expect(screen.queryByRole("button", { name: "Image" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Actions" })).not.toBeInTheDocument();
+  });
+
+  it("shows the assigned agent's name, or Unassigned when there isn't one", () => {
+    renderTable([{ id: "createdAt", desc: true }]);
+
+    const rows = screen.getAllByRole("row").slice(1);
+    expect(rows[0]).toHaveTextContent("Unassigned");
+    expect(rows[1]).toHaveTextContent("Alice Agent");
   });
 });

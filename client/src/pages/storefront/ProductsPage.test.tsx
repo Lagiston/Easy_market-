@@ -85,6 +85,16 @@ describe("storefront ProductsPage", () => {
     expect(lastProductsParams()).toEqual({ sort: "newest", page: 1 });
   });
 
+  it("links each product card to its detail page", async () => {
+    mockApi();
+    renderPage();
+
+    expect(await screen.findByRole("link", { name: /Rice 5kg/ })).toHaveAttribute(
+      "href",
+      "/products/p1",
+    );
+  });
+
   it("shows product and category names in the current language with English fallback", async () => {
     await i18n.changeLanguage("ar");
     mockApi();

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -196,34 +197,36 @@ export default function ProductsPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.products.map((product) => (
-              <Card key={product.id} className="overflow-hidden py-0">
-                {product.imageUrl ? (
-                  <img
-                    src={product.imageUrl}
-                    alt={localize(product.name, language)}
-                    className="aspect-square w-full object-cover"
-                  />
-                ) : (
-                  <div
-                    aria-label={t("products.noImage")}
-                    className="flex aspect-square w-full items-center justify-center bg-muted"
-                  >
-                    <ImageOff className="size-8 text-muted-foreground" />
-                  </div>
-                )}
-                <CardContent className="space-y-1 p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <h2 className="font-medium">{localize(product.name, language)}</h2>
-                    {product.stock === 0 && (
-                      <Badge variant="destructive">{t("products.outOfStock")}</Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {localize(product.category.name, language)}
-                  </p>
-                  <p className="font-semibold">{product.price}</p>
-                </CardContent>
-              </Card>
+              <Link key={product.id} to={`/products/${product.id}`} className="block">
+                <Card className="h-full overflow-hidden py-0 transition-colors hover:border-primary">
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={localize(product.name, language)}
+                      className="aspect-square w-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      aria-label={t("products.noImage")}
+                      className="flex aspect-square w-full items-center justify-center bg-muted"
+                    >
+                      <ImageOff className="size-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <CardContent className="space-y-1 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h2 className="font-medium">{localize(product.name, language)}</h2>
+                      {product.stock === 0 && (
+                        <Badge variant="destructive">{t("products.outOfStock")}</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {localize(product.category.name, language)}
+                    </p>
+                    <p className="font-semibold">{product.price}</p>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
           <Pagination>

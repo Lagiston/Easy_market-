@@ -20,6 +20,7 @@ export const productsRouter = Router();
 
 const productInclude = {
   category: true,
+  assignedAgent: { select: { id: true, name: true } },
 } as const;
 
 const IMAGE_EXTENSIONS: Record<string, string> = {
@@ -128,12 +129,21 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, price, stock, lowStockThreshold, categoryId } = parsed.data;
+  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId } =
+    parsed.data;
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
   if (!category || category.deletedAt) {
     res.status(404).json({ error: "Category not found" });
     return;
+  }
+
+  if (assignedAgentId) {
+    const agent = await prisma.user.findUnique({ where: { id: assignedAgentId } });
+    if (!agent || agent.deletedAt || agent.role !== Role.AGENT) {
+      res.status(404).json({ error: "Agent not found" });
+      return;
+    }
   }
 
   const product = await prisma.product.create({
@@ -145,6 +155,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
       stock,
       lowStockThreshold,
       categoryId,
+      assignedAgentId: assignedAgentId ?? null,
     },
     include: productInclude,
   });
@@ -169,7 +180,8 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, price, stock, lowStockThreshold, categoryId } = parsed.data;
+  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId } =
+    parsed.data;
   const productId = req.params.id;
 
   const target = await prisma.product.findUnique({ where: { id: productId } });
@@ -184,6 +196,14 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     return;
   }
 
+  if (assignedAgentId) {
+    const agent = await prisma.user.findUnique({ where: { id: assignedAgentId } });
+    if (!agent || agent.deletedAt || agent.role !== Role.AGENT) {
+      res.status(404).json({ error: "Agent not found" });
+      return;
+    }
+  }
+
   const product = await prisma.product.update({
     where: { id: productId },
     data: {
@@ -193,6 +213,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
       stock,
       lowStockThreshold,
       categoryId,
+      assignedAgentId: assignedAgentId ?? null,
     },
     include: productInclude,
   });

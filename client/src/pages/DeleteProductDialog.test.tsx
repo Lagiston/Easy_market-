@@ -18,6 +18,7 @@ const product: ProductRow = {
   lowStockThreshold: 10,
   imageUrl: null,
   category: { id: "c1", name: { en: "Groceries" } },
+  assignedAgent: null,
 };
 
 describe("DeleteProductDialog", () => {

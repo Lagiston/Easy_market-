@@ -45,6 +45,10 @@ export const createProductSchema = z.object({
   stock: z.number(STOCK_ERROR).int(STOCK_ERROR).min(0, STOCK_ERROR),
   lowStockThreshold: z.number(THRESHOLD_ERROR).int(THRESHOLD_ERROR).min(0, THRESHOLD_ERROR),
   categoryId: z.string(CATEGORY_ERROR).trim().min(1, CATEGORY_ERROR),
+  assignedAgentId: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().min(1).optional(),
+  ),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
