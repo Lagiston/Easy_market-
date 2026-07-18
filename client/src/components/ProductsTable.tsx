@@ -32,6 +32,18 @@ export type ProductRow = {
   category: { id: string; name: LocalizedName };
 };
 
+export const STOCK_STATUSES = ["in-stock", "low-stock", "out-of-stock"] as const;
+export type StockStatus = (typeof STOCK_STATUSES)[number];
+
+export function getStockStatus(product: {
+  stock: number;
+  lowStockThreshold: number;
+}): StockStatus {
+  if (product.stock === 0) return "out-of-stock";
+  if (product.stock < product.lowStockThreshold) return "low-stock";
+  return "in-stock";
+}
+
 const columnHelper = createColumnHelper<ProductRow>();
 
 export default function ProductsTable({

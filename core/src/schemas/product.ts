@@ -6,6 +6,7 @@ const PRICE_ERROR = "Price must be zero or a positive whole number";
 const STOCK_ERROR = "Stock must be zero or a positive whole number";
 const THRESHOLD_ERROR = "Low stock threshold must be zero or a positive whole number";
 const CATEGORY_ERROR = "Category is required";
+const PAGE_ERROR = "Page must be a positive whole number";
 
 export const localizedDescriptionSchema = z
   .object({
@@ -63,9 +64,16 @@ export type ProductSortField = (typeof PRODUCT_SORT_FIELDS)[number];
 export const SORT_ORDERS = ["asc", "desc"] as const;
 export type SortOrder = (typeof SORT_ORDERS)[number];
 
+export const PRODUCTS_PAGE_SIZE = 10;
+
 export const productListQuerySchema = z.object({
   sortBy: z.enum(PRODUCT_SORT_FIELDS).default("createdAt"),
   sortOrder: z.enum(SORT_ORDERS).default("desc"),
+  search: z.string().trim().max(200).optional(),
+  // Optional and undefaulted: omitting `page` means "return everything unpaginated"
+  // (used by the dashboard's client-side-filtered overview), while the products
+  // management page always sends an explicit page to get a paginated slice.
+  page: z.coerce.number(PAGE_ERROR).int(PAGE_ERROR).min(1, PAGE_ERROR).optional(),
 });
 
 export type ProductListQuery = z.infer<typeof productListQuerySchema>;

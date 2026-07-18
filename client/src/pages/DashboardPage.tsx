@@ -2,7 +2,12 @@ import { useMemo, useState } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import DashboardProductsTable from "@/components/DashboardProductsTable";
-import type { ProductRow } from "@/components/ProductsTable";
+import {
+  getStockStatus,
+  STOCK_STATUSES,
+  type ProductRow,
+  type StockStatus,
+} from "@/components/ProductsTable";
 import type { LocalizedName } from "@es-market/core";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,10 +28,18 @@ import {
 type Category = { id: string; name: LocalizedName };
 
 const ALL_CATEGORIES = "all";
+const ALL_STATUSES = "all";
+
+const STATUS_LABELS: Record<StockStatus, string> = {
+  "in-stock": "In stock",
+  "low-stock": "Low stock",
+  "out-of-stock": "Out of stock",
+};
 
 export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState(ALL_CATEGORIES);
+  const [status, setStatus] = useState(ALL_STATUSES);
 
   const { data, isError } = useQuery({
     queryKey: ["products"],
@@ -51,9 +64,10 @@ export default function DashboardPage() {
       const matchesSearch = query === "" || product.name.en.toLowerCase().includes(query);
       const matchesCategory =
         categoryId === ALL_CATEGORIES || product.category.id === categoryId;
-      return matchesSearch && matchesCategory;
+      const matchesStatus = status === ALL_STATUSES || getStockStatus(product) === status;
+      return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [products, search, categoryId]);
+  }, [products, search, categoryId, status]);
 
   return (
     <Card className="mx-auto max-w-4xl">
@@ -92,6 +106,25 @@ export default function DashboardPage() {
               {categories?.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name.en}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={status} onValueChange={(value) => setStatus(value ?? ALL_STATUSES)}>
+            <SelectTrigger aria-label="Filter by status" className="sm:max-w-48">
+              <SelectValue placeholder="All statuses">
+                {(value: string) =>
+                  value === ALL_STATUSES
+                    ? "All statuses"
+                    : STATUS_LABELS[value as StockStatus]
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_STATUSES}>All statuses</SelectItem>
+              {STOCK_STATUSES.map((stockStatus) => (
+                <SelectItem key={stockStatus} value={stockStatus}>
+                  {STATUS_LABELS[stockStatus]}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -11,6 +11,7 @@ import {
   createProductSchema,
   updateProductSchema,
   productListQuerySchema,
+  PRODUCTS_PAGE_SIZE,
   type ProductSortField,
 } from "@es-market/core";
 
@@ -85,7 +86,7 @@ productsRouter.get("/products", requireAuth, requireRole(Role.ADMIN), async (req
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { sortBy, sortOrder } = parsed.data;
+  const { sortBy, sortOrder, search, page } = parsed.data;
 
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
@@ -93,12 +94,32 @@ productsRouter.get("/products", requireAuth, requireRole(Role.ADMIN), async (req
     orderBy: { createdAt: "desc" },
   });
 
+  // Same reasoning as PRODUCT_SORT_COMPARATORS above: name/category are localized
+  // JSON, so matching against the English value is done in JS rather than Postgres.
+  const query = search?.toLowerCase();
+  const filtered = query
+    ? products.filter(
+        (product) =>
+          localizedEn(product.name).toLowerCase().includes(query) ||
+          localizedEn(product.category.name).toLowerCase().includes(query),
+      )
+    : products;
+
   const direction = sortOrder === "asc" ? 1 : -1;
-  const sorted = [...products].sort(
+  const sorted = [...filtered].sort(
     (a, b) => direction * PRODUCT_SORT_COMPARATORS[sortBy](a, b),
   );
 
-  res.json({ products: sorted });
+  const total = sorted.length;
+  if (page === undefined) {
+    res.json({ products: sorted, total });
+    return;
+  }
+
+  const start = (page - 1) * PRODUCTS_PAGE_SIZE;
+  const paginated = sorted.slice(start, start + PRODUCTS_PAGE_SIZE);
+
+  res.json({ products: paginated, total, page, pageSize: PRODUCTS_PAGE_SIZE });
 });
 
 productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (req, res) => {

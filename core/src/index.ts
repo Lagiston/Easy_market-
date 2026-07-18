@@ -19,6 +19,7 @@ export {
   productListQuerySchema,
   PRODUCT_SORT_FIELDS,
   SORT_ORDERS,
+  PRODUCTS_PAGE_SIZE,
   type LocalizedDescription,
   type CreateProductInput,
   type CreateProductFormInput,

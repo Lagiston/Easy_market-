@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { ProductRow } from "@/components/ProductsTable";
+import { getStockStatus, type ProductRow } from "@/components/ProductsTable";
 
 export default function DashboardProductsTable({
   products,
@@ -76,8 +76,12 @@ export default function DashboardProductsTable({
               </TableCell>
               <TableCell className="text-right">{product.stock}</TableCell>
               <TableCell>
-                {product.stock < product.lowStockThreshold && (
-                  <Badge variant="destructive">Low stock</Badge>
+                {getStockStatus(product) === "out-of-stock" ? (
+                  <Badge variant="destructive">Out of stock</Badge>
+                ) : getStockStatus(product) === "low-stock" ? (
+                  <Badge variant="outline">Low stock</Badge>
+                ) : (
+                  <Badge variant="secondary">In stock</Badge>
                 )}
               </TableCell>
             </TableRow>

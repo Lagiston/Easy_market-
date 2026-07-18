@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
+import { PRODUCTS_PAGE_SIZE } from "@es-market/core";
 import { renderWithQuery } from "@/test/render-with-query";
 import ProductsPage from "./ProductsPage";
 
@@ -54,7 +55,7 @@ describe("ProductsPage", () => {
   });
 
   it("renders products once loaded", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { products } });
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
 
     renderWithQuery(<ProductsPage />);
 
@@ -81,7 +82,7 @@ describe("ProductsPage", () => {
   });
 
   it("shows the create product dialog when the button is clicked", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { products } });
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     const user = userEvent.setup();
     renderWithQuery(<ProductsPage />);
     await screen.findByText("Rice 5kg");
@@ -92,7 +93,7 @@ describe("ProductsPage", () => {
   });
 
   it("hides the create product dialog when clicking outside", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { products } });
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     const user = userEvent.setup();
     renderWithQuery(<ProductsPage />);
     await screen.findByText("Rice 5kg");
@@ -111,7 +112,7 @@ describe("ProductsPage", () => {
     mockedAxios.get.mockImplementation((url: string) =>
       url === "/api/categories"
         ? Promise.resolve({ data: { categories } })
-        : Promise.resolve({ data: { products } }),
+        : Promise.resolve({ data: { products, total: products.length } }),
     );
     mockedAxios.put.mockResolvedValue({
       data: { product: { ...products[0], name: { en: "Rice 10kg" } } },
@@ -142,18 +143,18 @@ describe("ProductsPage", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("fetches products sorted by createdAt desc by default", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { products } });
+  it("fetches products sorted by createdAt desc by default, on page 1", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     renderWithQuery(<ProductsPage />);
     await screen.findByText("Rice 5kg");
 
     expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
-      params: { sortBy: "createdAt", sortOrder: "desc" },
+      params: { sortBy: "createdAt", sortOrder: "desc", page: 1 },
     });
   });
 
   it("clicking a column header refetches with the new sort params", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { products } });
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     const user = userEvent.setup();
     renderWithQuery(<ProductsPage />);
     await screen.findByText("Rice 5kg");
@@ -163,7 +164,7 @@ describe("ProductsPage", () => {
 
     await waitFor(() =>
       expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
-        params: { sortBy: "stock", sortOrder: "desc" },
+        params: { sortBy: "stock", sortOrder: "desc", page: 1 },
       }),
     );
 
@@ -171,13 +172,56 @@ describe("ProductsPage", () => {
 
     await waitFor(() =>
       expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
-        params: { sortBy: "stock", sortOrder: "asc" },
+        params: { sortBy: "stock", sortOrder: "asc", page: 1 },
       }),
     );
   });
 
+  it("debounces the search box and refetches with the search param", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
+    const user = userEvent.setup({ delay: null });
+    renderWithQuery(<ProductsPage />);
+    await screen.findByText("Rice 5kg");
+
+    await user.type(screen.getByLabelText("Search products"), "rice");
+
+    await vi.advanceTimersByTimeAsync(300);
+
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
+        params: { sortBy: "createdAt", sortOrder: "desc", search: "rice", page: 1 },
+      }),
+    );
+    vi.useRealTimers();
+  });
+
+  it("clicking Next fetches the next page, and Previous is disabled on page 1", async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: { products, total: PRODUCTS_PAGE_SIZE + 1 },
+    });
+    const user = userEvent.setup();
+    renderWithQuery(<ProductsPage />);
+    await screen.findByText("Rice 5kg");
+
+    expect(screen.getByText("Previous").closest("a")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
+
+    await user.click(screen.getByText("Next").closest("a")!);
+
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
+        params: { sortBy: "createdAt", sortOrder: "desc", page: 2 },
+      }),
+    );
+    expect(await screen.findByText("Page 2 of 2")).toBeInTheDocument();
+  });
+
   it("opens the delete confirmation and removes the product on confirm", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { products } });
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     mockedAxios.delete.mockResolvedValue({});
     const user = userEvent.setup();
     renderWithQuery(<ProductsPage />);
