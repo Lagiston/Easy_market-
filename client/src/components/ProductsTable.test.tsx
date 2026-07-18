@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
+import { MemoryRouter } from "react-router";
 import type { SortingState } from "@tanstack/react-table";
 import ProductsTable, { type ProductRow } from "./ProductsTable";
 
@@ -29,13 +30,15 @@ const products: ProductRow[] = [
 
 function renderTable(sorting: SortingState, onSortingChange = vi.fn()) {
   render(
-    <ProductsTable
-      products={products}
-      sorting={sorting}
-      onSortingChange={onSortingChange}
-      onEdit={vi.fn()}
-      onDelete={vi.fn()}
-    />,
+    <MemoryRouter>
+      <ProductsTable
+        products={products}
+        sorting={sorting}
+        onSortingChange={onSortingChange}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    </MemoryRouter>,
   );
   return { onSortingChange };
 }
@@ -92,6 +95,15 @@ describe("ProductsTable sorting", () => {
     await user.click(screen.getByRole("button", { name: "Stock" }));
 
     expect(applyUpdate(onSortingChange, initial)).toEqual([{ id: "stock", desc: false }]);
+  });
+
+  it("renders the product name as a link to its detail page", () => {
+    renderTable([{ id: "createdAt", desc: true }]);
+
+    expect(screen.getByRole("link", { name: "Rice 5kg" })).toHaveAttribute(
+      "href",
+      "/admin/products/1",
+    );
   });
 
   it("does not render Image or Actions columns as sortable buttons", () => {

@@ -1,7 +1,8 @@
 {
   "brand": "ES-Market",
   "nav": {
-    "home": "Home"
+    "home": "Home",
+    "products": "Products"
   },
   "language": {
     "label": "Language"
@@ -9,6 +10,24 @@
   "home": {
     "title": "Welcome to ES-Market",
     "subtitle": "Browse our products"
+  },
+  "products": {
+    "title": "Products",
+    "filters": {
+      "category": "Category",
+      "allCategories": "All categories",
+      "minPrice": "Min price",
+      "maxPrice": "Max price",
+      "sort": "Sort by",
+      "newest": "Newest",
+      "priceAsc": "Price: low to high",
+      "priceDesc": "Price: high to low"
+    },
+    "empty": "No products found.",
+    "error": "Could not load products. Please try again.",
+    "outOfStock": "Out of stock",
+    "noImage": "No image",
+    "pagination": "Page {{page}} of {{totalPages}}"
   },
   "footer": {
     "copyright": "© {{year}} ES-Market"

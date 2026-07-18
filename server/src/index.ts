@@ -7,6 +7,7 @@ import { apiLimiter, authLimiter } from "./middleware/rate-limit";
 import { usersRouter } from "./routes/users";
 import { productsRouter } from "./routes/products";
 import { categoriesRouter } from "./routes/categories";
+import { storefrontRouter } from "./routes/storefront";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -34,6 +35,7 @@ app.get("/api/health", async (_req, res) => {
 app.use("/api", usersRouter);
 app.use("/api", productsRouter);
 app.use("/api", categoriesRouter);
+app.use("/api", storefrontRouter);
 
 app.listen(port, () => {
   console.log(`ES-Market server listening on http://localhost:${port}`);

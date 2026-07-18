@@ -30,6 +30,14 @@ describe("StorefrontLayout", () => {
     );
   });
 
+  it("renders a nav link to the products page", () => {
+    renderLayout();
+    expect(screen.getByRole("link", { name: "Products" })).toHaveAttribute(
+      "href",
+      "/products",
+    );
+  });
+
   it("renders the language switcher", () => {
     renderLayout();
     expect(screen.getByRole("combobox")).toBeInTheDocument();

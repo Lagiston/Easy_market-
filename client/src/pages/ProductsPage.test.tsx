@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
 import { PRODUCTS_PAGE_SIZE } from "@es-market/core";
+import { MemoryRouter } from "react-router";
 import { renderWithQuery } from "@/test/render-with-query";
 import ProductsPage from "./ProductsPage";
 
@@ -48,7 +49,11 @@ describe("ProductsPage", () => {
   it("shows skeleton rows while loading", () => {
     mockedAxios.get.mockReturnValue(new Promise(() => {}));
 
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText("Catalog")).toBeInTheDocument();
     expect(screen.queryByText("Rice 5kg")).not.toBeInTheDocument();
@@ -57,7 +62,11 @@ describe("ProductsPage", () => {
   it("renders products once loaded", async () => {
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
 
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
 
     expect(await screen.findByText("Rice 5kg")).toBeInTheDocument();
     expect(screen.getByText("Groceries")).toBeInTheDocument();
@@ -71,7 +80,11 @@ describe("ProductsPage", () => {
   it("shows an error message when the request fails", async () => {
     mockedAxios.get.mockRejectedValue(new Error("Network error"));
 
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
 
     await waitFor(() =>
       expect(
@@ -84,7 +97,11 @@ describe("ProductsPage", () => {
   it("shows the create product dialog when the button is clicked", async () => {
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     const user = userEvent.setup();
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     await user.click(screen.getByRole("button", { name: /create product/i }));
@@ -95,7 +112,11 @@ describe("ProductsPage", () => {
   it("hides the create product dialog when clicking outside", async () => {
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     const user = userEvent.setup();
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     await user.click(screen.getByRole("button", { name: /create product/i }));
@@ -118,7 +139,11 @@ describe("ProductsPage", () => {
       data: { product: { ...products[0], name: { en: "Rice 10kg" } } },
     });
     const user = userEvent.setup();
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     await user.click(screen.getByRole("button", { name: "Edit Rice 5kg" }));
@@ -145,7 +170,11 @@ describe("ProductsPage", () => {
 
   it("fetches products sorted by createdAt desc by default, on page 1", async () => {
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
@@ -156,7 +185,11 @@ describe("ProductsPage", () => {
   it("clicking a column header refetches with the new sort params", async () => {
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     const user = userEvent.setup();
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     // Stock is a numeric column, so its first click sorts descending.
@@ -181,7 +214,11 @@ describe("ProductsPage", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     const user = userEvent.setup({ delay: null });
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     await user.type(screen.getByLabelText("Search products"), "rice");
@@ -201,7 +238,11 @@ describe("ProductsPage", () => {
       data: { products, total: PRODUCTS_PAGE_SIZE + 1 },
     });
     const user = userEvent.setup();
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     expect(screen.getByText("Previous").closest("a")).toHaveAttribute(
@@ -224,7 +265,11 @@ describe("ProductsPage", () => {
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     mockedAxios.delete.mockResolvedValue({});
     const user = userEvent.setup();
-    renderWithQuery(<ProductsPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     await user.click(screen.getByRole("button", { name: "Delete Rice 5kg" }));

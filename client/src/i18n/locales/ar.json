@@ -1,7 +1,8 @@
 {
   "brand": "إي إس ماركت",
   "nav": {
-    "home": "الرئيسية"
+    "home": "الرئيسية",
+    "products": "المنتجات"
   },
   "language": {
     "label": "اللغة"
@@ -9,6 +10,24 @@
   "home": {
     "title": "مرحبًا بكم في إي إس ماركت",
     "subtitle": "تصفح منتجاتنا"
+  },
+  "products": {
+    "title": "المنتجات",
+    "filters": {
+      "category": "الفئة",
+      "allCategories": "كل الفئات",
+      "minPrice": "أدنى سعر",
+      "maxPrice": "أقصى سعر",
+      "sort": "الترتيب حسب",
+      "newest": "الأحدث",
+      "priceAsc": "السعر: من الأقل إلى الأعلى",
+      "priceDesc": "السعر: من الأعلى إلى الأقل"
+    },
+    "empty": "لا توجد منتجات.",
+    "error": "تعذر تحميل المنتجات. يرجى المحاولة مرة أخرى.",
+    "outOfStock": "غير متوفر",
+    "noImage": "بدون صورة",
+    "pagination": "صفحة {{page}} من {{totalPages}}"
   },
   "footer": {
     "copyright": "© {{year}} إي إس ماركت"

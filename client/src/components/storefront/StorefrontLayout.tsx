@@ -18,6 +18,12 @@ export default function StorefrontLayout() {
           >
             {t("nav.home")}
           </Link>
+          <Link
+            to="/products"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            {t("nav.products")}
+          </Link>
         </nav>
         <div className="ms-auto">
           <LanguageSwitcher />

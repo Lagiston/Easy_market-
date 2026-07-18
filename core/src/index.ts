@@ -20,6 +20,9 @@ export {
   PRODUCT_SORT_FIELDS,
   SORT_ORDERS,
   PRODUCTS_PAGE_SIZE,
+  STOREFRONT_PRODUCT_SORTS,
+  STOREFRONT_PAGE_SIZE,
+  storefrontProductListQuerySchema,
   type LocalizedDescription,
   type CreateProductInput,
   type CreateProductFormInput,
@@ -28,6 +31,8 @@ export {
   type ProductSortField,
   type SortOrder,
   type ProductListQuery,
+  type StorefrontProductSort,
+  type StorefrontProductListQuery,
 } from "./schemas/product";
 export {
   createCategorySchema,

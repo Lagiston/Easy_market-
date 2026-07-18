@@ -1,7 +1,8 @@
 {
   "brand": "ES-Market",
   "nav": {
-    "home": "Nyumbani"
+    "home": "Nyumbani",
+    "products": "Bidhaa"
   },
   "language": {
     "label": "Lugha"
@@ -9,6 +10,24 @@
   "home": {
     "title": "Karibu ES-Market",
     "subtitle": "Vinjari bidhaa zetu"
+  },
+  "products": {
+    "title": "Bidhaa",
+    "filters": {
+      "category": "Kategoria",
+      "allCategories": "Kategoria zote",
+      "minPrice": "Bei ya chini",
+      "maxPrice": "Bei ya juu",
+      "sort": "Panga kwa",
+      "newest": "Mpya zaidi",
+      "priceAsc": "Bei: chini kwenda juu",
+      "priceDesc": "Bei: juu kwenda chini"
+    },
+    "empty": "Hakuna bidhaa zilizopatikana.",
+    "error": "Imeshindwa kupakia bidhaa. Tafadhali jaribu tena.",
+    "outOfStock": "Imeisha",
+    "noImage": "Hakuna picha",
+    "pagination": "Ukurasa {{page}} kati ya {{totalPages}}"
   },
   "footer": {
     "copyright": "© {{year}} ES-Market"

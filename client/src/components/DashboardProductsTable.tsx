@@ -1,4 +1,5 @@
 import { ImageOff } from "lucide-react";
+import { Link } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -70,7 +71,11 @@ export default function DashboardProductsTable({
                   </AvatarFallback>
                 </Avatar>
               </TableCell>
-              <TableCell className="font-medium">{product.name.en}</TableCell>
+              <TableCell className="font-medium">
+                <Link to={`/admin/products/${product.id}`} className="hover:underline">
+                  {product.name.en}
+                </Link>
+              </TableCell>
               <TableCell className="text-muted-foreground">
                 {product.category.name.en}
               </TableCell>

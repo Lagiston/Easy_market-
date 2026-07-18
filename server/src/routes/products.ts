@@ -151,6 +151,18 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
   res.status(201).json({ product });
 });
 
+productsRouter.get<{ id: string }>("/products/:id", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
+  const product = await prisma.product.findUnique({
+    where: { id: req.params.id },
+    include: productInclude,
+  });
+  if (!product || product.deletedAt) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+  res.json({ product });
+});
+
 productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
   const parsed = updateProductSchema.safeParse(req.body);
   if (!parsed.success) {

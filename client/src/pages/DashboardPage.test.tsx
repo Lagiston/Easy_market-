@@ -2,6 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
+import { MemoryRouter } from "react-router";
 import { renderWithQuery } from "@/test/render-with-query";
 import DashboardPage from "./DashboardPage";
 
@@ -57,7 +58,11 @@ describe("DashboardPage status filter", () => {
   });
 
   it("shows all products by default", async () => {
-    renderWithQuery(<DashboardPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
 
     expect(await screen.findByText("Rice 5kg")).toBeInTheDocument();
     expect(screen.getByText("Orange Juice")).toBeInTheDocument();
@@ -66,7 +71,11 @@ describe("DashboardPage status filter", () => {
 
   it("filters to only low-stock products", async () => {
     const user = userEvent.setup();
-    renderWithQuery(<DashboardPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     await user.click(screen.getByLabelText("Filter by status"));
@@ -81,7 +90,11 @@ describe("DashboardPage status filter", () => {
 
   it("filters to only out-of-stock products", async () => {
     const user = userEvent.setup();
-    renderWithQuery(<DashboardPage />);
+    renderWithQuery(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
     await screen.findByText("Rice 5kg");
 
     await user.click(screen.getByLabelText("Filter by status"));

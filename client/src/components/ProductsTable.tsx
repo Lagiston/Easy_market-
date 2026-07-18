@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router";
 import {
   createColumnHelper,
   flexRender,
@@ -77,7 +78,14 @@ export default function ProductsTable({
       columnHelper.accessor((row) => row.name.en, {
         id: "name",
         header: "Name",
-        cell: ({ row }) => <span className="font-medium">{row.original.name.en}</span>,
+        cell: ({ row }) => (
+          <Link
+            to={`/admin/products/${row.original.id}`}
+            className="font-medium hover:underline"
+          >
+            {row.original.name.en}
+          </Link>
+        ),
       }),
       columnHelper.accessor((row) => row.category.name.en, {
         id: "category",

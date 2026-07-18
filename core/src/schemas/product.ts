@@ -77,3 +77,18 @@ export const productListQuerySchema = z.object({
 });
 
 export type ProductListQuery = z.infer<typeof productListQuerySchema>;
+
+export const STOREFRONT_PRODUCT_SORTS = ["newest", "price-asc", "price-desc"] as const;
+export type StorefrontProductSort = (typeof STOREFRONT_PRODUCT_SORTS)[number];
+
+export const STOREFRONT_PAGE_SIZE = 12;
+
+export const storefrontProductListQuerySchema = z.object({
+  categoryId: z.string().trim().min(1).optional(),
+  minPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
+  maxPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
+  sort: z.enum(STOREFRONT_PRODUCT_SORTS).default("newest"),
+  page: z.coerce.number(PAGE_ERROR).int(PAGE_ERROR).min(1, PAGE_ERROR).default(1),
+});
+
+export type StorefrontProductListQuery = z.infer<typeof storefrontProductListQuerySchema>;
