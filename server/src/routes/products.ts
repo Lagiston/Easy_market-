@@ -74,6 +74,7 @@ const PRODUCT_SORT_COMPARATORS: Record<
 > = {
   name: (a, b) => localizedEn(a.name).localeCompare(localizedEn(b.name)),
   category: (a, b) => localizedEn(a.category.name).localeCompare(localizedEn(b.category.name)),
+  price: (a, b) => a.price - b.price,
   stock: (a, b) => a.stock - b.stock,
   createdAt: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
 };
@@ -106,7 +107,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, stock, lowStockThreshold, categoryId } = parsed.data;
+  const { name, description, price, stock, lowStockThreshold, categoryId } = parsed.data;
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
   if (!category || category.deletedAt) {
@@ -119,6 +120,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
       id: randomUUID(),
       name,
       description: description ?? Prisma.JsonNull,
+      price,
       stock,
       lowStockThreshold,
       categoryId,
@@ -134,7 +136,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, stock, lowStockThreshold, categoryId } = parsed.data;
+  const { name, description, price, stock, lowStockThreshold, categoryId } = parsed.data;
   const productId = req.params.id;
 
   const target = await prisma.product.findUnique({ where: { id: productId } });
@@ -154,6 +156,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     data: {
       name,
       description: description ?? Prisma.JsonNull,
+      price,
       stock,
       lowStockThreshold,
       categoryId,

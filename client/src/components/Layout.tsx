@@ -9,7 +9,7 @@ export default function Layout({ user }: { user: SessionUser }) {
   async function handleSignOut() {
     await authClient.signOut({
       fetchOptions: {
-        onSuccess: () => navigate("/login", { replace: true }),
+        onSuccess: () => navigate("/admin/login", { replace: true }),
       },
     });
   }
@@ -17,12 +17,12 @@ export default function Layout({ user }: { user: SessionUser }) {
   return (
     <nav className="flex items-center justify-between border-b bg-background px-6 py-3">
       <div className="flex items-center gap-6">
-        <Link to="/" className="text-lg font-semibold">
+        <Link to="/admin" className="text-lg font-semibold">
           ES-Market
         </Link>
         {user.role === Role.ADMIN && (
           <Link
-            to="/users"
+            to="/admin/users"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Users
@@ -30,7 +30,7 @@ export default function Layout({ user }: { user: SessionUser }) {
         )}
         {user.role === Role.ADMIN && (
           <Link
-            to="/products"
+            to="/admin/products"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Products
@@ -38,7 +38,7 @@ export default function Layout({ user }: { user: SessionUser }) {
         )}
         {user.role === Role.ADMIN && (
           <Link
-            to="/dashboard"
+            to="/admin/dashboard"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Dashboard
@@ -46,7 +46,7 @@ export default function Layout({ user }: { user: SessionUser }) {
         )}
         {user.role === Role.ADMIN && (
           <Link
-            to="/categories"
+            to="/admin/categories"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Categories

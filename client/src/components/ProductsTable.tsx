@@ -25,6 +25,7 @@ export type ProductRow = {
   id: string;
   name: LocalizedName;
   description: LocalizedDescription | null;
+  price: number;
   stock: number;
   lowStockThreshold: number;
   imageUrl: string | null;
@@ -72,6 +73,11 @@ export default function ProductsTable({
         cell: ({ row }) => (
           <span className="text-muted-foreground">{row.original.category.name.en}</span>
         ),
+      }),
+      columnHelper.accessor("price", {
+        id: "price",
+        header: "Price",
+        cell: ({ getValue }) => <div className="text-right">{getValue()}</div>,
       }),
       columnHelper.accessor("stock", {
         id: "stock",
@@ -134,7 +140,11 @@ export default function ProductsTable({
             {headerGroup.headers.map((header) => (
               <TableHead
                 key={header.id}
-                className={header.column.id === "stock" ? "text-right" : undefined}
+                className={
+                  header.column.id === "price" || header.column.id === "stock"
+                    ? "text-right"
+                    : undefined
+                }
               >
                 {header.column.getCanSort() ? (
                   <Button
@@ -166,6 +176,9 @@ export default function ProductsTable({
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-3 w-20" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="ml-auto h-3 w-10" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="ml-auto h-3 w-10" />

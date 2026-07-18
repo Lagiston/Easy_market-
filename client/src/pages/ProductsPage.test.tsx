@@ -13,6 +13,7 @@ const products = [
     id: "1",
     name: { en: "Rice 5kg" },
     description: null,
+    price: 1500,
     stock: 20,
     lowStockThreshold: 10,
     imageUrl: null,
@@ -22,6 +23,7 @@ const products = [
     id: "2",
     name: { en: "Orange Juice" },
     description: null,
+    price: 300,
     stock: 5,
     lowStockThreshold: 10,
     imageUrl: null,
@@ -131,6 +133,7 @@ describe("ProductsPage", () => {
       expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/1", {
         name: { en: "Rice 10kg" },
         description: undefined,
+        price: 1500,
         stock: 20,
         lowStockThreshold: 10,
         categoryId: "c1",

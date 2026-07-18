@@ -60,6 +60,7 @@ export default function ProductForm({
             en: product.description?.en ?? "",
             ar: product.description?.ar ?? "",
           },
+          price: product.price,
           stock: product.stock,
           lowStockThreshold: product.lowStockThreshold,
           categoryId: product.category.id,
@@ -67,6 +68,7 @@ export default function ProductForm({
       : {
           name: { en: "", ar: "" },
           description: { en: "", ar: "" },
+          price: 0,
           stock: 0,
           lowStockThreshold: 10,
           categoryId: "",
@@ -195,6 +197,20 @@ export default function ProductForm({
           </div>
         </TabsContent>
       </Tabs>
+      <div className="grid gap-1.5">
+        <Label htmlFor="product-form-price">Price</Label>
+        <Input
+          id="product-form-price"
+          type="number"
+          min={0}
+          step={1}
+          aria-invalid={!!errors.price}
+          {...register("price", { valueAsNumber: true })}
+        />
+        {errors.price && (
+          <p className="text-sm text-destructive">{errors.price.message}</p>
+        )}
+      </div>
       <div className="grid gap-1.5">
         <Label htmlFor="product-form-stock">Stock</Label>
         <Input

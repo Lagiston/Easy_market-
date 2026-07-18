@@ -10,10 +10,10 @@ export default function ProtectedRoute({ roles }: { roles?: Role[] }) {
     return null;
   }
   if (!session) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
   if (roles && !roles.includes(session.user.role as Role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   return (

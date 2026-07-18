@@ -2,6 +2,7 @@ import { z } from "zod";
 import { LANGUAGES, type Language, localizedNameSchema } from "./localized";
 
 const DESCRIPTION_ERROR = "Description must be 1000 characters or fewer";
+const PRICE_ERROR = "Price must be zero or a positive whole number";
 const STOCK_ERROR = "Stock must be zero or a positive whole number";
 const THRESHOLD_ERROR = "Low stock threshold must be zero or a positive whole number";
 const CATEGORY_ERROR = "Category is required";
@@ -39,6 +40,7 @@ export const createProductSchema = z.object({
   // client submits that post-transform value — so the server must accept a
   // missing description too.
   description: localizedDescriptionSchema.optional(),
+  price: z.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR),
   stock: z.number(STOCK_ERROR).int(STOCK_ERROR).min(0, STOCK_ERROR),
   lowStockThreshold: z.number(THRESHOLD_ERROR).int(THRESHOLD_ERROR).min(0, THRESHOLD_ERROR),
   categoryId: z.string(CATEGORY_ERROR).trim().min(1, CATEGORY_ERROR),
@@ -55,7 +57,7 @@ export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 
 export type UpdateProductFormInput = z.input<typeof updateProductSchema>;
 
-export const PRODUCT_SORT_FIELDS = ["name", "category", "stock", "createdAt"] as const;
+export const PRODUCT_SORT_FIELDS = ["name", "category", "price", "stock", "createdAt"] as const;
 export type ProductSortField = (typeof PRODUCT_SORT_FIELDS)[number];
 
 export const SORT_ORDERS = ["asc", "desc"] as const;

@@ -39,11 +39,12 @@ describe("ProductForm (create mode)", () => {
     mockedAxios.isAxiosError.mockReset();
   });
 
-  it("renders the name, description, stock, category, and image fields", () => {
+  it("renders the name, description, price, stock, category, and image fields", () => {
     renderForm();
 
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
     expect(screen.getByLabelText("Description")).toBeInTheDocument();
+    expect(screen.getByLabelText("Price")).toBeInTheDocument();
     expect(screen.getByLabelText("Stock")).toBeInTheDocument();
     expect(screen.getByLabelText("Category")).toBeInTheDocument();
     expect(screen.getByLabelText("Image")).toBeInTheDocument();
@@ -131,6 +132,7 @@ describe("ProductForm (create mode)", () => {
       expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
         name: { en: "Rice 5kg" },
         description: { en: "Long grain rice" },
+        price: 0,
         stock: 10,
         lowStockThreshold: 10,
         categoryId: "c1",
@@ -174,6 +176,7 @@ describe("ProductForm (edit mode)", () => {
     id: "42",
     name: { en: "Rice 5kg" },
     description: { en: "Long grain rice" },
+    price: 1500,
     stock: 20,
     lowStockThreshold: 10,
     imageUrl: null,
@@ -193,6 +196,7 @@ describe("ProductForm (edit mode)", () => {
 
     expect(screen.getByLabelText("Name")).toHaveValue("Rice 5kg");
     expect(screen.getByLabelText("Description")).toHaveValue("Long grain rice");
+    expect(screen.getByLabelText("Price")).toHaveValue(1500);
     expect(screen.getByLabelText("Stock")).toHaveValue(20);
     expect(screen.getByLabelText("Low stock threshold")).toHaveValue(10);
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
@@ -203,6 +207,7 @@ describe("ProductForm (edit mode)", () => {
       expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/42", {
         name: { en: "Rice 5kg" },
         description: { en: "Long grain rice" },
+        price: 1500,
         stock: 20,
         lowStockThreshold: 10,
         categoryId: "c1",
@@ -226,6 +231,7 @@ describe("ProductForm (edit mode)", () => {
     expect(mockedAxios.put).toHaveBeenCalledWith("/api/products/42", {
       name: { en: "Rice 10kg" },
       description: { en: "Long grain rice" },
+      price: 1500,
       stock: 20,
       lowStockThreshold: 10,
       categoryId: "c1",

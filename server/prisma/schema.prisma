@@ -91,6 +91,7 @@ model Product {
   id                String    @id
   name              Json
   description       Json?
+  price             Int
   stock             Int
   lowStockThreshold Int       @default(10)
   imageUrl          String?

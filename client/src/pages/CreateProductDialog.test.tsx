@@ -103,6 +103,7 @@ describe("CreateProductDialog", () => {
       expect(mockedAxios.post).toHaveBeenCalledWith("/api/products", {
         name: { en: "Rice 5kg" },
         description: undefined,
+        price: 0,
         stock: 10,
         lowStockThreshold: 10,
         categoryId: "c1",
