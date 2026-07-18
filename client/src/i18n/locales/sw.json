@@ -1,0 +1,16 @@
+{
+  "brand": "ES-Market",
+  "nav": {
+    "home": "Nyumbani"
+  },
+  "language": {
+    "label": "Lugha"
+  },
+  "home": {
+    "title": "Karibu ES-Market",
+    "subtitle": "Vinjari bidhaa zetu"
+  },
+  "footer": {
+    "copyright": "© {{year}} ES-Market"
+  }
+}
