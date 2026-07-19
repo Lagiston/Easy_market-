@@ -1,3 +1,4 @@
+export { sanitizeText } from "./sanitize";
 export {
   Role,
   createUserSchema,

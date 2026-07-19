@@ -121,7 +121,7 @@ export default function ProductsPage() {
             value={categoryId}
             onValueChange={(value) => setCategoryId(value ?? ALL_CATEGORIES)}
           >
-            <SelectTrigger id="category-filter" className="min-w-40">
+            <SelectTrigger id="category-filter" className="min-w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

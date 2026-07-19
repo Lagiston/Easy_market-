@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { LANGUAGES, type Language, localizedNameSchema } from "./localized";
+import { sanitizeText } from "../sanitize";
 
 const DESCRIPTION_ERROR = "Description must be 1000 characters or fewer";
 const PRICE_ERROR = "Price must be zero or a positive whole number";
@@ -28,7 +29,8 @@ export const localizedDescriptionSchema = z
   .transform((value) => {
     const result: Partial<Record<Language, string>> = {};
     for (const lang of LANGUAGES) {
-      if (value[lang]) result[lang] = value[lang];
+      const clean = value[lang] ? sanitizeText(value[lang]) : undefined;
+      if (clean) result[lang] = clean;
     }
     return Object.keys(result).length > 0 ? (result as LocalizedDescription) : undefined;
   });
@@ -44,10 +46,10 @@ export const createProductSchema = z.object({
   price: z.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR),
   stock: z.number(STOCK_ERROR).int(STOCK_ERROR).min(0, STOCK_ERROR),
   lowStockThreshold: z.number(THRESHOLD_ERROR).int(THRESHOLD_ERROR).min(0, THRESHOLD_ERROR),
-  categoryId: z.string(CATEGORY_ERROR).trim().min(1, CATEGORY_ERROR),
+  categoryId: z.string(CATEGORY_ERROR).trim().min(1, CATEGORY_ERROR).max(100, CATEGORY_ERROR),
   assignedAgentId: z.preprocess(
     (value) => (value === "" ? undefined : value),
-    z.string().trim().min(1).optional(),
+    z.string().trim().min(1).max(100).optional(),
   ),
 });
 

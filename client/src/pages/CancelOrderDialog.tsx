@@ -86,7 +86,11 @@ export default function CancelOrderDialog({
               control={control}
               render={({ field }) => (
                 <Select value={field.value ?? null} onValueChange={field.onChange}>
-                  <SelectTrigger id="cancel-order-reason" aria-invalid={!!errors.reason}>
+                  <SelectTrigger
+                    id="cancel-order-reason"
+                    className="w-full"
+                    aria-invalid={!!errors.reason}
+                  >
                     <SelectValue placeholder="Select a reason">
                       {(value: string | null) =>
                         value ? CANCEL_REASON_LABELS[value as keyof typeof CANCEL_REASON_LABELS] : ""

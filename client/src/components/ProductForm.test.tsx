@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
@@ -174,9 +174,11 @@ describe("ProductForm (create mode)", () => {
     renderForm();
 
     await user.type(screen.getByLabelText("Name"), "Rice 5kg");
-    // Uses spaces so the textarea wraps normally instead of rendering as one
-    // unbroken line.
-    await user.type(screen.getByLabelText("Description"), "lorem ipsum ".repeat(90));
+    // fireEvent.change sets the whole value in one go — typing 1000+ chars
+    // key-by-key via user.type is slow enough to flake against the test timeout.
+    fireEvent.change(screen.getByLabelText("Description"), {
+      target: { value: "lorem ipsum ".repeat(90) },
+    });
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");

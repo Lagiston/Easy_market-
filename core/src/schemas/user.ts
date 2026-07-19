@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sanitizeText } from "../sanitize";
 
 // Mirrors the `Role` enum in server/prisma/schema.prisma. Shared here so the
 // client (which has no access to the Prisma-generated enum) and server both
@@ -15,7 +16,13 @@ const EMAIL_ERROR = "A valid email is required";
 const PASSWORD_ERROR = "Password must be at least 8 characters";
 
 export const createUserSchema = z.object({
-  name: z.string(NAME_ERROR).trim().min(3, NAME_ERROR),
+  name: z
+    .string(NAME_ERROR)
+    .trim()
+    .min(3, NAME_ERROR)
+    .transform(sanitizeText)
+    // Sanitizing markup-only input can empty the value after the min check.
+    .refine((value) => value.length >= 3, NAME_ERROR),
   email: z.string(EMAIL_ERROR).trim().toLowerCase().pipe(z.email(EMAIL_ERROR)),
   password: z.string(PASSWORD_ERROR).trim().min(8, PASSWORD_ERROR),
 });

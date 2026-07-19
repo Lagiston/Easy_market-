@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sanitizeText } from "../sanitize";
 
 // Mirrors the `FulfillmentType` enum in server/prisma/schema.prisma. Shared here
 // so the client (which has no access to the Prisma-generated enum) and server
@@ -92,7 +93,13 @@ const ITEMS_ERROR = "Order must contain at least one item";
 const QUANTITY_ERROR = "Quantity must be a positive whole number";
 
 const checkoutFieldsSchema = z.object({
-  customerName: z.string(CUSTOMER_NAME_ERROR).trim().min(2, CUSTOMER_NAME_ERROR),
+  customerName: z
+    .string(CUSTOMER_NAME_ERROR)
+    .trim()
+    .min(2, CUSTOMER_NAME_ERROR)
+    .transform(sanitizeText)
+    // Sanitizing markup-only input can empty the value after the min check.
+    .refine((value) => value.length >= 2, CUSTOMER_NAME_ERROR),
   customerPhone: z
     .string(PHONE_ERROR)
     .trim()
@@ -100,7 +107,13 @@ const checkoutFieldsSchema = z.object({
   fulfillmentType: z.enum(FULFILLMENT_TYPES, FULFILLMENT_ERROR),
   address: z.preprocess(
     (value) => (value === "" ? undefined : value),
-    z.string().trim().min(1, ADDRESS_ERROR).optional(),
+    z
+      .string()
+      .trim()
+      .min(1, ADDRESS_ERROR)
+      .transform(sanitizeText)
+      .refine((value) => value.length >= 1, ADDRESS_ERROR)
+      .optional(),
   ),
 });
 

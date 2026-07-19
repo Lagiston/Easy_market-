@@ -257,7 +257,11 @@ export default function ProductForm({
           control={control}
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="product-form-category" aria-invalid={!!errors.categoryId}>
+              <SelectTrigger
+                id="product-form-category"
+                className="w-full"
+                aria-invalid={!!errors.categoryId}
+              >
                 <SelectValue placeholder="Select a category">
                   {(value: string) =>
                     categories?.find((category) => category.id === value)?.name.en ?? ""
@@ -290,6 +294,7 @@ export default function ProductForm({
             >
               <SelectTrigger
                 id="product-form-assigned-agent"
+                className="w-full"
                 aria-invalid={!!errors.assignedAgentId}
               >
                 <SelectValue placeholder="Unassigned">
