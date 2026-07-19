@@ -10,6 +10,7 @@ import {
 } from "@/components/ProductsTable";
 import type { LocalizedName } from "@es-market/core";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/card";
 
 type Category = { id: string; name: LocalizedName };
+type DashboardStats = { products: number; orders: number; lowStock: number };
 
 const ALL_CATEGORIES = "all";
 const ALL_STATUSES = "all";
@@ -36,6 +38,27 @@ const STATUS_LABELS: Record<StockStatus, string> = {
   "out-of-stock": "Out of stock",
 };
 
+function StatCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | undefined;
+}) {
+  return (
+    <Card>
+      <CardHeader className="space-y-1.5">
+        <CardDescription>{label}</CardDescription>
+        {value === undefined ? (
+          <Skeleton className="h-8 w-12" />
+        ) : (
+          <CardTitle className="text-2xl tabular-nums">{value}</CardTitle>
+        )}
+      </CardHeader>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState(ALL_CATEGORIES);
@@ -44,7 +67,9 @@ export default function DashboardPage() {
   const { data, isError } = useQuery({
     queryKey: ["products"],
     queryFn: () =>
-      axios.get<{ products: ProductRow[] }>("/api/products").then((res) => res.data.products),
+      axios
+        .get<{ products: ProductRow[] }>("/api/products")
+        .then((res) => res.data.products),
   });
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -52,6 +77,13 @@ export default function DashboardPage() {
       axios
         .get<{ categories: Category[] }>("/api/categories")
         .then((res) => res.data.categories),
+  });
+  const { data: stats } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: () =>
+      axios
+        .get<{ stats: DashboardStats }>("/api/dashboard/stats")
+        .then((res) => res.data.stats),
   });
 
   const products = data ?? null;
@@ -61,83 +93,102 @@ export default function DashboardPage() {
     if (!products) return null;
     const query = search.trim().toLowerCase();
     return products.filter((product) => {
-      const matchesSearch = query === "" || product.name.en.toLowerCase().includes(query);
+      const matchesSearch =
+        query === "" || product.name.en.toLowerCase().includes(query);
       const matchesCategory =
         categoryId === ALL_CATEGORIES || product.category.id === categoryId;
-      const matchesStatus = status === ALL_STATUSES || getStockStatus(product) === status;
+      const matchesStatus =
+        status === ALL_STATUSES || getStockStatus(product) === status;
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [products, search, categoryId, status]);
 
   return (
-    <Card className="mx-auto max-w-4xl">
-      <CardHeader className="space-y-1.5">
-        <CardTitle>Dashboard</CardTitle>
-        <CardDescription>
-          {filteredProducts
-            ? `${filteredProducts.length} product${filteredProducts.length === 1 ? "" : "s"}`
-            : "Catalog overview"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Input
-            placeholder="Search products…"
-            aria-label="Search products"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="sm:max-w-xs"
-          />
-          <Select
-            value={categoryId}
-            onValueChange={(value) => setCategoryId(value ?? ALL_CATEGORIES)}
-          >
-            <SelectTrigger aria-label="Filter by category" className="sm:max-w-48">
-              <SelectValue placeholder="All categories">
-                {(value: string) =>
-                  value === ALL_CATEGORIES
-                    ? "All categories"
-                    : (categories?.find((category) => category.id === value)?.name.en ?? "")
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
-              {categories?.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name.en}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={status} onValueChange={(value) => setStatus(value ?? ALL_STATUSES)}>
-            <SelectTrigger aria-label="Filter by status" className="sm:max-w-48">
-              <SelectValue placeholder="All statuses">
-                {(value: string) =>
-                  value === ALL_STATUSES
-                    ? "All statuses"
-                    : STATUS_LABELS[value as StockStatus]
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_STATUSES}>All statuses</SelectItem>
-              {STOCK_STATUSES.map((stockStatus) => (
-                <SelectItem key={stockStatus} value={stockStatus}>
-                  {STATUS_LABELS[stockStatus]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {error ? (
-          <p className="py-8 text-center text-sm text-destructive">
-            Could not load products. Please try again.
-          </p>
-        ) : (
-          <DashboardProductsTable products={filteredProducts} />
-        )}
-      </CardContent>
-    </Card>
+    <div className="mx-auto max-w-4xl space-y-4">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Products" value={stats?.products} />
+        <StatCard label="Orders" value={stats?.orders} />
+        <StatCard label="Low-stock items" value={stats?.lowStock} />
+      </div>
+      <Card>
+        <CardHeader className="space-y-1.5">
+          <CardTitle>Dashboard</CardTitle>
+          <CardDescription>
+            {filteredProducts
+              ? `${filteredProducts.length} product${filteredProducts.length === 1 ? "" : "s"}`
+              : "Catalog overview"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Input
+              placeholder="Search products…"
+              aria-label="Search products"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="sm:max-w-xs"
+            />
+            <Select
+              value={categoryId}
+              onValueChange={(value) => setCategoryId(value ?? ALL_CATEGORIES)}
+            >
+              <SelectTrigger
+                aria-label="Filter by category"
+                className="sm:max-w-48"
+              >
+                <SelectValue placeholder="All categories">
+                  {(value: string) =>
+                    value === ALL_CATEGORIES
+                      ? "All categories"
+                      : (categories?.find((category) => category.id === value)
+                          ?.name.en ?? "")
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name.en}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={status}
+              onValueChange={(value) => setStatus(value ?? ALL_STATUSES)}
+            >
+              <SelectTrigger
+                aria-label="Filter by status"
+                className="sm:max-w-48"
+              >
+                <SelectValue placeholder="All statuses">
+                  {(value: string) =>
+                    value === ALL_STATUSES
+                      ? "All statuses"
+                      : STATUS_LABELS[value as StockStatus]
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_STATUSES}>All statuses</SelectItem>
+                {STOCK_STATUSES.map((stockStatus) => (
+                  <SelectItem key={stockStatus} value={stockStatus}>
+                    {STATUS_LABELS[stockStatus]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {error ? (
+            <p className="py-8 text-center text-sm text-destructive">
+              Could not load products. Please try again.
+            </p>
+          ) : (
+            <DashboardProductsTable products={filteredProducts} />
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

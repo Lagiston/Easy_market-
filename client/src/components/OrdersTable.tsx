@@ -1,12 +1,13 @@
-import { PhoneCall, PhoneMissed, PhoneOff } from "lucide-react";
+import { Link } from "react-router";
+import { Ban, PackageCheck, PhoneCall, PhoneMissed, PhoneOff, Truck } from "lucide-react";
 import {
   CALL_ATTEMPTS_BEFORE_CANCEL,
+  FulfillmentType,
   OrderStatus,
   type CancelReason,
-  type FulfillmentType,
   type LocalizedName,
 } from "@es-market/core";
-import { Badge } from "@/components/ui/badge";
+import OrderStatusBadge from "@/components/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -30,38 +31,46 @@ export type OrderRow = {
   cancelReason: CancelReason | null;
   callAttempts: number;
   createdAt: string;
+  updatedAt: string;
   subtotal: number;
   total: number;
   items: { id: string; productName: LocalizedName; unitPrice: number; quantity: number }[];
 };
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  RECEIVED: "Received",
-  CONFIRMED: "Confirmed",
-  OUT_FOR_DELIVERY: "Out for delivery",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
+export function canGoOutForDelivery(order: OrderRow) {
+  return (
+    order.status === OrderStatus.CONFIRMED &&
+    order.fulfillmentType === FulfillmentType.DELIVERY
+  );
+}
 
-const STATUS_VARIANTS: Record<OrderStatus, "default" | "secondary" | "outline" | "destructive"> = {
-  RECEIVED: "secondary",
-  CONFIRMED: "default",
-  OUT_FOR_DELIVERY: "outline",
-  COMPLETED: "default",
-  CANCELLED: "destructive",
-};
+export function canComplete(order: OrderRow) {
+  return order.fulfillmentType === FulfillmentType.DELIVERY
+    ? order.status === OrderStatus.OUT_FOR_DELIVERY
+    : order.status === OrderStatus.CONFIRMED;
+}
+
+export function canCancel(order: OrderRow) {
+  return order.status === OrderStatus.RECEIVED || order.status === OrderStatus.CONFIRMED;
+}
 
 export default function OrdersTable({
   orders,
   onLogCall,
   onConfirm,
   onCancelUnreachable,
+  onOutForDelivery,
+  onComplete,
+  onCancel,
   actionsPending,
 }: {
   orders: OrderRow[] | null;
   onLogCall: (order: OrderRow) => void;
   onConfirm: (order: OrderRow) => void;
   onCancelUnreachable: (order: OrderRow) => void;
+  onOutForDelivery: (order: OrderRow) => void;
+  onComplete: (order: OrderRow) => void;
+  onCancel: (order: OrderRow) => void;
   actionsPending: boolean;
 }) {
   return (
@@ -100,57 +109,98 @@ export default function OrdersTable({
         ) : (
           orders.map((order) => (
             <TableRow key={order.id}>
-              <TableCell className="font-mono font-medium">{order.code}</TableCell>
+              <TableCell>
+                <Link
+                  to={`/admin/orders/${order.id}`}
+                  className="font-mono font-medium hover:underline"
+                >
+                  {order.code}
+                </Link>
+              </TableCell>
               <TableCell>
                 <div>{order.customerName}</div>
                 <div className="text-muted-foreground">{order.customerPhone}</div>
               </TableCell>
               <TableCell>
-                {order.fulfillmentType === "DELIVERY" ? "Delivery" : "Pickup"}
+                {order.fulfillmentType === FulfillmentType.DELIVERY ? "Delivery" : "Pickup"}
               </TableCell>
               <TableCell>
-                <Badge variant={STATUS_VARIANTS[order.status]}>
-                  {STATUS_LABELS[order.status]}
-                </Badge>
+                <OrderStatusBadge status={order.status} />
               </TableCell>
               <TableCell className="tabular-nums">{order.callAttempts}</TableCell>
               <TableCell className="tabular-nums">{order.total}</TableCell>
               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>
-                {order.status === OrderStatus.RECEIVED && (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Log failed call for ${order.code}`}
-                      disabled={actionsPending}
-                      onClick={() => onLogCall(order)}
-                    >
-                      <PhoneMissed />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Confirm order ${order.code}`}
-                      disabled={actionsPending}
-                      onClick={() => onConfirm(order)}
-                    >
-                      <PhoneCall />
-                    </Button>
-                    {order.callAttempts >= CALL_ATTEMPTS_BEFORE_CANCEL && (
+                <div className="flex items-center gap-1">
+                  {order.status === OrderStatus.RECEIVED && (
+                    <>
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        className="text-destructive"
-                        aria-label={`Cancel unreachable order ${order.code}`}
+                        aria-label={`Log failed call for ${order.code}`}
                         disabled={actionsPending}
-                        onClick={() => onCancelUnreachable(order)}
+                        onClick={() => onLogCall(order)}
                       >
-                        <PhoneOff />
+                        <PhoneMissed />
                       </Button>
-                    )}
-                  </div>
-                )}
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Confirm order ${order.code}`}
+                        disabled={actionsPending}
+                        onClick={() => onConfirm(order)}
+                      >
+                        <PhoneCall />
+                      </Button>
+                      {order.callAttempts >= CALL_ATTEMPTS_BEFORE_CANCEL && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          aria-label={`Cancel unreachable order ${order.code}`}
+                          disabled={actionsPending}
+                          onClick={() => onCancelUnreachable(order)}
+                        >
+                          <PhoneOff />
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  {canGoOutForDelivery(order) && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Mark order ${order.code} out for delivery`}
+                      disabled={actionsPending}
+                      onClick={() => onOutForDelivery(order)}
+                    >
+                      <Truck />
+                    </Button>
+                  )}
+                  {canComplete(order) && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Complete order ${order.code}`}
+                      disabled={actionsPending}
+                      onClick={() => onComplete(order)}
+                    >
+                      <PackageCheck />
+                    </Button>
+                  )}
+                  {canCancel(order) && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-destructive"
+                      aria-label={`Cancel order ${order.code}`}
+                      disabled={actionsPending}
+                      onClick={() => onCancel(order)}
+                    >
+                      <Ban />
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))

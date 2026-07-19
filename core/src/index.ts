@@ -45,10 +45,12 @@ export {
   checkoutFormSchema,
   placeOrderSchema,
   cancelOrderSchema,
+  orderListQuerySchema,
   orderLookupSchema,
   type CheckoutFormInput,
   type PlaceOrderInput,
   type CancelOrderInput,
+  type OrderListQuery,
   type OrderLookupInput,
   type OrderLookupFormInput,
 } from "./schemas/order";

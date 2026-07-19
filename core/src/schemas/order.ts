@@ -52,6 +52,13 @@ export const CANCEL_REASONS = [
 // "customer unreachable" (Project-Scope resolved decision).
 export const CALL_ATTEMPTS_BEFORE_CANCEL = 3;
 
+// Staff order list filter: omit `status` for all orders.
+export const orderListQuerySchema = z.object({
+  status: z.enum(ORDER_STATUSES).optional(),
+});
+
+export type OrderListQuery = z.infer<typeof orderListQuerySchema>;
+
 export const cancelOrderSchema = z.object({
   reason: z.enum(CANCEL_REASONS, "A cancel reason is required"),
 });

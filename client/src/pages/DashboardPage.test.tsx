@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
@@ -47,14 +47,34 @@ const categories = [
   { id: "c2", name: { en: "Beverages" } },
 ];
 
-describe("DashboardPage status filter", () => {
+const stats = { products: 3, orders: 12, lowStock: 1 };
+
+describe("DashboardPage", () => {
   beforeEach(() => {
     mockedAxios.get.mockReset();
     mockedAxios.get.mockImplementation((url: string) =>
       url === "/api/categories"
         ? Promise.resolve({ data: { categories } })
-        : Promise.resolve({ data: { products } }),
+        : url === "/api/dashboard/stats"
+          ? Promise.resolve({ data: { stats } })
+          : Promise.resolve({ data: { products } }),
     );
+  });
+
+  it("shows product, order, and low-stock counts", async () => {
+    renderWithQuery(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Products")).toBeInTheDocument();
+    const productsTile = screen.getByText("Products").closest("[data-slot=card]")!;
+    const ordersTile = screen.getByText("Orders").closest("[data-slot=card]")!;
+    const lowStockTile = screen.getByText("Low-stock items").closest("[data-slot=card]")!;
+    expect(await within(productsTile as HTMLElement).findByText("3")).toBeInTheDocument();
+    expect(within(ordersTile as HTMLElement).getByText("12")).toBeInTheDocument();
+    expect(within(lowStockTile as HTMLElement).getByText("1")).toBeInTheDocument();
   });
 
   it("shows all products by default", async () => {

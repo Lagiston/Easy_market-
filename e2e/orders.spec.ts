@@ -31,9 +31,11 @@ function uniqueOrderCode(): string {
 async function seedReceivedOrder({
   stockAfterOrder,
   quantity,
+  fulfillmentType = "PICKUP",
 }: {
   stockAfterOrder: number;
   quantity: number;
+  fulfillmentType?: "PICKUP" | "DELIVERY";
 }) {
   return withDb(async (client) => {
     const category = await client.query(
@@ -54,9 +56,15 @@ async function seedReceivedOrder({
     const code = uniqueOrderCode();
     await client.query(
       `INSERT INTO "order"
-         (id, code, status, "fulfillmentType", "customerName", "customerPhone", "deliveryFee", "updatedAt")
-       VALUES ($1, $2, 'RECEIVED', 'PICKUP', 'E2E Customer', '+255700999888', 0, now())`,
-      [orderId, code],
+         (id, code, status, "fulfillmentType", "customerName", "customerPhone", address, "deliveryFee", "updatedAt")
+       VALUES ($1, $2, 'RECEIVED', $3, 'E2E Customer', '+255700999888', $4, $5, now())`,
+      [
+        orderId,
+        code,
+        fulfillmentType,
+        fulfillmentType === "DELIVERY" ? "123 E2E Street" : null,
+        fulfillmentType === "DELIVERY" ? 50 : 0,
+      ],
     );
     await client.query(
       `INSERT INTO "order_item" (id, "orderId", "productId", "productName", "unitPrice", quantity)
@@ -170,6 +178,103 @@ test.describe("Staff phone-confirmation flow", () => {
         client.query('SELECT status FROM "order" WHERE id = $1', [seeded.orderId]),
       );
       expect(persisted.rows[0].status).toBe("CONFIRMED");
+    } finally {
+      await cleanupOrder(seeded);
+    }
+  });
+});
+
+test.describe("Order lifecycle", () => {
+  test("delivery order runs the full lifecycle: confirm → out for delivery → complete, and the detail page shows COMPLETED", async ({
+    page,
+  }) => {
+    const seeded = await seedReceivedOrder({
+      stockAfterOrder: 5,
+      quantity: 1,
+      fulfillmentType: "DELIVERY",
+    });
+    const { code } = seeded;
+
+    try {
+      await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+      await page.goto("/admin/orders");
+
+      const row = page.getByRole("row", { name: code });
+      await expect(row).toContainText("Received");
+
+      await row.getByRole("button", { name: `Confirm order ${code}` }).click();
+      await expect(row).toContainText("Confirmed");
+
+      await row
+        .getByRole("button", { name: `Mark order ${code} out for delivery` })
+        .click();
+      await expect(row).toContainText("Out for delivery");
+
+      await row.getByRole("button", { name: `Complete order ${code}` }).click();
+      await expect(row).toContainText("Completed");
+      // Terminal status: no further actions in the row.
+      await expect(row.getByRole("button")).toHaveCount(0);
+
+      // The order code links to the new staff detail page; it re-fetches from
+      // GET /api/orders/:id, so the COMPLETED status shown there is persisted truth.
+      await row.getByRole("link", { name: code }).click();
+      await expect(page).toHaveURL(`/admin/orders/${seeded.orderId}`);
+      await expect(page.getByText("Completed")).toBeVisible();
+      await expect(page.getByText("123 E2E Street")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Cancel order" })).toBeHidden();
+
+      const persisted = await withDb((client) =>
+        client.query('SELECT status FROM "order" WHERE id = $1', [seeded.orderId]),
+      );
+      expect(persisted.rows[0].status).toBe("COMPLETED");
+    } finally {
+      await cleanupOrder(seeded);
+    }
+  });
+
+  test("cancelling with a chosen reason marks the order CANCELLED and restores product stock", async ({
+    page,
+  }) => {
+    const quantity = 3;
+    const stockAfterOrder = 4;
+    const seeded = await seedReceivedOrder({ stockAfterOrder, quantity });
+    const { code } = seeded;
+
+    try {
+      await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+      await page.goto("/admin/orders");
+
+      const row = page.getByRole("row", { name: code });
+      await expect(row).toContainText("Received");
+
+      await row.getByRole("button", { name: `Cancel order ${code}` }).click();
+      const dialog = page.getByRole("dialog", { name: `Cancel order ${code}?` });
+      await expect(dialog).toBeVisible();
+
+      // Pick the reason in the dialog's Select, then submit.
+      await dialog.getByRole("combobox", { name: "Reason" }).click();
+      await page.getByRole("option", { name: "Customer request" }).click();
+      await dialog.getByRole("button", { name: "Cancel order" }).click();
+
+      await expect(dialog).toBeHidden();
+      await expect(row).toContainText("Cancelled");
+
+      // DB truth: cancelled with the chosen reason, and the transaction
+      // restored the product's stock by the ordered quantity.
+      const persisted = await withDb((client) =>
+        client.query(
+          `SELECT o.status, o."cancelReason", p.stock
+           FROM "order" o
+           JOIN "order_item" i ON i."orderId" = o.id
+           JOIN "product" p ON p.id = i."productId"
+           WHERE o.id = $1`,
+          [seeded.orderId],
+        ),
+      );
+      expect(persisted.rows).toHaveLength(1);
+      expect(persisted.rows[0].status).toBe("CANCELLED");
+      expect(persisted.rows[0].cancelReason).toBe("CUSTOMER_REQUEST");
+      expect(persisted.rows[0].stock).toBe(stockAfterOrder + quantity);
     } finally {
       await cleanupOrder(seeded);
     }

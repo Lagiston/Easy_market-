@@ -10,6 +10,7 @@ import { categoriesRouter } from "./routes/categories";
 import { storefrontRouter } from "./routes/storefront";
 import { ordersRouter } from "./routes/orders";
 import { settingsRouter } from "./routes/settings";
+import { dashboardRouter } from "./routes/dashboard";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -41,6 +42,7 @@ app.use("/api", categoriesRouter);
 app.use("/api", storefrontRouter);
 app.use("/api", ordersRouter);
 app.use("/api", settingsRouter);
+app.use("/api", dashboardRouter);
 
 app.listen(port, () => {
   console.log(`ES-Market server listening on http://localhost:${port}`);

@@ -1,7 +1,8 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
+import { MemoryRouter } from "react-router";
 import { renderWithQuery } from "@/test/render-with-query";
 import { CancelReason, FulfillmentType, OrderStatus } from "@es-market/core";
 import type { OrderRow } from "@/components/OrdersTable";
@@ -30,11 +31,20 @@ function order(overrides: Partial<OrderRow> = {}): OrderRow {
     cancelReason: null,
     callAttempts: 0,
     createdAt: "2026-07-18T12:00:00.000Z",
+    updatedAt: "2026-07-18T12:00:00.000Z",
     subtotal: 3800,
     total: 4000,
     items: [{ id: "i1", productName: { en: "Rice 5kg" }, unitPrice: 1900, quantity: 2 }],
     ...overrides,
   };
+}
+
+function renderPage() {
+  return renderWithQuery(
+    <MemoryRouter>
+      <OrdersPage />
+    </MemoryRouter>,
+  );
 }
 
 describe("OrdersPage", () => {
@@ -45,24 +55,50 @@ describe("OrdersPage", () => {
 
   it("renders order rows with code, customer, status, calls, and total", async () => {
     mockedGet.mockResolvedValueOnce({ data: { orders: [order()] } });
-    renderWithQuery(<OrdersPage />);
+    renderPage();
 
     expect(await screen.findByText("ABCD2345")).toBeInTheDocument();
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
     expect(screen.getByText("0712345678")).toBeInTheDocument();
-    expect(screen.getByText("Received")).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("Received")).toBeInTheDocument();
     expect(screen.getByText("4000")).toBeInTheDocument();
     expect(screen.getByText("1 order — call the customer to confirm each received order.")).toBeInTheDocument();
   });
 
+  it("links each order code to its detail page", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { orders: [order()] } });
+    renderPage();
+
+    expect(await screen.findByRole("link", { name: "ABCD2345" })).toHaveAttribute(
+      "href",
+      "/admin/orders/o1",
+    );
+  });
+
   it("shows an empty state when there are no orders", async () => {
     mockedGet.mockResolvedValueOnce({ data: { orders: [] } });
-    renderWithQuery(<OrdersPage />);
+    renderPage();
 
     expect(await screen.findByText("No orders yet.")).toBeInTheDocument();
   });
 
-  it("only offers actions on received orders", async () => {
+  it("fetches all orders by default and refetches with a status filter on tab click", async () => {
+    mockedGet.mockResolvedValue({ data: { orders: [] } });
+    renderPage();
+
+    await screen.findByText("No orders yet.");
+    expect(mockedGet).toHaveBeenCalledWith("/api/orders", { params: {} });
+
+    await userEvent.click(screen.getByRole("tab", { name: "Confirmed" }));
+
+    await waitFor(() =>
+      expect(mockedGet).toHaveBeenCalledWith("/api/orders", {
+        params: { status: OrderStatus.CONFIRMED },
+      }),
+    );
+  });
+
+  it("offers phone actions only on received orders", async () => {
     mockedGet.mockResolvedValueOnce({
       data: {
         orders: [
@@ -72,7 +108,7 @@ describe("OrdersPage", () => {
         ],
       },
     });
-    renderWithQuery(<OrdersPage />);
+    renderPage();
 
     expect(await screen.findByLabelText("Log failed call for ABCD2345")).toBeInTheDocument();
     expect(screen.getByLabelText("Confirm order ABCD2345")).toBeInTheDocument();
@@ -81,7 +117,7 @@ describe("OrdersPage", () => {
     expect(screen.queryByLabelText("Log failed call for QRST4567")).not.toBeInTheDocument();
   });
 
-  it("hides the cancel action below three call attempts and shows it at three", async () => {
+  it("hides the unreachable-cancel action below three call attempts and shows it at three", async () => {
     mockedGet.mockResolvedValueOnce({
       data: {
         orders: [
@@ -90,7 +126,7 @@ describe("OrdersPage", () => {
         ],
       },
     });
-    renderWithQuery(<OrdersPage />);
+    renderPage();
 
     expect(await screen.findByLabelText("Cancel unreachable order WXYZ6789")).toBeInTheDocument();
     expect(screen.queryByLabelText("Cancel unreachable order ABCD2345")).not.toBeInTheDocument();
@@ -101,7 +137,7 @@ describe("OrdersPage", () => {
       .mockResolvedValueOnce({ data: { orders: [order()] } })
       .mockResolvedValueOnce({ data: { orders: [order({ callAttempts: 1 })] } });
     mockedPost.mockResolvedValueOnce({ data: { order: order({ callAttempts: 1 }) } });
-    renderWithQuery(<OrdersPage />);
+    renderPage();
 
     await userEvent.click(await screen.findByLabelText("Log failed call for ABCD2345"));
 
@@ -114,12 +150,119 @@ describe("OrdersPage", () => {
       .mockResolvedValueOnce({ data: { orders: [order()] } })
       .mockResolvedValueOnce({ data: { orders: [order({ status: OrderStatus.CONFIRMED })] } });
     mockedPost.mockResolvedValueOnce({ data: { order: order({ status: OrderStatus.CONFIRMED }) } });
-    renderWithQuery(<OrdersPage />);
+    renderPage();
 
     await userEvent.click(await screen.findByLabelText("Confirm order ABCD2345"));
 
     expect(mockedPost).toHaveBeenCalledWith("/api/orders/o1/confirm");
-    expect(await screen.findByText("Confirmed")).toBeInTheDocument();
+    expect(await within(screen.getByRole("table")).findByText("Confirmed")).toBeInTheDocument();
+  });
+
+  it("marks a confirmed delivery order out for delivery", async () => {
+    mockedGet
+      .mockResolvedValueOnce({
+        data: { orders: [order({ status: OrderStatus.CONFIRMED })] },
+      })
+      .mockResolvedValueOnce({
+        data: { orders: [order({ status: OrderStatus.OUT_FOR_DELIVERY })] },
+      });
+    mockedPost.mockResolvedValueOnce({
+      data: { order: order({ status: OrderStatus.OUT_FOR_DELIVERY }) },
+    });
+    renderPage();
+
+    await userEvent.click(
+      await screen.findByLabelText("Mark order ABCD2345 out for delivery"),
+    );
+
+    expect(mockedPost).toHaveBeenCalledWith("/api/orders/o1/out-for-delivery");
+    expect(await within(screen.getByRole("table")).findByText("Out for delivery")).toBeInTheDocument();
+  });
+
+  it("offers complete on dispatched delivery orders and confirmed pickup orders only", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        orders: [
+          order({ id: "o1", code: "ABCD2345", status: OrderStatus.OUT_FOR_DELIVERY }),
+          order({
+            id: "o2",
+            code: "WXYZ6789",
+            status: OrderStatus.CONFIRMED,
+            fulfillmentType: FulfillmentType.PICKUP,
+          }),
+          order({ id: "o3", code: "QRST4567", status: OrderStatus.CONFIRMED }),
+        ],
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByLabelText("Complete order ABCD2345")).toBeInTheDocument();
+    expect(screen.getByLabelText("Complete order WXYZ6789")).toBeInTheDocument();
+    // A confirmed delivery order must be dispatched first.
+    expect(screen.queryByLabelText("Complete order QRST4567")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Mark order QRST4567 out for delivery")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Mark order WXYZ6789 out for delivery")).not.toBeInTheDocument();
+  });
+
+  it("completes an order", async () => {
+    mockedGet
+      .mockResolvedValueOnce({
+        data: { orders: [order({ status: OrderStatus.OUT_FOR_DELIVERY })] },
+      })
+      .mockResolvedValueOnce({
+        data: { orders: [order({ status: OrderStatus.COMPLETED })] },
+      });
+    mockedPost.mockResolvedValueOnce({ data: { order: order({ status: OrderStatus.COMPLETED }) } });
+    renderPage();
+
+    await userEvent.click(await screen.findByLabelText("Complete order ABCD2345"));
+
+    expect(mockedPost).toHaveBeenCalledWith("/api/orders/o1/complete");
+    expect(await within(screen.getByRole("table")).findByText("Completed")).toBeInTheDocument();
+  });
+
+  it("offers the general cancel on received and confirmed orders only", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        orders: [
+          order({ id: "o1", code: "ABCD2345" }),
+          order({ id: "o2", code: "WXYZ6789", status: OrderStatus.CONFIRMED }),
+          order({ id: "o3", code: "QRST4567", status: OrderStatus.OUT_FOR_DELIVERY }),
+          order({ id: "o4", code: "JKLM2345", status: OrderStatus.COMPLETED }),
+        ],
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByLabelText("Cancel order ABCD2345")).toBeInTheDocument();
+    expect(screen.getByLabelText("Cancel order WXYZ6789")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Cancel order QRST4567")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Cancel order JKLM2345")).not.toBeInTheDocument();
+  });
+
+  it("cancels an order with a chosen reason through the cancel dialog", async () => {
+    mockedGet
+      .mockResolvedValueOnce({ data: { orders: [order({ status: OrderStatus.CONFIRMED })] } })
+      .mockResolvedValueOnce({
+        data: {
+          orders: [
+            order({ status: OrderStatus.CANCELLED, cancelReason: CancelReason.CUSTOMER_REQUEST }),
+          ],
+        },
+      });
+    mockedPost.mockResolvedValueOnce({ data: { order: {} } });
+    renderPage();
+
+    await userEvent.click(await screen.findByLabelText("Cancel order ABCD2345"));
+    expect(await screen.findByText("Cancel order ABCD2345?")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("combobox"));
+    await userEvent.click(await screen.findByRole("option", { name: "Customer request" }));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel order" }));
+
+    expect(mockedPost).toHaveBeenCalledWith("/api/orders/o1/cancel", {
+      reason: CancelReason.CUSTOMER_REQUEST,
+    });
+    expect(await within(screen.getByRole("table")).findByText("Cancelled")).toBeInTheDocument();
   });
 
   it("cancels an unreachable order through the confirm dialog", async () => {
@@ -129,7 +272,7 @@ describe("OrdersPage", () => {
         data: { orders: [order({ status: OrderStatus.CANCELLED, cancelReason: CancelReason.CUSTOMER_UNREACHABLE, callAttempts: 3 })] },
       });
     mockedPost.mockResolvedValueOnce({ data: { order: {} } });
-    renderWithQuery(<OrdersPage />);
+    renderPage();
 
     await userEvent.click(await screen.findByLabelText("Cancel unreachable order ABCD2345"));
     expect(await screen.findByText("Cancel order ABCD2345?")).toBeInTheDocument();
@@ -138,7 +281,7 @@ describe("OrdersPage", () => {
     expect(mockedPost).toHaveBeenCalledWith("/api/orders/o1/cancel", {
       reason: CancelReason.CUSTOMER_UNREACHABLE,
     });
-    expect(await screen.findByText("Cancelled")).toBeInTheDocument();
+    expect(await within(screen.getByRole("table")).findByText("Cancelled")).toBeInTheDocument();
   });
 
   it("surfaces a server error when an action fails", async () => {
@@ -153,7 +296,7 @@ describe("OrdersPage", () => {
         config: { headers: new AxiosHeaders() },
       }),
     );
-    renderWithQuery(<OrdersPage />);
+    renderPage();
 
     await userEvent.click(await screen.findByLabelText("Confirm order ABCD2345"));
 

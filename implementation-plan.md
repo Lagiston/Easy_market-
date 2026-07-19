@@ -51,8 +51,8 @@ Goal: customer places a pay-on-delivery order; staff manage it.
 - [x] 4.3b Phone confirmation: staff call the customer's number to confirm the order — the received → confirmed transition in the dashboard records it. No SMS OTP / no SMS provider in v1
 - [x] 4.4 Order confirmation page + order status lookup (order number + phone)
 - [x] 4.5 Stock decrement on order placement; restore on cancellation
-- [ ] 4.6 Dashboard: order list with status filter, order detail, status transitions, cancel
-- [ ] 4.7 Dashboard overview page: counts of products, orders, low-stock items
+- [x] 4.6 Dashboard: order list with status filter, order detail, status transitions, cancel
+- [x] 4.7 Dashboard overview page: counts of products, orders, low-stock items
 
 **Demo:** end-to-end order — customer checks out, staff confirms and completes it.
 

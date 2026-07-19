@@ -1,11 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { Router, type Response } from "express";
-import { OrderStatus, Prisma } from "../generated/prisma/client";
+import { FulfillmentType, OrderStatus, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { generateOrderCode } from "../lib/order-code";
 import { computeDeliveryFee, getSettings } from "../lib/settings";
 import { requireAuth } from "../middleware/require-auth";
-import { cancelOrderSchema, orderLookupSchema, placeOrderSchema } from "@es-market/core";
+import {
+  cancelOrderSchema,
+  orderListQuerySchema,
+  orderLookupSchema,
+  placeOrderSchema,
+} from "@es-market/core";
 
 // Order endpoints; mounted at /api in index.ts.
 export const ordersRouter = Router();
@@ -181,12 +186,31 @@ function serializeOrder(
   return { ...order, subtotal, total: subtotal + order.deliveryFee };
 }
 
-ordersRouter.get("/orders", requireAuth, async (_req, res) => {
+ordersRouter.get("/orders", requireAuth, async (req, res) => {
+  const parsed = orderListQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]!.message });
+    return;
+  }
+  const { status } = parsed.data;
   const orders = await prisma.order.findMany({
+    where: status ? { status } : undefined,
     include: orderWithItems,
     orderBy: { createdAt: "desc" },
   });
   res.json({ orders: orders.map(serializeOrder) });
+});
+
+ordersRouter.get<{ id: string }>("/orders/:id", requireAuth, async (req, res) => {
+  const order = await prisma.order.findUnique({
+    where: { id: req.params.id },
+    include: orderWithItems,
+  });
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+  res.json({ order: serializeOrder(order) });
 });
 
 // 404 when the order doesn't exist, 409 when it exists but a guarded
@@ -231,6 +255,44 @@ ordersRouter.post<{ id: string }>("/orders/:id/confirm", requireAuth, async (req
   });
   if (updated.count === 0) {
     await rejectMissingOrConflict(res, id, "Only received orders can be confirmed");
+    return;
+  }
+  await respondWithOrder(res, id);
+});
+
+// Marks a confirmed delivery order as dispatched. Pickup orders skip this step.
+ordersRouter.post<{ id: string }>("/orders/:id/out-for-delivery", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const updated = await prisma.order.updateMany({
+    where: {
+      id,
+      status: OrderStatus.CONFIRMED,
+      fulfillmentType: FulfillmentType.DELIVERY,
+    },
+    data: { status: OrderStatus.OUT_FOR_DELIVERY },
+  });
+  if (updated.count === 0) {
+    await rejectMissingOrConflict(res, id, "Only confirmed delivery orders can go out for delivery");
+    return;
+  }
+  await respondWithOrder(res, id);
+});
+
+// Completes an order: delivery once dispatched, pickup straight from confirmed.
+ordersRouter.post<{ id: string }>("/orders/:id/complete", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const updated = await prisma.order.updateMany({
+    where: {
+      id,
+      OR: [
+        { fulfillmentType: FulfillmentType.DELIVERY, status: OrderStatus.OUT_FOR_DELIVERY },
+        { fulfillmentType: FulfillmentType.PICKUP, status: OrderStatus.CONFIRMED },
+      ],
+    },
+    data: { status: OrderStatus.COMPLETED },
+  });
+  if (updated.count === 0) {
+    await rejectMissingOrConflict(res, id, "Order is not ready to be completed");
     return;
   }
   await respondWithOrder(res, id);

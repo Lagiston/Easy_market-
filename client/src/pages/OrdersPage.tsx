@@ -1,8 +1,12 @@
 import { useState } from "react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ORDER_STATUSES, type OrderStatus } from "@es-market/core";
 import OrdersTable, { type OrderRow } from "@/components/OrdersTable";
+import { STATUS_LABELS } from "@/components/OrderStatusBadge";
 import CancelUnreachableOrderDialog from "./CancelUnreachableOrderDialog";
+import CancelOrderDialog from "./CancelOrderDialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -19,12 +23,19 @@ function extractServerError(error: unknown, fallback: string) {
 
 export default function OrdersPage() {
   const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const [cancellingUnreachableOrder, setCancellingUnreachableOrder] =
+    useState<OrderRow | null>(null);
   const [cancellingOrder, setCancellingOrder] = useState<OrderRow | null>(null);
 
   const { data, isError } = useQuery({
-    queryKey: ["orders"],
+    queryKey: ["orders", statusFilter],
     queryFn: () =>
-      axios.get<{ orders: OrderRow[] }>("/api/orders").then((res) => res.data.orders),
+      axios
+        .get<{ orders: OrderRow[] }>("/api/orders", {
+          params: statusFilter === "all" ? {} : { status: statusFilter },
+        })
+        .then((res) => res.data.orders),
   });
   const orders = data ?? null;
 
@@ -39,12 +50,30 @@ export default function OrdersPage() {
     mutationFn: (order: OrderRow) => axios.post(`/api/orders/${order.id}/confirm`),
     onSuccess: invalidateOrders,
   });
+  const outForDeliveryMutation = useMutation({
+    mutationFn: (order: OrderRow) => axios.post(`/api/orders/${order.id}/out-for-delivery`),
+    onSuccess: invalidateOrders,
+  });
+  const completeMutation = useMutation({
+    mutationFn: (order: OrderRow) => axios.post(`/api/orders/${order.id}/complete`),
+    onSuccess: invalidateOrders,
+  });
 
   const serverError = logCallMutation.isError
     ? extractServerError(logCallMutation.error, "Could not log the call. Please try again.")
     : confirmMutation.isError
       ? extractServerError(confirmMutation.error, "Could not confirm the order. Please try again.")
-      : null;
+      : outForDeliveryMutation.isError
+        ? extractServerError(
+            outForDeliveryMutation.error,
+            "Could not mark the order out for delivery. Please try again.",
+          )
+        : completeMutation.isError
+          ? extractServerError(
+              completeMutation.error,
+              "Could not complete the order. Please try again.",
+            )
+          : null;
 
   return (
     <Card className="mx-auto max-w-5xl">
@@ -56,6 +85,20 @@ export default function OrdersPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <Tabs
+          value={statusFilter}
+          onValueChange={(value) => setStatusFilter(value as OrderStatus | "all")}
+          className="mb-4"
+        >
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            {ORDER_STATUSES.map((status) => (
+              <TabsTrigger key={status} value={status}>
+                {STATUS_LABELS[status]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
         {isError ? (
           <p className="py-8 text-center text-sm text-destructive">
             Could not load orders. Please try again.
@@ -67,12 +110,26 @@ export default function OrdersPage() {
               orders={orders}
               onLogCall={(order) => logCallMutation.mutate(order)}
               onConfirm={(order) => confirmMutation.mutate(order)}
-              onCancelUnreachable={setCancellingOrder}
-              actionsPending={logCallMutation.isPending || confirmMutation.isPending}
+              onCancelUnreachable={setCancellingUnreachableOrder}
+              onOutForDelivery={(order) => outForDeliveryMutation.mutate(order)}
+              onComplete={(order) => completeMutation.mutate(order)}
+              onCancel={setCancellingOrder}
+              actionsPending={
+                logCallMutation.isPending ||
+                confirmMutation.isPending ||
+                outForDeliveryMutation.isPending ||
+                completeMutation.isPending
+              }
             />
           </>
         )}
         <CancelUnreachableOrderDialog
+          order={cancellingUnreachableOrder}
+          onOpenChange={(open) => {
+            if (!open) setCancellingUnreachableOrder(null);
+          }}
+        />
+        <CancelOrderDialog
           order={cancellingOrder}
           onOpenChange={(open) => {
             if (!open) setCancellingOrder(null);

@@ -12,6 +12,7 @@ import StorefrontOrderConfirmationPage from "./pages/storefront/OrderConfirmatio
 import StorefrontOrderStatusPage from "./pages/storefront/OrderStatusPage";
 import SettingsPage from "./pages/SettingsPage";
 import OrdersPage from "./pages/OrdersPage";
+import OrderDetailPage from "./pages/OrderDetailPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
@@ -37,6 +38,7 @@ function App() {
       <Route path="/admin" element={<ProtectedRoute />}>
         <Route index element={<HomePage />} />
         <Route path="orders" element={<OrdersPage />} />
+        <Route path="orders/:id" element={<OrderDetailPage />} />
       </Route>
       <Route path="/admin" element={<ProtectedRoute roles={[Role.ADMIN]} />}>
         <Route path="users" element={<UsersPage />} />
