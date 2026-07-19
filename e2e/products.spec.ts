@@ -1,5 +1,5 @@
 import path from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { Client } from "pg";
 import {
   TEST_ADMIN_EMAIL,
@@ -21,6 +21,33 @@ async function hardDeleteProduct(name: string) {
   try {
     // `name` is a JSON column of localized values; match on the English name.
     await client.query('DELETE FROM "product" WHERE name->>\'en\' = $1', [name]);
+  } finally {
+    await client.end();
+  }
+}
+
+// Creates a throwaway AGENT via the API (as an already-logged-in admin) for
+// tests that delete a user, so the shared seeded TEST_AGENT_EMAIL row is
+// never touched. Mirrors the helper in e2e/users.spec.ts.
+async function createThrowawayAgent(page: Page, label: string) {
+  const email = `${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@e2e.test`;
+  const name = `Throwaway ${label}`;
+  const response = await page.request.post("/api/users", {
+    data: { name, email, password: "throwaway-password-123" },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to create throwaway agent: ${response.status()}`);
+  }
+  return { name, email };
+}
+
+// Hard-deletes a throwaway user (bypassing the soft-delete API) so repeated
+// local/CI runs against the shared test DB don't accumulate rows.
+async function hardDeleteUser(email: string) {
+  const client = new Client({ connectionString: TEST_DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query('DELETE FROM "user" WHERE email = $1', [email]);
   } finally {
     await client.end();
   }
@@ -407,6 +434,72 @@ test.describe("Assign agent (ADMIN)", () => {
       expect(body.error).toBe("Agent not found");
     } finally {
       await hardDeleteProduct(name);
+    }
+  });
+
+  test("deleting the assigned agent from the Users page unassigns their products", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    const { name: agentName, email: agentEmail } = await createThrowawayAgent(
+      page,
+      "unassign-on-delete",
+    );
+
+    const name = `Agent Delete Cascade Product ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      await page.goto("/admin/products");
+      await page.getByRole("button", { name: "Create product" }).click();
+      const createDialog = page.getByRole("dialog");
+      await createDialog.getByLabel("Name").fill(name);
+      await createDialog.getByLabel("Stock", { exact: true }).fill("5");
+      await createDialog.getByLabel("Category").click();
+      await page.getByRole("option", { name: "Groceries" }).click();
+      await createDialog.getByLabel("Assigned agent").click();
+      await page.getByRole("option", { name: agentName }).click();
+      await createDialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
+      await createDialog.getByRole("button", { name: "Create product" }).click();
+      await expect(createDialog).not.toBeVisible();
+
+      const row = page.getByRole("row").filter({ hasText: name });
+      await expect(row).toBeVisible();
+      await expect(row.getByText(agentName, { exact: true })).toBeVisible();
+
+      // Soft-delete the agent from the admin Users page, which per the
+      // DELETE /api/users/:id route also unassigns any products currently
+      // assigned to them, in the same transaction as the soft-delete.
+      await page.goto("/admin/users");
+      const userRow = page.getByRole("row").filter({ hasText: agentEmail });
+      await expect(userRow).toBeVisible();
+      await userRow.getByRole("button", { name: `Delete ${agentName}` }).click();
+      const deleteDialog = page.getByRole("alertdialog");
+      await expect(deleteDialog).toBeVisible();
+      await deleteDialog.getByRole("button", { name: "Delete" }).click();
+      await expect(deleteDialog).not.toBeVisible();
+      await expect(userRow).not.toBeVisible();
+
+      // The product now shows as Unassigned rather than referencing the
+      // deleted agent — check both the immediately-invalidated list and a
+      // fresh reload to confirm the FK change actually persisted server-side.
+      await page.goto("/admin/products");
+      const rowAfterAgentDelete = page.getByRole("row").filter({ hasText: name });
+      await expect(rowAfterAgentDelete.getByText("Unassigned", { exact: true })).toBeVisible();
+      await expect(
+        rowAfterAgentDelete.getByText(agentName, { exact: true }),
+      ).not.toBeVisible();
+
+      await page.reload();
+      const rowAfterReload = page.getByRole("row").filter({ hasText: name });
+      await expect(rowAfterReload.getByText("Unassigned", { exact: true })).toBeVisible();
+
+      await rowAfterReload.getByRole("button", { name: `Edit ${name}` }).click();
+      const editDialog = page.getByRole("dialog");
+      await expect(editDialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
+      await expect(editDialog.getByLabel("Assigned agent")).toContainText("Unassigned");
+    } finally {
+      await hardDeleteProduct(name);
+      await hardDeleteUser(agentEmail);
     }
   });
 });

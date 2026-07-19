@@ -135,8 +135,14 @@ usersRouter.delete<{ id: string }>("/users/:id", requireAuth, requireRole(Role.A
     return;
   }
 
-  await prisma.user.update({ where: { id: userId }, data: { deletedAt: new Date() } });
-  await prisma.session.deleteMany({ where: { userId } });
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userId }, data: { deletedAt: new Date() } }),
+    prisma.session.deleteMany({ where: { userId } }),
+    prisma.product.updateMany({
+      where: { assignedAgentId: userId },
+      data: { assignedAgentId: null },
+    }),
+  ]);
 
   res.status(204).end();
 });
