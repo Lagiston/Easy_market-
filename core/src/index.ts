@@ -80,4 +80,7 @@ export {
   createInquirySchema,
   type CreateInquiryInput,
   type CreateInquiryFormInput,
+  addMessageSchema,
+  type AddMessageInput,
+  type AddMessageFormInput,
 } from "./schemas/inquiry";

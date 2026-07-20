@@ -3,7 +3,13 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { prisma } from "./lib/prisma";
 import { uploadsDir } from "./lib/uploads";
-import { apiLimiter, authLimiter, inquiryLimiter, orderLimiter } from "./middleware/rate-limit";
+import {
+  apiLimiter,
+  authLimiter,
+  inquiryLimiter,
+  inquiryPollLimiter,
+  orderLimiter,
+} from "./middleware/rate-limit";
 import { usersRouter } from "./routes/users";
 import { productsRouter } from "./routes/products";
 import { categoriesRouter } from "./routes/categories";
@@ -19,7 +25,9 @@ const port = Number(process.env.PORT ?? 3000);
 if (process.env.NODE_ENV === "production") {
   app.use("/api/auth", authLimiter);
   app.use("/api/storefront/orders", orderLimiter);
-  app.use("/api/storefront/inquiries", inquiryLimiter);
+  app.post("/api/storefront/inquiries", inquiryLimiter);
+  app.post("/api/storefront/inquiries/:id/messages", inquiryLimiter);
+  app.get("/api/storefront/inquiries/:id", inquiryPollLimiter);
   app.use("/api", apiLimiter);
 }
 

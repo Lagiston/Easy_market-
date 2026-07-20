@@ -123,5 +123,19 @@
   },
   "footer": {
     "copyright": "© {{year}} ES-Market"
+  },
+  "chat": {
+    "open": "Open chat",
+    "close": "Close chat",
+    "title": "Chat with us",
+    "startPrompt": "Tell us a bit about yourself and how we can help.",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "message": "Message",
+    "start": "Start chat",
+    "starting": "Starting…",
+    "startError": "Could not start the chat. Please try again.",
+    "closed": "This conversation is closed."
   }
 }

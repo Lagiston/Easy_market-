@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ChatWidget from "./ChatWidget";
 
 export default function StorefrontLayout() {
   const { t } = useTranslation();
@@ -62,6 +63,7 @@ export default function StorefrontLayout() {
       <footer className="border-t px-6 py-4 text-sm text-muted-foreground">
         {t("footer.copyright", { year: new Date().getFullYear() })}
       </footer>
+      <ChatWidget />
     </div>
   );
 }

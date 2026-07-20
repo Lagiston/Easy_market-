@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, it, expect, beforeEach } from "vitest";
 import i18n from "@/i18n";
@@ -6,16 +7,19 @@ import { CartProvider } from "@/lib/cart";
 import StorefrontLayout from "./StorefrontLayout";
 
 function renderLayout() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <MemoryRouter initialEntries={["/"]}>
-      <CartProvider>
-        <Routes>
-          <Route element={<StorefrontLayout />}>
-            <Route index element={<div>Page content</div>} />
-          </Route>
-        </Routes>
-      </CartProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={["/"]}>
+        <CartProvider>
+          <Routes>
+            <Route element={<StorefrontLayout />}>
+              <Route index element={<div>Page content</div>} />
+            </Route>
+          </Routes>
+        </CartProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

@@ -78,3 +78,17 @@ export type CreateInquiryInput = z.infer<typeof createInquirySchema>;
 
 // Pre-transform shape (what the form fields hold before name/message are normalized).
 export type CreateInquiryFormInput = z.input<typeof createInquirySchema>;
+
+// Follow-up customer message on an existing inquiry (chat widget reply box).
+export const addMessageSchema = z.object({
+  message: z
+    .string(MESSAGE_ERROR)
+    .trim()
+    .min(10, MESSAGE_ERROR)
+    .max(2000, MESSAGE_MAX_ERROR)
+    .transform(sanitizeText)
+    .refine((value) => value.length >= 10, MESSAGE_ERROR),
+});
+
+export type AddMessageInput = z.infer<typeof addMessageSchema>;
+export type AddMessageFormInput = z.input<typeof addMessageSchema>;

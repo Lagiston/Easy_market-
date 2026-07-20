@@ -123,5 +123,19 @@
   },
   "footer": {
     "copyright": "© {{year}} ES-Market"
+  },
+  "chat": {
+    "open": "Fungua mazungumzo",
+    "close": "Funga mazungumzo",
+    "title": "Zungumza nasi",
+    "startPrompt": "Tuambie kidogo kuhusu wewe na jinsi tunavyoweza kukusaidia.",
+    "name": "Jina",
+    "email": "Barua pepe",
+    "phone": "Simu",
+    "message": "Ujumbe",
+    "start": "Anza mazungumzo",
+    "starting": "Inaanza…",
+    "startError": "Imeshindwa kuanza mazungumzo. Tafadhali jaribu tena.",
+    "closed": "Mazungumzo haya yamefungwa."
   }
 }

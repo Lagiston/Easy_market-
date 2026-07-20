@@ -25,10 +25,19 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Stricter limit on public inquiry creation to slow contact-form spam.
+// Stricter limit on public inquiry creation/reply to slow contact-form spam.
 export const inquiryLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});
+
+// Looser limit for the chat widget's message-polling GET — steady polling from
+// one IP needs far more headroom than the write endpoints above.
+export const inquiryPollLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 120,
   standardHeaders: "draft-8",
   legacyHeaders: false,
 });
