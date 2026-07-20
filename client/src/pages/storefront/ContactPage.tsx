@@ -4,7 +4,11 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
-import { createInquirySchema, type CreateInquiryFormInput } from "@es-market/core";
+import {
+  createInquirySchema,
+  type CreateInquiryFormInput,
+  type Language,
+} from "@es-market/core";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,7 +21,7 @@ const PHONE = "+255 700 000 000";
 const EMAIL = "hello@es-market.example";
 
 export default function ContactPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const rows = [
     {
@@ -80,7 +84,9 @@ export default function ContactPage() {
           <h2 className="mb-4 text-lg font-semibold">{t("contact.formTitle")}</h2>
           <form
             noValidate
-            onSubmit={handleSubmit((input) => mutation.mutate(input))}
+            onSubmit={handleSubmit((input) =>
+              mutation.mutate({ ...input, language: (i18n.resolvedLanguage ?? "en") as Language }),
+            )}
             className="grid gap-4"
           >
             <div className="grid gap-1.5">

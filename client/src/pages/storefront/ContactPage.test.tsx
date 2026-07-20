@@ -82,7 +82,25 @@ describe("storefront ContactPage", () => {
         customerName: "Jane Doe",
         customerEmail: "jane@example.com",
         message: "Do you have rice in stock?",
+        language: "en",
       }),
+    );
+  });
+
+  it("submits the active UI language with the inquiry", async () => {
+    mockedPost.mockResolvedValueOnce({ data: { inquiry: { id: "inq1" } } });
+    await i18n.changeLanguage("ar");
+    renderWithQuery(<ContactPage />);
+
+    await userEvent.type(screen.getByLabelText("الاسم"), "Jane Doe");
+    await userEvent.type(screen.getByLabelText("البريد الإلكتروني"), "jane@example.com");
+    await userEvent.type(screen.getByLabelText("الرسالة"), "Do you have rice in stock?");
+    await userEvent.click(screen.getByRole("button", { name: "إرسال الرسالة" }));
+
+    expect(await screen.findByText("شكرًا — سنتواصل معك قريبًا.")).toBeInTheDocument();
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/api/storefront/inquiries",
+      expect.objectContaining({ language: "ar" }),
     );
   });
 

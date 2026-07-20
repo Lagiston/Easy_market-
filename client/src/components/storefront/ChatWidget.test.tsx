@@ -66,6 +66,32 @@ describe("storefront ChatWidget", () => {
 
     await waitFor(() => expect(mockedGet).toHaveBeenCalledWith("/api/storefront/inquiries/inq1"));
     expect(window.localStorage.getItem("es-market-inquiry-id")).toBe("inq1");
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/api/storefront/inquiries",
+      expect.objectContaining({ language: "en" }),
+    );
+  });
+
+  it("submits the active UI language with the inquiry", async () => {
+    mockedPost.mockResolvedValueOnce({ data: { inquiry: { id: "inq1" } } });
+    mockedGet.mockResolvedValue({
+      data: { inquiry: { id: "inq1", status: "OPEN", messages: [] } },
+    });
+    await i18n.changeLanguage("ar");
+    renderWithQuery(<ChatWidget />);
+    await userEvent.click(screen.getByRole("button", { name: "فتح المحادثة" }));
+
+    await userEvent.type(screen.getByLabelText("الاسم"), "Jane Doe");
+    await userEvent.type(screen.getByLabelText("البريد الإلكتروني"), "jane@example.com");
+    await userEvent.type(screen.getByLabelText("الرسالة"), "Do you have rice in stock?");
+    await userEvent.click(screen.getByRole("button", { name: "بدء المحادثة" }));
+
+    await waitFor(() =>
+      expect(mockedPost).toHaveBeenCalledWith(
+        "/api/storefront/inquiries",
+        expect.objectContaining({ language: "ar" }),
+      ),
+    );
   });
 
   it("renders customer and staff messages with a reply box", async () => {

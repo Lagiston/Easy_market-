@@ -195,14 +195,23 @@ model Inquiry {
   customerName    String
   customerEmail   String
   customerPhone   String?
+  // Bare code from core's LANGUAGES ("en"/"ar"/"sw"/"fr") — the customer's UI
+  // language at submission time, not a Prisma enum (matches how LocalizedName
+  // treats language as plain string keys rather than DB-enum-backed).
+  language        String         @default("en")
   assignedAgentId String?
   assignedAgent   User?          @relation("InquiryAssignedAgent", fields: [assignedAgentId], references: [id])
+  // Null = never escalated. Orthogonal to `status` — an inquiry can be OPEN
+  // (or RESOLVED) and escalated at the same time; escalation doesn't replace
+  // the OPEN/RESOLVED/CLOSED lifecycle.
+  escalatedAt     DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   messages        Message[]
 
   @@index([assignedAgentId])
   @@index([status])
+  @@index([status, assignedAgentId])
   @@map("inquiry")
 }
 

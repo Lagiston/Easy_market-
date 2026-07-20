@@ -83,4 +83,13 @@ export {
   addMessageSchema,
   type AddMessageInput,
   type AddMessageFormInput,
+  INQUIRY_QUEUES,
+  type InquiryQueue,
+  inquiryListQuerySchema,
+  type InquiryListQuery,
+  assignInquirySchema,
+  type AssignInquiryInput,
+  type AssignInquiryFormInput,
+  escalateInquirySchema,
+  type EscalateInquiryInput,
 } from "./schemas/inquiry";

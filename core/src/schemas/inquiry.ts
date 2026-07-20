@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { sanitizeText } from "../sanitize";
+import { LANGUAGES } from "./localized";
 
 // Mirrors the `InquiryChannel` enum in server/prisma/schema.prisma. Shared here so
 // the client (which has no access to the Prisma-generated enum) and server both
@@ -72,6 +73,9 @@ export const createInquirySchema = z.object({
     .max(2000, MESSAGE_MAX_ERROR)
     .transform(sanitizeText)
     .refine((value) => value.length >= 10, MESSAGE_ERROR),
+  // The customer's UI language at submission time — defaulted (not required)
+  // so the route stays robust against an old/cached client build that omits it.
+  language: z.enum(LANGUAGES).default("en"),
 });
 
 export type CreateInquiryInput = z.infer<typeof createInquirySchema>;
@@ -92,3 +96,35 @@ export const addMessageSchema = z.object({
 
 export type AddMessageInput = z.infer<typeof addMessageSchema>;
 export type AddMessageFormInput = z.input<typeof addMessageSchema>;
+
+// Staff inbox queue filter: "mine" is resolved server-side from the signed-in
+// user's id — never trust a client-supplied agent id for that.
+export const INQUIRY_QUEUES = ["mine", "unassigned", "all"] as const;
+export type InquiryQueue = (typeof INQUIRY_QUEUES)[number];
+
+export const inquiryListQuerySchema = z.object({
+  status: z.enum(INQUIRY_STATUSES).optional(),
+  queue: z.enum(INQUIRY_QUEUES).default("all"),
+});
+
+export type InquiryListQuery = z.infer<typeof inquiryListQuerySchema>;
+
+// Staff assignment — omitting/blanking agentId unassigns. Mirrors the
+// assignedAgentId preprocess pattern in core/src/schemas/product.ts.
+export const assignInquirySchema = z.object({
+  agentId: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().min(1).max(100).optional(),
+  ),
+});
+
+export type AssignInquiryInput = z.infer<typeof assignInquirySchema>;
+export type AssignInquiryFormInput = z.input<typeof assignInquirySchema>;
+
+// Escalation always hands the inquiry to a specific admin — unlike
+// assignInquirySchema's agentId, this one is required (never an unassign).
+export const escalateInquirySchema = z.object({
+  agentId: z.string().trim().min(1).max(100),
+});
+
+export type EscalateInquiryInput = z.infer<typeof escalateInquirySchema>;

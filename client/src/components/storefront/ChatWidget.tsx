@@ -12,6 +12,7 @@ import {
   MessageSender,
   type AddMessageFormInput,
   type CreateInquiryFormInput,
+  type Language,
 } from "@es-market/core";
 import {
   clearStoredInquiryId,
@@ -39,7 +40,7 @@ type Thread = {
 const POLL_INTERVAL_MS = 4000;
 
 export default function ChatWidget() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [inquiryId, setInquiryId] = useState<string | null>(() => getStoredInquiryId());
@@ -120,7 +121,12 @@ export default function ChatWidget() {
           {!inquiryId ? (
             <form
               noValidate
-              onSubmit={startForm.handleSubmit((input) => startMutation.mutate(input))}
+              onSubmit={startForm.handleSubmit((input) =>
+                startMutation.mutate({
+                  ...input,
+                  language: (i18n.resolvedLanguage ?? "en") as Language,
+                }),
+              )}
               className="flex flex-1 flex-col gap-3 overflow-y-auto p-4"
             >
               <p className="text-sm text-muted-foreground">{t("chat.startPrompt")}</p>
