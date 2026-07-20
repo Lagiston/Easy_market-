@@ -1,10 +1,26 @@
 import { Link, useNavigate } from "react-router";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import { Role } from "@es-market/core";
 import { authClient, type SessionUser } from "@/lib/auth-client";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
+const ATTENTION_POLL_MS = 30000;
 
 export default function Layout({ user }: { user: SessionUser }) {
   const navigate = useNavigate();
+
+  // Inquiries still open/resolved that are unclaimed or escalated — the nav
+  // badge's "needs a human to look at this" count.
+  const { data: attentionCount } = useQuery({
+    queryKey: ["inquiries-attention-count"],
+    queryFn: () =>
+      axios
+        .get<{ count: number }>("/api/inquiries/attention-count")
+        .then((res) => res.data.count),
+    refetchInterval: ATTENTION_POLL_MS,
+  });
 
   async function handleSignOut() {
     await authClient.signOut({
@@ -28,9 +44,17 @@ export default function Layout({ user }: { user: SessionUser }) {
         </Link>
         <Link
           to="/admin/inquiries"
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           Inquiries
+          {!!attentionCount && (
+            <Badge
+              variant="destructive"
+              aria-label={`${attentionCount} inquiries need attention`}
+            >
+              {attentionCount}
+            </Badge>
+          )}
         </Link>
         {user.role === Role.ADMIN && (
           <Link

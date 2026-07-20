@@ -146,6 +146,20 @@ inquiriesRouter.get("/inquiries", requireAuth, async (req, res) => {
   res.json({ inquiries });
 });
 
+// Nav badge count: inquiries still open/resolved (not CLOSED) that are either
+// unclaimed or escalated — the two "needs a human to look at this" signals.
+// Registered before the /:id route below so "attention-count" isn't captured
+// as an id.
+inquiriesRouter.get("/inquiries/attention-count", requireAuth, async (req, res) => {
+  const count = await prisma.inquiry.count({
+    where: {
+      status: { not: InquiryStatus.CLOSED },
+      OR: [{ assignedAgentId: null }, { escalatedAt: { not: null } }],
+    },
+  });
+  res.json({ count });
+});
+
 inquiriesRouter.get<{ id: string }>("/inquiries/:id", requireAuth, async (req, res) => {
   const inquiry = await prisma.inquiry.findUnique({
     where: { id: req.params.id },

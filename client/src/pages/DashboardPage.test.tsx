@@ -47,7 +47,7 @@ const categories = [
   { id: "c2", name: { en: "Beverages" } },
 ];
 
-const stats = { products: 3, orders: 12, lowStock: 1 };
+const stats = { products: 3, orders: 12, lowStock: 1, openInquiries: 4, escalatedInquiries: 2 };
 
 describe("DashboardPage", () => {
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe("DashboardPage", () => {
     );
   });
 
-  it("shows product, order, and low-stock counts", async () => {
+  it("shows product, order, low-stock, and inquiry counts", async () => {
     renderWithQuery(
       <MemoryRouter>
         <DashboardPage />
@@ -72,9 +72,13 @@ describe("DashboardPage", () => {
     const productsTile = screen.getByText("Products").closest("[data-slot=card]")!;
     const ordersTile = screen.getByText("Orders").closest("[data-slot=card]")!;
     const lowStockTile = screen.getByText("Low-stock items").closest("[data-slot=card]")!;
+    const openInquiriesTile = screen.getByText("Open inquiries").closest("[data-slot=card]")!;
+    const escalatedTile = screen.getByText("Escalated inquiries").closest("[data-slot=card]")!;
     expect(await within(productsTile as HTMLElement).findByText("3")).toBeInTheDocument();
     expect(within(ordersTile as HTMLElement).getByText("12")).toBeInTheDocument();
     expect(within(lowStockTile as HTMLElement).getByText("1")).toBeInTheDocument();
+    expect(within(openInquiriesTile as HTMLElement).getByText("4")).toBeInTheDocument();
+    expect(within(escalatedTile as HTMLElement).getByText("2")).toBeInTheDocument();
   });
 
   it("shows all products by default", async () => {

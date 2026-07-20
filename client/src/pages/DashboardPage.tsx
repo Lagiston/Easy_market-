@@ -27,7 +27,13 @@ import {
 } from "@/components/ui/card";
 
 type Category = { id: string; name: LocalizedName };
-type DashboardStats = { products: number; orders: number; lowStock: number };
+type DashboardStats = {
+  products: number;
+  orders: number;
+  lowStock: number;
+  openInquiries: number;
+  escalatedInquiries: number;
+};
 
 const ALL_CATEGORIES = "all";
 const ALL_STATUSES = "all";
@@ -105,10 +111,12 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-5">
         <StatCard label="Products" value={stats?.products} />
         <StatCard label="Orders" value={stats?.orders} />
         <StatCard label="Low-stock items" value={stats?.lowStock} />
+        <StatCard label="Open inquiries" value={stats?.openInquiries} />
+        <StatCard label="Escalated inquiries" value={stats?.escalatedInquiries} />
       </div>
       <Card>
         <CardHeader className="space-y-1.5">
