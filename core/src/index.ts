@@ -70,3 +70,14 @@ export {
   type UpdateCategoryInput,
   type UpdateCategoryFormInput,
 } from "./schemas/category";
+export {
+  InquiryChannel,
+  INQUIRY_CHANNELS,
+  InquiryStatus,
+  INQUIRY_STATUSES,
+  MessageSender,
+  MESSAGE_SENDERS,
+  createInquirySchema,
+  type CreateInquiryInput,
+  type CreateInquiryFormInput,
+} from "./schemas/inquiry";

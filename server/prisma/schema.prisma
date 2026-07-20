@@ -25,6 +25,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
   assignedProducts Product[] @relation("ProductAssignedAgent")
+  assignedInquiries Inquiry[] @relation("InquiryAssignedAgent")
+  authoredMessages  Message[] @relation("MessageAuthor")
 
   @@unique([email])
   @@map("user")
@@ -169,4 +171,51 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@map("order_item")
+}
+
+enum InquiryChannel {
+  WEBSITE
+}
+
+enum InquiryStatus {
+  OPEN
+  RESOLVED
+  CLOSED
+}
+
+enum MessageSender {
+  CUSTOMER
+  STAFF
+}
+
+model Inquiry {
+  id              String         @id
+  channel         InquiryChannel @default(WEBSITE)
+  status          InquiryStatus  @default(OPEN)
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  assignedAgentId String?
+  assignedAgent   User?          @relation("InquiryAssignedAgent", fields: [assignedAgentId], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  messages        Message[]
+
+  @@index([assignedAgentId])
+  @@index([status])
+  @@map("inquiry")
+}
+
+model Message {
+  id           String        @id
+  inquiryId    String
+  inquiry      Inquiry       @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  sender       MessageSender
+  authorUserId String?
+  author       User?         @relation("MessageAuthor", fields: [authorUserId], references: [id])
+  body         String
+  createdAt    DateTime      @default(now())
+
+  @@index([inquiryId])
+  @@map("message")
 }

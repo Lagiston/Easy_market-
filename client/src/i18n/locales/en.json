@@ -36,7 +36,14 @@
     "address": "Address",
     "addressValue": "12 Market Street, City Center",
     "hours": "Opening hours",
-    "hoursValue": "Mon–Sat: 8:00–20:00, Sun: 9:00–14:00"
+    "hoursValue": "Mon–Sat: 8:00–20:00, Sun: 9:00–14:00",
+    "formTitle": "Send us a message",
+    "name": "Name",
+    "message": "Message",
+    "send": "Send message",
+    "sending": "Sending…",
+    "success": "Thanks — we'll get back to you soon.",
+    "error": "Could not send your message. Please try again."
   },
   "products": {
     "title": "Products",

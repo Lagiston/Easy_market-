@@ -60,7 +60,7 @@ Goal: customer places a pay-on-delivery order; staff manage it.
 
 Goal: the human support pipeline works before AI is layered on.
 
-- [ ] 5.1 Schema: `Inquiry` (channel-agnostic `channel` field), `Message`, status/queue fields
+- [x] 5.1 Schema: `Inquiry` (channel-agnostic `channel` field), `Message`, status/queue fields
 - [ ] 5.2 Contact/support form on storefront → creates inquiry
 - [ ] 5.3 Customer chat widget: simple threaded conversation (SSE or polling)
 - [ ] 5.4 Dashboard inquiry inbox: queues, status filters, assignment
