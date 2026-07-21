@@ -74,7 +74,7 @@ Goal: the human support pipeline works before AI is layered on.
 Goal: AI classifies inquiries and drafts replies; agents approve every send.
 
 - [x] 6.1 Schema + admin CRUD: `KbArticle` with per-language content
-- [ ] 6.2 Postgres full-text search over KB articles (per language)
+- [x] 6.2 Postgres full-text search over KB articles (per language)
 - [ ] 6.3 OpenAI integration module (server-side only): client wrapper, error handling, structured outputs
 - [ ] 6.4 Inquiry classification (GPT-5 mini): topic, product concerned, urgency, confidence → auto-routing to queues
       — new nullable `Inquiry` fields: `aiTopic`/`aiUrgency` (plain strings, core-side constant, no new Prisma enum), `aiConfidence` (`Float?`), `aiProductId` (nullable FK to `Product`, mirrors `assignedAgentId`). No new queue column — "auto-routing" just means the classifier populates `assignedAgentId` itself (e.g. route to whoever's assigned to the concerned product), reusing the existing mine/unassigned/all derivation.

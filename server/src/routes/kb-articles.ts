@@ -3,7 +3,8 @@ import { Router } from "express";
 import { Role } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/require-auth";
-import { createKbArticleSchema, updateKbArticleSchema } from "@es-market/core";
+import { createKbArticleSchema, updateKbArticleSchema, kbSearchQuerySchema } from "@es-market/core";
+import { searchKbArticles } from "../lib/kb-search";
 
 // KbArticle endpoints; mounted at /api in index.ts.
 export const kbArticlesRouter = Router();
@@ -15,6 +16,24 @@ kbArticlesRouter.get("/kb-articles", requireAuth, requireRole(Role.ADMIN), async
   });
   res.json({ kbArticles });
 });
+
+// Verification/AI-retrieval-plumbing endpoint (not a client search feature —
+// no search box in the admin KbArticles page). Registered before any future
+// GET /kb-articles/:id route to avoid an :id/search path collision.
+kbArticlesRouter.get(
+  "/kb-articles/search",
+  requireAuth,
+  requireRole(Role.ADMIN),
+  async (req, res) => {
+    const parsed = kbSearchQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]!.message });
+      return;
+    }
+    const results = await searchKbArticles(parsed.data.q, parsed.data.language);
+    res.json({ kbArticles: results });
+  },
+);
 
 kbArticlesRouter.post("/kb-articles", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
   const parsed = createKbArticleSchema.safeParse(req.body);

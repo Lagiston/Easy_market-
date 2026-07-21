@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { localizedNameSchema } from "./localized";
+import { LANGUAGES, localizedNameSchema } from "./localized";
 import { sanitizeText } from "../sanitize";
 
 const BODY_ERROR = "Body must be 10000 characters or fewer";
@@ -53,3 +53,10 @@ export const updateKbArticleSchema = createKbArticleSchema;
 export type UpdateKbArticleInput = z.infer<typeof updateKbArticleSchema>;
 
 export type UpdateKbArticleFormInput = z.input<typeof updateKbArticleSchema>;
+
+export const kbSearchQuerySchema = z.object({
+  q: z.string().trim().min(1),
+  language: z.enum(LANGUAGES),
+});
+
+export type KbSearchQuery = z.infer<typeof kbSearchQuerySchema>;

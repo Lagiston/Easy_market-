@@ -97,9 +97,11 @@ export {
   kbArticleBodySchema,
   createKbArticleSchema,
   updateKbArticleSchema,
+  kbSearchQuerySchema,
   type KbArticleBody,
   type CreateKbArticleInput,
   type CreateKbArticleFormInput,
   type UpdateKbArticleInput,
   type UpdateKbArticleFormInput,
+  type KbSearchQuery,
 } from "./schemas/kb-article";

@@ -238,6 +238,15 @@ model KbArticle {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  // Generated tsvector columns (title + body per language, weighted A/B) — see
+  // migration 20260721_kb_article_search. Prisma can't read/write Unsupported
+  // fields; declaring them here just stops future migrations from treating
+  // them as drift and proposing a DROP COLUMN.
+  searchEn Unsupported("tsvector")? @map("search_en")
+  searchAr Unsupported("tsvector")? @map("search_ar")
+  searchSw Unsupported("tsvector")? @map("search_sw")
+  searchFr Unsupported("tsvector")? @map("search_fr")
+
   @@index([topic])
   @@map("kb_article")
 }
