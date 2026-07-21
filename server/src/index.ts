@@ -18,6 +18,7 @@ import { ordersRouter } from "./routes/orders";
 import { inquiriesRouter } from "./routes/inquiries";
 import { settingsRouter } from "./routes/settings";
 import { dashboardRouter } from "./routes/dashboard";
+import { kbArticlesRouter } from "./routes/kb-articles";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -54,6 +55,7 @@ app.use("/api", ordersRouter);
 app.use("/api", inquiriesRouter);
 app.use("/api", settingsRouter);
 app.use("/api", dashboardRouter);
+app.use("/api", kbArticlesRouter);
 
 app.listen(port, () => {
   console.log(`ES-Market server listening on http://localhost:${port}`);

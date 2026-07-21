@@ -93,3 +93,13 @@ export {
   escalateInquirySchema,
   type EscalateInquiryInput,
 } from "./schemas/inquiry";
+export {
+  kbArticleBodySchema,
+  createKbArticleSchema,
+  updateKbArticleSchema,
+  type KbArticleBody,
+  type CreateKbArticleInput,
+  type CreateKbArticleFormInput,
+  type UpdateKbArticleInput,
+  type UpdateKbArticleFormInput,
+} from "./schemas/kb-article";

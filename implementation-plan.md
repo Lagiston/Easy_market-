@@ -73,14 +73,18 @@ Goal: the human support pipeline works before AI is layered on.
 
 Goal: AI classifies inquiries and drafts replies; agents approve every send.
 
-- [ ] 6.1 Schema + admin CRUD: `KbArticle` with per-language content
+- [x] 6.1 Schema + admin CRUD: `KbArticle` with per-language content
 - [ ] 6.2 Postgres full-text search over KB articles (per language)
 - [ ] 6.3 OpenAI integration module (server-side only): client wrapper, error handling, structured outputs
 - [ ] 6.4 Inquiry classification (GPT-5 mini): topic, product concerned, urgency, confidence → auto-routing to queues
+      — new nullable `Inquiry` fields: `aiTopic`/`aiUrgency` (plain strings, core-side constant, no new Prisma enum), `aiConfidence` (`Float?`), `aiProductId` (nullable FK to `Product`, mirrors `assignedAgentId`). No new queue column — "auto-routing" just means the classifier populates `assignedAgentId` itself (e.g. route to whoever's assigned to the concerned product), reusing the existing mine/unassigned/all derivation.
 - [ ] 6.5 Escalation rules: low confidence, complaints/refunds, "human please" → straight to agent, no draft
+      — reuse `Inquiry.escalatedAt` as a general actor-agnostic "needs a human" signal, but decoupled from admin hand-off: the AI path sets `escalatedAt: new Date()` only, leaving `assignedAgentId` untouched (no specific admin to hand off to — stays in the unassigned pool for any agent to claim). The existing staff-facing escalate endpoint is unchanged and keeps requiring an admin, since a person escalating means "hand this to someone specific."
 - [ ] 6.6 AI reply drafting (GPT-5): retrieve KB candidates via FTS, draft in customer's language
+      — reuses the already-anticipated `Message.sender = AI_DRAFT` value; no schema surprise.
 - [ ] 6.7 Agent review workflow: view draft with sources, edit, approve/send, or discard and write manually
 - [ ] 6.8 Draft-quality tracking: store whether draft was sent unedited / edited / discarded (feeds success metrics)
+      — build 6.7 + 6.8 together: add `Message.draftStatus` (nullable, meaningful only on `AI_DRAFT` rows — `PENDING`/`SENT_UNEDITED`/`SENT_EDITED`/`DISCARDED`) up front rather than bolting on 6.8's tracking after 6.7 ships. Approving-with-edits mints a new `STAFF` message with the edited body rather than mutating the draft in place, preserving `Message`'s existing immutability (no `updatedAt`).
 
 **Demo:** inquiry arrives, gets classified and routed, agent approves an AI draft and it's sent.
 

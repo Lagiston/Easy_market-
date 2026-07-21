@@ -228,3 +228,16 @@ model Message {
   @@index([inquiryId])
   @@map("message")
 }
+
+model KbArticle {
+  id        String    @id
+  title     Json
+  body      Json
+  topic     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([topic])
+  @@map("kb_article")
+}

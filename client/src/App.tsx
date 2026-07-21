@@ -22,6 +22,7 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import DashboardPage from "./pages/DashboardPage";
 import CategoriesPage from "./pages/CategoriesPage";
+import KbArticlesPage from "./pages/KbArticlesPage";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="kb-articles" element={<KbArticlesPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>
