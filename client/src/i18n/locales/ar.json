@@ -4,7 +4,8 @@
     "home": "الرئيسية",
     "products": "المنتجات",
     "orderStatus": "حالة الطلب",
-    "contact": "اتصل بنا"
+    "contact": "اتصل بنا",
+    "signIn": "تسجيل الدخول"
   },
   "language": {
     "label": "اللغة"
@@ -142,5 +143,44 @@
     "starting": "جارٍ البدء…",
     "startError": "تعذر بدء المحادثة. حاول مرة أخرى.",
     "closed": "هذه المحادثة مغلقة."
+  },
+  "account": {
+    "title": "حسابي",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "myOrders": "طلباتي",
+    "signOut": "تسجيل الخروج",
+    "login": {
+      "title": "تسجيل الدخول",
+      "submit": "تسجيل الدخول",
+      "submitting": "جارٍ تسجيل الدخول…",
+      "error": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+      "noAccount": "ليس لديك حساب؟",
+      "signUpLink": "إنشاء حساب"
+    },
+    "signUp": {
+      "title": "إنشاء حساب",
+      "submit": "إنشاء حساب",
+      "submitting": "جارٍ إنشاء الحساب…",
+      "error": "تعذر إنشاء حسابك. حاول مرة أخرى.",
+      "hasAccount": "لديك حساب بالفعل؟",
+      "signInLink": "تسجيل الدخول"
+    },
+    "orders": {
+      "title": "طلباتي",
+      "empty": "لم تقم بأي طلبات بعد.",
+      "error": "تعذر تحميل طلباتك. حاول مرة أخرى.",
+      "linkPhoneLabel": "هل طلبت من قبل كضيف؟ أدخل رقم الهاتف لربط الطلب",
+      "linkPhoneSubmit": "ربط الطلبات",
+      "linkPhoneSuccess_zero": "لم يتم ربط أي طلبات بحسابك.",
+      "linkPhoneSuccess_one": "تم ربط طلب واحد بحسابك.",
+      "linkPhoneSuccess_two": "تم ربط طلبين بحسابك.",
+      "linkPhoneSuccess_few": "تم ربط {{count}} طلبات بحسابك.",
+      "linkPhoneSuccess_many": "تم ربط {{count}} طلبًا بحسابك.",
+      "linkPhoneSuccess_other": "تم ربط {{count}} طلب بحسابك.",
+      "linkPhoneNoMatch": "لم يتم العثور على طلبات غير مرتبطة بهذا الرقم.",
+      "linkPhoneError": "تعذر ربط الطلبات. حاول مرة أخرى."
+    }
   }
 }

@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { Router, type Response } from "express";
+import { fromNodeHeaders } from "better-auth/node";
 import { FulfillmentType, OrderStatus, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { generateOrderCode } from "../lib/order-code";
 import { computeDeliveryFee, getSettings } from "../lib/settings";
 import { requireAuth } from "../middleware/require-auth";
+import { customerAuth } from "../lib/customer-auth";
 import {
   cancelOrderSchema,
   orderListQuerySchema,
@@ -26,6 +28,35 @@ function englishName(value: Prisma.JsonValue): string {
 // A code collision aborts the whole Postgres transaction, so the retry loop
 // wraps the transaction rather than the create.
 const CODE_RETRIES = 5;
+
+export const orderWithItems = { items: true } as const;
+
+// Guest/customer-safe order shape — omits customerName/customerPhone/address/
+// customerId (internal-only fields; see serializeOrder below for the staff
+// version that includes them). Shared by the guest lookup route and the
+// signed-in customer's order-history list, which return an identical shape.
+export function serializePublicOrder(
+  order: Prisma.OrderGetPayload<{ include: typeof orderWithItems }>,
+) {
+  const subtotal = order.items.reduce(
+    (sum, item) => sum + item.unitPrice * item.quantity,
+    0,
+  );
+  return {
+    code: order.code,
+    status: order.status,
+    fulfillmentType: order.fulfillmentType,
+    createdAt: order.createdAt,
+    subtotal,
+    deliveryFee: order.deliveryFee,
+    total: subtotal + order.deliveryFee,
+    items: order.items.map((item) => ({
+      productName: item.productName,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+    })),
+  };
+}
 
 ordersRouter.post("/storefront/orders", async (req, res) => {
   const parsed = placeOrderSchema.safeParse(req.body);
@@ -56,6 +87,13 @@ ordersRouter.post("/storefront/orders", async (req, res) => {
   );
   const deliveryFee = computeDeliveryFee(subtotal, fulfillmentType, await getSettings());
 
+  // Soft/optional auth: this route stays public for guests either way — if a
+  // valid customer session cookie happens to be present, the order is linked
+  // to that account, but nothing here requires or blocks on it.
+  const customerSession = await customerAuth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+
   for (let attempt = 0; attempt < CODE_RETRIES; attempt++) {
     const code = generateOrderCode();
     try {
@@ -80,6 +118,7 @@ ordersRouter.post("/storefront/orders", async (req, res) => {
             customerName,
             customerPhone,
             address: address ?? null,
+            customerId: customerSession?.user.id ?? null,
             deliveryFee,
             items: {
               create: products.map((product) => ({
@@ -127,7 +166,7 @@ ordersRouter.post("/storefront/orders", async (req, res) => {
   res.status(500).json({ error: "Could not generate an order code, please try again" });
 });
 
-function normalizePhone(value: string): string {
+export function normalizePhone(value: string): string {
   return value.replace(/[\s-]/g, "");
 }
 
@@ -143,38 +182,17 @@ ordersRouter.get("/storefront/orders/lookup", async (req, res) => {
 
   const order = await prisma.order.findUnique({
     where: { code },
-    include: { items: true },
+    include: orderWithItems,
   });
   if (!order || normalizePhone(order.customerPhone) !== normalizePhone(phone)) {
     res.status(404).json({ error: "Order not found" });
     return;
   }
 
-  const subtotal = order.items.reduce(
-    (sum, item) => sum + item.unitPrice * item.quantity,
-    0,
-  );
-  res.json({
-    order: {
-      code: order.code,
-      status: order.status,
-      fulfillmentType: order.fulfillmentType,
-      createdAt: order.createdAt,
-      subtotal,
-      deliveryFee: order.deliveryFee,
-      total: subtotal + order.deliveryFee,
-      items: order.items.map((item) => ({
-        productName: item.productName,
-        unitPrice: item.unitPrice,
-        quantity: item.quantity,
-      })),
-    },
-  });
+  res.json({ order: serializePublicOrder(order) });
 });
 
 // --- Staff endpoints (any signed-in staff: ADMIN or AGENT) ---
-
-const orderWithItems = { items: true } as const;
 
 function serializeOrder(
   order: Prisma.OrderGetPayload<{ include: typeof orderWithItems }>,

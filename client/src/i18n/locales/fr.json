@@ -4,7 +4,8 @@
     "home": "Accueil",
     "products": "Produits",
     "orderStatus": "Suivi de commande",
-    "contact": "Contact"
+    "contact": "Contact",
+    "signIn": "Se connecter"
   },
   "language": {
     "label": "Langue"
@@ -142,5 +143,40 @@
     "starting": "Démarrage…",
     "startError": "Impossible de démarrer le chat. Veuillez réessayer.",
     "closed": "Cette conversation est fermée."
+  },
+  "account": {
+    "title": "Mon compte",
+    "name": "Nom",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "myOrders": "Mes commandes",
+    "signOut": "Se déconnecter",
+    "login": {
+      "title": "Se connecter",
+      "submit": "Se connecter",
+      "submitting": "Connexion…",
+      "error": "E-mail ou mot de passe invalide",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "signUpLink": "S'inscrire"
+    },
+    "signUp": {
+      "title": "Créer un compte",
+      "submit": "S'inscrire",
+      "submitting": "Création du compte…",
+      "error": "Impossible de créer votre compte. Veuillez réessayer.",
+      "hasAccount": "Vous avez déjà un compte ?",
+      "signInLink": "Se connecter"
+    },
+    "orders": {
+      "title": "Mes commandes",
+      "empty": "Vous n'avez pas encore passé de commande.",
+      "error": "Impossible de charger vos commandes. Veuillez réessayer.",
+      "linkPhoneLabel": "Déjà commandé en tant qu'invité ? Entrez ce numéro pour lier la commande",
+      "linkPhoneSubmit": "Lier les commandes",
+      "linkPhoneSuccess_one": "{{count}} commande liée à votre compte.",
+      "linkPhoneSuccess_other": "{{count}} commandes liées à votre compte.",
+      "linkPhoneNoMatch": "Aucune commande non liée trouvée pour ce numéro.",
+      "linkPhoneError": "Impossible de lier les commandes. Veuillez réessayer."
+    }
   }
 }

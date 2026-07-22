@@ -9,6 +9,12 @@ export {
   type UserListQuery,
 } from "./schemas/user";
 export {
+  customerSignUpSchema,
+  customerSignInSchema,
+  type CustomerSignUpInput,
+  type CustomerSignInInput,
+} from "./schemas/customer";
+export {
   LANGUAGES,
   localizedNameSchema,
   type Language,
@@ -50,12 +56,14 @@ export {
   cancelOrderSchema,
   orderListQuerySchema,
   orderLookupSchema,
+  linkGuestOrdersSchema,
   type CheckoutFormInput,
   type PlaceOrderInput,
   type CancelOrderInput,
   type OrderListQuery,
   type OrderLookupInput,
   type OrderLookupFormInput,
+  type LinkGuestOrdersInput,
 } from "./schemas/order";
 export {
   DEFAULT_SETTINGS,

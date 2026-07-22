@@ -4,7 +4,8 @@
     "home": "Home",
     "products": "Products",
     "orderStatus": "Order status",
-    "contact": "Contact"
+    "contact": "Contact",
+    "signIn": "Sign in"
   },
   "language": {
     "label": "Language"
@@ -142,5 +143,40 @@
     "starting": "Starting…",
     "startError": "Could not start the chat. Please try again.",
     "closed": "This conversation is closed."
+  },
+  "account": {
+    "title": "My account",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "myOrders": "My orders",
+    "signOut": "Sign out",
+    "login": {
+      "title": "Sign in",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "error": "Invalid email or password",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up"
+    },
+    "signUp": {
+      "title": "Create an account",
+      "submit": "Sign up",
+      "submitting": "Creating account…",
+      "error": "Could not create your account. Please try again.",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in"
+    },
+    "orders": {
+      "title": "My orders",
+      "empty": "You haven't placed any orders yet.",
+      "error": "Could not load your orders. Please try again.",
+      "linkPhoneLabel": "Ordered as a guest before? Enter that phone number to link it",
+      "linkPhoneSubmit": "Link orders",
+      "linkPhoneSuccess_one": "Linked {{count}} order to your account.",
+      "linkPhoneSuccess_other": "Linked {{count}} orders to your account.",
+      "linkPhoneNoMatch": "No unclaimed orders found for that phone number.",
+      "linkPhoneError": "Could not link orders. Please try again."
+    }
   }
 }

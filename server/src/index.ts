@@ -1,6 +1,7 @@
 import express from "express";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
+import { customerAuth } from "./lib/customer-auth";
 import { prisma } from "./lib/prisma";
 import { uploadsDir } from "./lib/uploads";
 import {
@@ -16,6 +17,7 @@ import { productsRouter } from "./routes/products";
 import { categoriesRouter } from "./routes/categories";
 import { storefrontRouter } from "./routes/storefront";
 import { ordersRouter } from "./routes/orders";
+import { customerRouter } from "./routes/customer";
 import { inquiriesRouter } from "./routes/inquiries";
 import { settingsRouter } from "./routes/settings";
 import { dashboardRouter } from "./routes/dashboard";
@@ -27,8 +29,13 @@ import { registerProductClassificationWorker } from "./lib/product-classificatio
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
 
+// POST /customer/orders/link-by-phone is rate-limited too, but per signed-in
+// customer rather than per IP — see linkOrdersLimiter's own comment. That
+// needs req.customer, so it's applied directly in customer.ts's route
+// registration (after requireCustomerAuth) instead of here.
 if (process.env.NODE_ENV === "production") {
   app.use("/api/auth", authLimiter);
+  app.use("/api/customer-auth", authLimiter);
   app.use("/api/storefront/orders", orderLimiter);
   app.post("/api/storefront/inquiries", inquiryLimiter);
   app.post("/api/storefront/inquiries/:id/messages", inquiryLimiter);
@@ -38,6 +45,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
+app.all("/api/customer-auth/*splat", toNodeHandler(customerAuth));
 
 app.use(express.json());
 
@@ -57,6 +65,7 @@ app.use("/api", productsRouter);
 app.use("/api", categoriesRouter);
 app.use("/api", storefrontRouter);
 app.use("/api", ordersRouter);
+app.use("/api", customerRouter);
 app.use("/api", inquiriesRouter);
 app.use("/api", settingsRouter);
 app.use("/api", dashboardRouter);

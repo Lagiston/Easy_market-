@@ -1,13 +1,15 @@
 import { Link, Outlet } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, User } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { customerAuthClient } from "@/lib/customer-auth-client";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ChatWidget from "./ChatWidget";
 
 export default function StorefrontLayout() {
   const { t } = useTranslation();
   const { totalQuantity } = useCart();
+  const { data: session } = customerAuthClient.useSession();
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -53,6 +55,13 @@ export default function StorefrontLayout() {
                 {totalQuantity}
               </span>
             )}
+          </Link>
+          <Link
+            to={session ? "/account" : "/account/login"}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <User className="size-4" />
+            {session ? session.user.name : t("nav.signIn")}
           </Link>
           <LanguageSwitcher />
         </div>

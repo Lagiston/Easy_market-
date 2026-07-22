@@ -80,6 +80,80 @@ model Verification {
   @@map("verification")
 }
 
+// Customer-facing accounts — a second, fully separate Better Auth instance
+// (server/src/lib/customer-auth.ts) from the staff User/Session/Account/
+// Verification tables above. Kept separate rather than adding a third Role
+// value: the staff instance has public signup deliberately disabled and
+// `role` is a staff-only, exhaustively ADMIN|AGENT concept elsewhere in the
+// codebase (requireRole, agent-assignment dropdowns, etc.) — reusing it would
+// mean either weakening that signup gate or bolting an unrelated concept onto
+// every place that treats Role as exhaustive. No deletedAt/soft-delete here:
+// there's no account-deactivation flow being built, so it would be
+// speculative — add it if/when that flow exists.
+model Customer {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      CustomerSession[]
+  accounts      CustomerAccount[]
+  orders        Order[]
+
+  @@unique([email])
+  @@map("customer")
+}
+
+model CustomerSession {
+  id         String   @id
+  expiresAt  DateTime
+  token      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  ipAddress  String?
+  userAgent  String?
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([customerId])
+  @@map("customer_session")
+}
+
+model CustomerAccount {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  customerId            String
+  customer              Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([customerId])
+  @@map("customer_account")
+}
+
+model CustomerVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("customer_verification")
+}
+
 model Category {
   id        String    @id
   name      Json
@@ -160,10 +234,18 @@ model Order {
   deliveryFee     Int             @default(0)
   cancelReason    CancelReason?
   callAttempts    Int             @default(0)
+  // Nullable: set only when the order was placed while signed in to a
+  // customer account (soft/optional auth in POST /storefront/orders — the
+  // route stays public either way). customerName/customerPhone/address stay
+  // as point-in-time snapshots regardless, same as OrderItem's
+  // productName/unitPrice snapshot pattern.
+  customerId      String?
+  customer        Customer?       @relation(fields: [customerId], references: [id])
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   items           OrderItem[]
 
+  @@index([customerId])
   @@map("order")
 }
 

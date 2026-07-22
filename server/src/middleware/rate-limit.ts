@@ -25,6 +25,24 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Stricter limit on claiming guest orders by phone — each request is a
+// phone-number guess that, if it hits, permanently transfers a stranger's
+// order (name/address/items) to the requester's account. Keyed on the
+// signed-in customer's id, not IP: unlike every other limiter here, IP alone
+// isn't a strong enough key for an *authenticated* enumeration attack — one
+// account could rotate IPs (VPN/proxy) and keep guessing past a per-IP cap
+// while staying logged in. This means the middleware must run after
+// requireCustomerAuth has populated req.customer (see its route registration
+// in customer.ts), unlike every other limiter here, which are all mounted
+// globally in index.ts before any route runs.
+export const linkOrdersLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  keyGenerator: (req) => req.customer.id,
+});
+
 // Stricter limit on public inquiry creation/reply to slow contact-form spam.
 export const inquiryLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

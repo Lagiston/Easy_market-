@@ -85,6 +85,18 @@ export type OrderLookupInput = z.infer<typeof orderLookupSchema>;
 // Pre-transform shape (what the form fields hold).
 export type OrderLookupFormInput = z.input<typeof orderLookupSchema>;
 
+// Signed-in customer voluntarily claiming past guest orders placed with a
+// phone number, matched against Order.customerPhone (normalized the same way
+// as orderLookupSchema's lookup — see server/src/routes/orders.ts's
+// normalizePhone). Same lenient "non-empty" validation as the lookup phone
+// field, since this matches an already-placed order rather than validating a
+// new phone's format.
+export const linkGuestOrdersSchema = z.object({
+  phone: z.string(LOOKUP_PHONE_ERROR).trim().min(1, LOOKUP_PHONE_ERROR),
+});
+
+export type LinkGuestOrdersInput = z.infer<typeof linkGuestOrdersSchema>;
+
 const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
 const PHONE_ERROR = "A valid phone number is required";
 const ADDRESS_ERROR = "Address is required for delivery";

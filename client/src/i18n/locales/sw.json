@@ -4,7 +4,8 @@
     "home": "Nyumbani",
     "products": "Bidhaa",
     "orderStatus": "Hali ya oda",
-    "contact": "Wasiliana"
+    "contact": "Wasiliana",
+    "signIn": "Ingia"
   },
   "language": {
     "label": "Lugha"
@@ -142,5 +143,40 @@
     "starting": "Inaanza…",
     "startError": "Imeshindwa kuanza mazungumzo. Tafadhali jaribu tena.",
     "closed": "Mazungumzo haya yamefungwa."
+  },
+  "account": {
+    "title": "Akaunti yangu",
+    "name": "Jina",
+    "email": "Barua pepe",
+    "password": "Nenosiri",
+    "myOrders": "Oda zangu",
+    "signOut": "Toka",
+    "login": {
+      "title": "Ingia",
+      "submit": "Ingia",
+      "submitting": "Inaingia…",
+      "error": "Barua pepe au nenosiri sio sahihi",
+      "noAccount": "Huna akaunti?",
+      "signUpLink": "Jisajili"
+    },
+    "signUp": {
+      "title": "Fungua akaunti",
+      "submit": "Jisajili",
+      "submitting": "Inafungua akaunti…",
+      "error": "Imeshindwa kufungua akaunti yako. Tafadhali jaribu tena.",
+      "hasAccount": "Una akaunti tayari?",
+      "signInLink": "Ingia"
+    },
+    "orders": {
+      "title": "Oda zangu",
+      "empty": "Bado hujafanya oda yoyote.",
+      "error": "Imeshindwa kupakia oda zako. Tafadhali jaribu tena.",
+      "linkPhoneLabel": "Umewahi kuagiza kama mgeni? Weka nambari hiyo ya simu kuunganisha oda",
+      "linkPhoneSubmit": "Unganisha oda",
+      "linkPhoneSuccess_one": "Oda {{count}} imeunganishwa kwenye akaunti yako.",
+      "linkPhoneSuccess_other": "Oda {{count}} zimeunganishwa kwenye akaunti yako.",
+      "linkPhoneNoMatch": "Hakuna oda zisizounganishwa zilizopatikana kwa nambari hiyo.",
+      "linkPhoneError": "Imeshindwa kuunganisha oda. Tafadhali jaribu tena."
+    }
   }
 }
