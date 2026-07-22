@@ -1,9 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import axios from "axios";
 import { MemoryRouter } from "react-router";
 import type { SortingState } from "@tanstack/react-table";
+import { renderWithQuery } from "@/test/render-with-query";
 import ProductsTable, { type ProductRow } from "./ProductsTable";
+
+vi.mock("axios");
+const mockedAxios = vi.mocked(axios, { deep: true });
 
 const products: ProductRow[] = [
   {
@@ -14,6 +19,10 @@ const products: ProductRow[] = [
     stock: 20,
     lowStockThreshold: 10,
     imageUrl: null,
+    tags: [],
+    aiSuggestedCategoryId: null,
+    aiSuggestedTags: [],
+    aiSuggestedAt: null,
     category: { id: "c1", name: { en: "Groceries" } },
     assignedAgent: null,
   },
@@ -25,13 +34,17 @@ const products: ProductRow[] = [
     stock: 5,
     lowStockThreshold: 10,
     imageUrl: null,
+    tags: [],
+    aiSuggestedCategoryId: null,
+    aiSuggestedTags: [],
+    aiSuggestedAt: null,
     category: { id: "c2", name: { en: "Beverages" } },
     assignedAgent: { id: "a1", name: "Alice Agent" },
   },
 ];
 
 function renderTable(sorting: SortingState, onSortingChange = vi.fn()) {
-  render(
+  renderWithQuery(
     <MemoryRouter>
       <ProductsTable
         products={products}
@@ -46,6 +59,10 @@ function renderTable(sorting: SortingState, onSortingChange = vi.fn()) {
 }
 
 describe("ProductsTable sorting", () => {
+  beforeEach(() => {
+    mockedAxios.get.mockResolvedValue({ data: { categories: [] } });
+  });
+
   it("renders rows in the order given by the products prop (server-sorted)", () => {
     renderTable([{ id: "createdAt", desc: true }]);
 

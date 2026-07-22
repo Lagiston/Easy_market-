@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { X } from "lucide-react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
@@ -8,6 +9,7 @@ import {
   updateProductSchema,
   Role,
   type LocalizedName,
+  type ProductClassification,
   type UpdateProductFormInput,
   type UpdateProductInput,
 } from "@es-market/core";
@@ -15,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -25,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ProductRow } from "@/components/ProductsTable";
+import { pingClassificationAccepted } from "@/lib/product-classification";
 
 type Category = { id: string; name: LocalizedName };
 type Agent = { id: string; name: string; role: Role };
@@ -59,6 +63,9 @@ export default function ProductForm({
     register,
     control,
     handleSubmit,
+    getValues,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<UpdateProductFormInput, unknown, UpdateProductInput>({
     resolver: zodResolver(product ? updateProductSchema : createProductSchema),
@@ -74,6 +81,7 @@ export default function ProductForm({
           lowStockThreshold: product.lowStockThreshold,
           categoryId: product.category.id,
           assignedAgentId: product.assignedAgent?.id ?? "",
+          tags: product.tags,
         }
       : {
           name: { en: "", ar: "" },
@@ -83,7 +91,21 @@ export default function ProductForm({
           lowStockThreshold: 10,
           categoryId: "",
           assignedAgentId: "",
+          tags: [],
         },
+  });
+
+  const nameEn = watch("name.en");
+  const watchedTags = watch("tags") ?? [];
+
+  const classifyMutation = useMutation({
+    mutationFn: async () =>
+      axios
+        .post<ProductClassification>("/api/ai/classify-product", {
+          name: getValues("name.en"),
+          description: getValues("description.en") || undefined,
+        })
+        .then((res) => res.data),
   });
 
   const mutation = useMutation({
@@ -250,6 +272,89 @@ export default function ProductForm({
           <p className="text-sm text-destructive">{errors.lowStockThreshold.message}</p>
         )}
       </div>
+      <div className="grid gap-2 rounded-md border p-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-medium">AI suggestions</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!nameEn?.trim() || classifyMutation.isPending}
+            onClick={() => classifyMutation.mutate()}
+          >
+            {classifyMutation.isPending ? "Suggesting…" : "Suggest with AI"}
+          </Button>
+        </div>
+        {classifyMutation.isError && (
+          <p className="text-sm text-destructive">
+            {axios.isAxiosError(classifyMutation.error) &&
+            classifyMutation.error.response?.data?.error
+              ? String(classifyMutation.error.response.data.error)
+              : "Could not get AI suggestions. Please try again."}
+          </p>
+        )}
+        {classifyMutation.isSuccess && (
+          <div className="grid gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Category:</span>
+              {classifyMutation.data.categoryId ? (
+                <>
+                  <span>
+                    {
+                      categories?.find(
+                        (category) => category.id === classifyMutation.data!.categoryId,
+                      )?.name.en
+                    }
+                  </span>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setValue("categoryId", classifyMutation.data!.categoryId!, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      });
+                      pingClassificationAccepted("category");
+                    }}
+                  >
+                    Apply
+                  </Button>
+                </>
+              ) : (
+                <span className="text-muted-foreground">No confident match</span>
+              )}
+            </div>
+            {classifyMutation.data.tags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 text-sm">
+                <span className="text-muted-foreground">Tags:</span>
+                {classifyMutation.data.tags.map((tag) => {
+                  const alreadyAdded = watchedTags.includes(tag);
+                  return (
+                    <Button
+                      key={tag}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      disabled={alreadyAdded}
+                      onClick={() => {
+                        setValue("tags", [...watchedTags, tag], {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        });
+                        pingClassificationAccepted("tag");
+                      }}
+                    >
+                      {alreadyAdded ? tag : `+ ${tag}`}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       <div className="grid gap-1.5">
         <Label htmlFor="product-form-category">Category</Label>
         <Controller
@@ -281,6 +386,51 @@ export default function ProductForm({
         {errors.categoryId && (
           <p className="text-sm text-destructive">{errors.categoryId.message}</p>
         )}
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="product-form-tag-input">Tags</Label>
+        <Controller
+          name="tags"
+          control={control}
+          render={({ field }) => {
+            const tags = field.value ?? [];
+            return (
+              <div className="grid gap-2">
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="gap-1 pe-1">
+                        {tag}
+                        <button
+                          type="button"
+                          aria-label={`Remove ${tag}`}
+                          onClick={() => field.onChange(tags.filter((t) => t !== tag))}
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <Input
+                  id="product-form-tag-input"
+                  placeholder="Type a tag and press Enter"
+                  aria-invalid={!!errors.tags}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    const value = event.currentTarget.value.trim().toLowerCase();
+                    if (value && !tags.includes(value)) {
+                      field.onChange([...tags, value]);
+                    }
+                    event.currentTarget.value = "";
+                  }}
+                />
+              </div>
+            );
+          }}
+        />
+        {errors.tags && <p className="text-sm text-destructive">{errors.tags.message}</p>}
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="product-form-assigned-agent">Assigned agent</Label>

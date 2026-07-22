@@ -19,6 +19,7 @@ const publicProductSelect = {
   price: true,
   stock: true,
   imageUrl: true,
+  tags: true,
   category: { select: { id: true, name: true } },
 } as const;
 
@@ -34,11 +35,12 @@ storefrontRouter.get("/storefront/products", async (req, res) => {
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { categoryId, minPrice, maxPrice, sort, page } = parsed.data;
+  const { categoryId, tag, minPrice, maxPrice, sort, page } = parsed.data;
 
   const where: Prisma.ProductWhereInput = {
     deletedAt: null,
     ...(categoryId ? { categoryId } : {}),
+    ...(tag ? { tags: { has: tag } } : {}),
     ...(minPrice !== undefined || maxPrice !== undefined
       ? {
           price: {
@@ -82,4 +84,18 @@ storefrontRouter.get("/storefront/categories", async (_req, res) => {
     orderBy: { createdAt: "desc" },
   });
   res.json({ categories });
+});
+
+// Distinct tags across the non-deleted catalog, for the storefront's tag
+// filter dropdown. v1 simplification: flattened/deduped in JS rather than a
+// dedicated SQL DISTINCT-on-array-elements query — fine at this catalog's
+// expected scale (mirrors the same tradeoff already flagged for the AI
+// classification prompt in product-classification.ts).
+storefrontRouter.get("/storefront/tags", async (_req, res) => {
+  const products = await prisma.product.findMany({
+    where: { deletedAt: null },
+    select: { tags: true },
+  });
+  const tags = [...new Set(products.flatMap((product) => product.tags))].sort();
+  res.json({ tags });
 });

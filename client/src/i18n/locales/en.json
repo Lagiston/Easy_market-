@@ -50,6 +50,8 @@
     "filters": {
       "category": "Category",
       "allCategories": "All categories",
+      "tag": "Tag",
+      "allTags": "All tags",
       "minPrice": "Min price",
       "maxPrice": "Max price",
       "sort": "Sort by",

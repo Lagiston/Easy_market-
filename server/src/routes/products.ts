@@ -7,10 +7,12 @@ import { Role, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { productImagesDir } from "../lib/uploads";
 import { requireAuth, requireRole } from "../middleware/require-auth";
+import { boss, CLASSIFY_PRODUCT_QUEUE } from "../lib/queue";
 import {
   createProductSchema,
   updateProductSchema,
   productListQuerySchema,
+  reclassifyStatusQuerySchema,
   PRODUCTS_PAGE_SIZE,
   type ProductSortField,
 } from "@es-market/core";
@@ -102,7 +104,10 @@ productsRouter.get("/products", requireAuth, requireRole(Role.ADMIN), async (req
     ? products.filter(
         (product) =>
           localizedEn(product.name).toLowerCase().includes(query) ||
-          localizedEn(product.category.name).toLowerCase().includes(query),
+          localizedEn(product.category.name).toLowerCase().includes(query) ||
+          // Tags are already stored lowercase (see createProductSchema), so no
+          // need to lowercase them again here.
+          product.tags.some((tag) => tag.includes(query)),
       )
     : products;
 
@@ -129,7 +134,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId } =
+  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId, tags } =
     parsed.data;
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
@@ -156,10 +161,47 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
       lowStockThreshold,
       categoryId,
       assignedAgentId: assignedAgentId ?? null,
+      tags,
     },
     include: productInclude,
   });
   res.status(201).json({ product });
+});
+
+// These two must be registered before GET /products/:id below — Express
+// matches routes in registration order, and "/products/:id" would otherwise
+// swallow "/products/reclassify-status" (treating it as an id).
+productsRouter.post("/products/reclassify-all", requireAuth, requireRole(Role.ADMIN), async (_req, res) => {
+  const products = await prisma.product.findMany({
+    where: { deletedAt: null },
+    select: { id: true },
+  });
+
+  const since = new Date();
+  await Promise.all(
+    products.map((product) => boss.send(CLASSIFY_PRODUCT_QUEUE, { productId: product.id })),
+  );
+
+  res.json({ total: products.length, since: since.toISOString() });
+});
+
+productsRouter.get("/products/reclassify-status", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
+  const parsed = reclassifyStatusQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]!.message });
+    return;
+  }
+
+  // Approximation: counts any product whose suggestion was (re)computed since
+  // the given timestamp, not specifically ones from this exact batch — fine
+  // for a single admin triggering one bulk run at a time; two overlapping
+  // bulk runs would double-count. Not solved here, same spirit as other
+  // flagged v1 simplifications in this codebase.
+  const completed = await prisma.product.count({
+    where: { deletedAt: null, aiSuggestedAt: { gte: new Date(parsed.data.since) } },
+  });
+
+  res.json({ completed });
 });
 
 productsRouter.get<{ id: string }>("/products/:id", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
@@ -180,7 +222,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId } =
+  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId, tags } =
     parsed.data;
   const productId = req.params.id;
 
@@ -214,11 +256,38 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
       lowStockThreshold,
       categoryId,
       assignedAgentId: assignedAgentId ?? null,
+      tags,
+      // Any manual edit supersedes a stale pending bulk-reclassify suggestion.
+      aiSuggestedCategoryId: null,
+      aiSuggestedTags: [],
+      aiSuggestedAt: null,
     },
     include: productInclude,
   });
   res.json({ product });
 });
+
+productsRouter.post<{ id: string }>(
+  "/products/:id/dismiss-suggestion",
+  requireAuth,
+  requireRole(Role.ADMIN),
+  async (req, res) => {
+    const productId = req.params.id;
+
+    const target = await prisma.product.findUnique({ where: { id: productId } });
+    if (!target || target.deletedAt) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+
+    const product = await prisma.product.update({
+      where: { id: productId },
+      data: { aiSuggestedCategoryId: null, aiSuggestedTags: [], aiSuggestedAt: null },
+      include: productInclude,
+    });
+    res.json({ product });
+  },
+);
 
 productsRouter.delete<{ id: string }>("/products/:id", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
   const productId = req.params.id;

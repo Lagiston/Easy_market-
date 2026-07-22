@@ -50,6 +50,8 @@
     "filters": {
       "category": "Catégorie",
       "allCategories": "Toutes les catégories",
+      "tag": "Étiquette",
+      "allTags": "Toutes les étiquettes",
       "minPrice": "Prix min",
       "maxPrice": "Prix max",
       "sort": "Trier par",

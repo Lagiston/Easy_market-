@@ -98,6 +98,14 @@ model Product {
   stock             Int
   lowStockThreshold Int       @default(10)
   imageUrl          String?
+  tags              String[]  @default([])
+  // Populated by the bulk "reclassify all products" pg-boss job — a pending
+  // suggestion for staff to accept/dismiss, never auto-applied. Unrelated to
+  // the synchronous single-product "Suggest with AI" flow in the create/edit
+  // form, which is ephemeral and doesn't touch these fields.
+  aiSuggestedCategoryId String?
+  aiSuggestedTags       String[]  @default([])
+  aiSuggestedAt         DateTime?
   categoryId        String
   category          Category  @relation(fields: [categoryId], references: [id])
   assignedAgentId   String?
@@ -280,4 +288,19 @@ model KbArticle {
 
   @@index([topic])
   @@map("kb_article")
+}
+
+// Singleton row (fixed id) of lightweight counters for the product
+// classification (7.1-7.3) acceptance-rate dashboard stat — a lower-fidelity
+// alternative to logging every individual suggestion, since there's no
+// natural per-suggestion entity to attach an outcome to the way Message
+// carries draftStatus for inquiry drafts.
+model ProductClassificationMetric {
+  id                String @id @default("singleton")
+  categorySuggested Int    @default(0)
+  categoryAccepted  Int    @default(0)
+  tagsSuggested     Int    @default(0)
+  tagsAccepted      Int    @default(0)
+
+  @@map("product_classification_metric")
 }

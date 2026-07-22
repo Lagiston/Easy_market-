@@ -107,6 +107,7 @@ describe("CreateProductDialog", () => {
         stock: 10,
         lowStockThreshold: 10,
         categoryId: "c1",
+        tags: [],
       }),
     );
     await waitFor(() =>

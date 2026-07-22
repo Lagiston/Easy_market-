@@ -17,6 +17,10 @@ const product: ProductRow = {
   stock: 20,
   lowStockThreshold: 10,
   imageUrl: null,
+  tags: [],
+  aiSuggestedCategoryId: null,
+  aiSuggestedTags: [],
+  aiSuggestedAt: null,
   category: { id: "c1", name: { en: "Groceries" } },
   assignedAgent: null,
 };

@@ -74,6 +74,15 @@ export default function ProductDetailPage() {
               <p className="text-sm text-muted-foreground">
                 {localize(product.category.name, language)}
               </p>
+              {product.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {product.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <p className="text-xl font-semibold">{product.price}</p>

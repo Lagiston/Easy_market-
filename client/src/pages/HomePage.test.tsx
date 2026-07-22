@@ -22,6 +22,8 @@ const stats = {
   openInquiries: 4,
   escalatedInquiries: 2,
   draftSuccessRate: 82,
+  categorySuggestionAcceptanceRate: 67,
+  tagSuggestionAcceptanceRate: 38,
 };
 
 function adminSession() {

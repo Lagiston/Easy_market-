@@ -50,6 +50,8 @@
     "filters": {
       "category": "Kategoria",
       "allCategories": "Kategoria zote",
+      "tag": "Lebo",
+      "allTags": "Lebo zote",
       "minPrice": "Bei ya chini",
       "maxPrice": "Bei ya juu",
       "sort": "Panga kwa",

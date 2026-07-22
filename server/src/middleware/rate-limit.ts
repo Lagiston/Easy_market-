@@ -41,3 +41,15 @@ export const inquiryPollLimiter = rateLimit({
   standardHeaders: "draft-8",
   legacyHeaders: false,
 });
+
+// Stricter limit on /api/ai routes — unlike most other endpoints, every
+// request here is a real, billable OpenAI call, so a much lower ceiling than
+// the general apiLimiter caps exposure to a compromised/careless admin
+// session (all AI routes are ADMIN-only, so this shouldn't bind legitimate
+// staff usage in practice).
+export const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});

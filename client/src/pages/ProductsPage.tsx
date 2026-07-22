@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SortingState } from "@tanstack/react-table";
+import { Sparkles } from "lucide-react";
 import CreateProductDialog from "./CreateProductDialog";
 import EditProductDialog from "./EditProductDialog";
 import DeleteProductDialog from "./DeleteProductDialog";
 import ProductsTable, { type ProductRow } from "@/components/ProductsTable";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,14 +25,49 @@ import {
 } from "@/components/ui/pagination";
 import { PRODUCTS_PAGE_SIZE } from "@es-market/core";
 
+type ReclassifyBatch = { total: number; since: string };
+
 export default function ProductsPage() {
+  const queryClient = useQueryClient();
   const [editingProduct, setEditingProduct] = useState<ProductRow | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductRow | null>(null);
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [batch, setBatch] = useState<ReclassifyBatch | null>(null);
   const sort = sorting[0] ?? { id: "createdAt", desc: true };
+
+  const reclassifyMutation = useMutation({
+    mutationFn: () =>
+      axios.post<ReclassifyBatch>("/api/products/reclassify-all").then((res) => res.data),
+    onSuccess: setBatch,
+  });
+
+  const { data: reclassifyStatus } = useQuery({
+    queryKey: ["products", "reclassify-status", batch?.since],
+    queryFn: () =>
+      axios
+        .get<{ completed: number }>("/api/products/reclassify-status", {
+          params: { since: batch!.since },
+        })
+        .then((res) => res.data),
+    enabled: batch !== null,
+    refetchInterval: (query) => {
+      if (!batch) return false;
+      const completed = query.state.data?.completed ?? 0;
+      return completed >= batch.total ? false : 2000;
+    },
+  });
+
+  // Once the batch finishes, refresh the list (so new suggestion badges show
+  // up) and hide the progress line.
+  useEffect(() => {
+    if (batch && reclassifyStatus && reclassifyStatus.completed >= batch.total) {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      setBatch(null);
+    }
+  }, [batch, reclassifyStatus, queryClient]);
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -70,16 +107,30 @@ export default function ProductsPage() {
             {data ? `${total} product${total === 1 ? "" : "s"}` : "Catalog"}
           </CardDescription>
         </div>
-        <CreateProductDialog />
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={batch !== null || reclassifyMutation.isPending}
+            onClick={() => reclassifyMutation.mutate()}
+          >
+            <Sparkles /> Reclassify all
+          </Button>
+          <CreateProductDialog />
+        </div>
       </CardHeader>
       <CardContent>
         <Input
-          placeholder="Search products…"
+          placeholder="Search by name, category, or tag…"
           aria-label="Search products"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           className="mb-4 sm:max-w-xs"
         />
+        {batch && (
+          <p className="mb-4 text-sm text-muted-foreground">
+            Reclassifying products… {reclassifyStatus?.completed ?? 0}/{batch.total}
+          </p>
+        )}
         {error ? (
           <p className="py-8 text-center text-sm text-destructive">
             Could not load products. Please try again.

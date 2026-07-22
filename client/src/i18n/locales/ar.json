@@ -50,6 +50,8 @@
     "filters": {
       "category": "الفئة",
       "allCategories": "كل الفئات",
+      "tag": "الوسم",
+      "allTags": "كل الوسوم",
       "minPrice": "أدنى سعر",
       "maxPrice": "أقصى سعر",
       "sort": "الترتيب حسب",

@@ -19,6 +19,7 @@ const products = [
     stock: 20,
     lowStockThreshold: 10,
     imageUrl: null,
+    tags: [],
     category: { id: "c1", name: { en: "Groceries" } },
   },
   {
@@ -29,6 +30,7 @@ const products = [
     stock: 5,
     lowStockThreshold: 10,
     imageUrl: null,
+    tags: [],
     category: { id: "c2", name: { en: "Beverages" } },
   },
 ];
@@ -163,6 +165,7 @@ describe("ProductsPage", () => {
         stock: 20,
         lowStockThreshold: 10,
         categoryId: "c1",
+        tags: [],
       }),
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

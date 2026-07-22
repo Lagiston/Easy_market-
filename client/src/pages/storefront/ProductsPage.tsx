@@ -39,12 +39,14 @@ export type StorefrontProduct = {
   price: number;
   stock: number;
   imageUrl: string | null;
+  tags: string[];
   category: { id: string; name: LocalizedName };
 };
 
 type StorefrontCategory = { id: string; name: LocalizedName };
 
 const ALL_CATEGORIES = "all";
+const ALL_TAGS = "all";
 
 const SORT_LABEL_KEYS: Record<StorefrontProductSort, string> = {
   newest: "products.filters.newest",
@@ -57,6 +59,7 @@ export default function ProductsPage() {
   const language = i18n.resolvedLanguage ?? "en";
 
   const [categoryId, setCategoryId] = useState(ALL_CATEGORIES);
+  const [tag, setTag] = useState(ALL_TAGS);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [debouncedPrices, setDebouncedPrices] = useState({ minPrice: "", maxPrice: "" });
@@ -74,7 +77,7 @@ export default function ProductsPage() {
   // Changing any filter or the sort invalidates the current page's meaning.
   useEffect(() => {
     setPage(1);
-  }, [categoryId, debouncedPrices.minPrice, debouncedPrices.maxPrice, sort]);
+  }, [categoryId, tag, debouncedPrices.minPrice, debouncedPrices.maxPrice, sort]);
 
   const { data: categoriesData } = useQuery({
     queryKey: ["storefront", "categories"],
@@ -84,11 +87,18 @@ export default function ProductsPage() {
         .then((res) => res.data.categories),
   });
 
+  const { data: tagsData } = useQuery({
+    queryKey: ["storefront", "tags"],
+    queryFn: () =>
+      axios.get<{ tags: string[] }>("/api/storefront/tags").then((res) => res.data.tags),
+  });
+
   const { data, isPending, isError } = useQuery({
     queryKey: [
       "storefront",
       "products",
       categoryId,
+      tag,
       debouncedPrices.minPrice,
       debouncedPrices.maxPrice,
       sort,
@@ -99,6 +109,7 @@ export default function ProductsPage() {
         .get<{ products: StorefrontProduct[]; total: number }>("/api/storefront/products", {
           params: {
             ...(categoryId !== ALL_CATEGORIES ? { categoryId } : {}),
+            ...(tag !== ALL_TAGS ? { tag } : {}),
             ...(debouncedPrices.minPrice ? { minPrice: debouncedPrices.minPrice } : {}),
             ...(debouncedPrices.maxPrice ? { maxPrice: debouncedPrices.maxPrice } : {}),
             sort,
@@ -131,6 +142,22 @@ export default function ProductsPage() {
               {(categoriesData ?? []).map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {localize(category.name, language)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="tag-filter">{t("products.filters.tag")}</Label>
+          <Select value={tag} onValueChange={(value) => setTag(value ?? ALL_TAGS)}>
+            <SelectTrigger id="tag-filter" className="min-w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_TAGS}>{t("products.filters.allTags")}</SelectItem>
+              {(tagsData ?? []).map((tagOption) => (
+                <SelectItem key={tagOption} value={tagOption}>
+                  {tagOption}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -226,6 +253,15 @@ export default function ProductsPage() {
                     <p className="text-sm text-muted-foreground">
                       {localize(product.category.name, language)}
                     </p>
+                    {product.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {product.tags.map((productTag) => (
+                          <Badge key={productTag} variant="secondary">
+                            {productTag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                     <p className="font-semibold">{product.price}</p>
                   </CardContent>
                 </Card>

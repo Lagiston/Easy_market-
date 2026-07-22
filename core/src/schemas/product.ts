@@ -8,6 +8,17 @@ const STOCK_ERROR = "Stock must be zero or a positive whole number";
 const THRESHOLD_ERROR = "Low stock threshold must be zero or a positive whole number";
 const CATEGORY_ERROR = "Category is required";
 const PAGE_ERROR = "Page must be a positive whole number";
+const TAG_ERROR = "Tags must be 50 characters or fewer";
+
+// Lowercased so "Rice" and "rice" collapse to the same tag — otherwise the
+// storefront tag filter and admin tag list fragment over near-duplicates that
+// differ only in casing.
+const tagSchema = z
+  .string()
+  .trim()
+  .min(1, TAG_ERROR)
+  .max(50, TAG_ERROR)
+  .transform((value) => value.toLowerCase());
 
 export const localizedDescriptionSchema = z
   .object({
@@ -51,6 +62,11 @@ export const createProductSchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.string().trim().min(1).max(100).optional(),
   ),
+  tags: z
+    .array(tagSchema)
+    .max(10)
+    .default([])
+    .transform((tags) => Array.from(new Set(tags))),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
@@ -84,6 +100,12 @@ export const productListQuerySchema = z.object({
 
 export type ProductListQuery = z.infer<typeof productListQuerySchema>;
 
+export const reclassifyStatusQuerySchema = z.object({
+  since: z.string().datetime(),
+});
+
+export type ReclassifyStatusQuery = z.infer<typeof reclassifyStatusQuerySchema>;
+
 export const STOREFRONT_PRODUCT_SORTS = ["newest", "price-asc", "price-desc"] as const;
 export type StorefrontProductSort = (typeof STOREFRONT_PRODUCT_SORTS)[number];
 
@@ -91,6 +113,7 @@ export const STOREFRONT_PAGE_SIZE = 12;
 
 export const storefrontProductListQuerySchema = z.object({
   categoryId: z.string().trim().min(1).optional(),
+  tag: z.string().trim().min(1).max(50).optional(),
   minPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
   maxPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
   sort: z.enum(STOREFRONT_PRODUCT_SORTS).default("newest"),

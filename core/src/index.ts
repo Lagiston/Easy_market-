@@ -18,6 +18,8 @@ export {
   createProductSchema,
   updateProductSchema,
   productListQuerySchema,
+  reclassifyStatusQuerySchema,
+  type ReclassifyStatusQuery,
   PRODUCT_SORT_FIELDS,
   SORT_ORDERS,
   PRODUCTS_PAGE_SIZE,
@@ -102,6 +104,16 @@ export {
   type InquiryClassification,
 } from "./schemas/inquiry-classification";
 export { inquiryDraftSchema, type InquiryDraft } from "./schemas/inquiry-draft";
+export {
+  productClassificationRequestSchema,
+  productClassificationSchema,
+  PRODUCT_CLASSIFICATION_FIELDS,
+  productClassificationAcceptSchema,
+  type ProductClassificationRequest,
+  type ProductClassification,
+  type ProductClassificationField,
+  type ProductClassificationAcceptInput,
+} from "./schemas/product-classification";
 export {
   kbArticleBodySchema,
   createKbArticleSchema,

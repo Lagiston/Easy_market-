@@ -2,6 +2,7 @@ import { Router } from "express";
 import { DraftStatus, InquiryStatus, MessageSender, Role } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/require-auth";
+import { getProductClassificationAcceptance } from "../lib/product-classification-metrics";
 
 // Admin dashboard overview counts; mounted at /api in index.ts.
 export const dashboardRouter = Router();
@@ -11,8 +12,15 @@ dashboardRouter.get(
   requireAuth,
   requireRole(Role.ADMIN),
   async (_req, res) => {
-    const [products, orders, lowStock, openInquiries, escalatedInquiries, draftStatusCounts] =
-      await Promise.all([
+    const [
+      products,
+      orders,
+      lowStock,
+      openInquiries,
+      escalatedInquiries,
+      draftStatusCounts,
+      productClassificationAcceptance,
+    ] = await Promise.all([
         prisma.product.count({ where: { deletedAt: null } }),
         prisma.order.count(),
         // Matches the client's getStockStatus: low stock excludes out-of-stock.
@@ -32,6 +40,7 @@ dashboardRouter.get(
           where: { sender: MessageSender.AI_DRAFT, draftStatus: { not: null } },
           _count: true,
         }),
+        getProductClassificationAcceptance(),
       ]);
 
     // Success rate = share of reviewed drafts (sent as-is or with edits) that
@@ -47,7 +56,16 @@ dashboardRouter.get(
     const draftSuccessRate = reviewed > 0 ? Math.round((sent / reviewed) * 100) : null;
 
     res.json({
-      stats: { products, orders, lowStock, openInquiries, escalatedInquiries, draftSuccessRate },
+      stats: {
+        products,
+        orders,
+        lowStock,
+        openInquiries,
+        escalatedInquiries,
+        draftSuccessRate,
+        categorySuggestionAcceptanceRate: productClassificationAcceptance.category,
+        tagSuggestionAcceptanceRate: productClassificationAcceptance.tags,
+      },
     });
   },
 );

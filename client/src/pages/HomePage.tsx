@@ -27,6 +27,8 @@ type DashboardStats = {
   openInquiries: number;
   escalatedInquiries: number;
   draftSuccessRate: number | null;
+  categorySuggestionAcceptanceRate: number | null;
+  tagSuggestionAcceptanceRate: number | null;
 };
 
 const ATTENTION_LIMIT = 5;
@@ -174,13 +176,23 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-4xl space-y-4">
       {isAdmin && (
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
           <StatCard label="Products" value={stats?.products} />
           <StatCard label="Orders" value={stats?.orders} />
           <StatCard label="Low-stock items" value={stats?.lowStock} />
           <StatCard label="Open inquiries" value={stats?.openInquiries} />
           <StatCard label="Escalated inquiries" value={stats?.escalatedInquiries} />
           <StatCard label="Draft success rate" value={stats?.draftSuccessRate} suffix="%" />
+          <StatCard
+            label="Category suggestion acceptance"
+            value={stats?.categorySuggestionAcceptanceRate}
+            suffix="%"
+          />
+          <StatCard
+            label="Tag suggestion acceptance"
+            value={stats?.tagSuggestionAcceptanceRate}
+            suffix="%"
+          />
         </div>
       )}
 

@@ -94,9 +94,9 @@ Goal: AI classifies inquiries and drafts replies; agents approve every send.
 
 Goal: catalog stays consistently organized with AI help.
 
-- [ ] 7.1 Classification endpoint (GPT-5 mini): suggest category + tags from product name/description
-- [ ] 7.2 Product form integration: suggestions shown on create, staff accept/override
-- [ ] 7.3 Tags in schema + tag filtering on storefront
+- [x] 7.1 Classification endpoint (GPT-5.6 Luna): suggest category + tags from product name/description
+- [x] 7.2 Product form integration: suggestions shown on create, staff accept/override
+- [x] 7.3 Tags in schema + tag filtering on storefront
 
 **Demo:** staff types a product description; category and tags appear pre-filled.
 

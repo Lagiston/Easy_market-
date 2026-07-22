@@ -229,6 +229,7 @@ describe("ProductForm (create mode)", () => {
         stock: 10,
         lowStockThreshold: 10,
         categoryId: "c1",
+        tags: [],
       }),
     );
     await waitFor(() =>
@@ -273,6 +274,10 @@ describe("ProductForm (edit mode)", () => {
     stock: 20,
     lowStockThreshold: 10,
     imageUrl: null,
+    tags: [],
+    aiSuggestedCategoryId: null,
+    aiSuggestedTags: [],
+    aiSuggestedAt: null,
     category: categories[0]!,
     assignedAgent: null,
   };
@@ -305,6 +310,7 @@ describe("ProductForm (edit mode)", () => {
         stock: 20,
         lowStockThreshold: 10,
         categoryId: "c1",
+        tags: [],
       }),
     );
   });
@@ -329,6 +335,7 @@ describe("ProductForm (edit mode)", () => {
       stock: 20,
       lowStockThreshold: 10,
       categoryId: "c1",
+      tags: [],
     });
   });
 

@@ -18,6 +18,7 @@ const products: StorefrontProduct[] = [
     price: 1500,
     stock: 20,
     imageUrl: null,
+    tags: [],
     category: { id: "c1", name: { en: "Groceries" } },
   },
   {
@@ -27,6 +28,7 @@ const products: StorefrontProduct[] = [
     price: 300,
     stock: 0,
     imageUrl: null,
+    tags: [],
     category: { id: "c2", name: { en: "Beverages" } },
   },
 ];

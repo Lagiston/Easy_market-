@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router";
+import axios from "axios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createColumnHelper,
   flexRender,
@@ -8,10 +10,25 @@ import {
   type OnChangeFn,
   type SortingState,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, ImageOff, Pencil, Trash2 } from "lucide-react";
-import type { LocalizedDescription, LocalizedName } from "@es-market/core";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ImageOff,
+  Pencil,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
+import type { LocalizedDescription, LocalizedName, UpdateProductInput } from "@es-market/core";
+import { pingClassificationAccepted } from "@/lib/product-classification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -30,9 +47,110 @@ export type ProductRow = {
   stock: number;
   lowStockThreshold: number;
   imageUrl: string | null;
+  tags: string[];
   category: { id: string; name: LocalizedName };
   assignedAgent: { id: string; name: string } | null;
+  aiSuggestedCategoryId: string | null;
+  aiSuggestedTags: string[];
+  aiSuggestedAt: string | null;
 };
+
+type Category = { id: string; name: LocalizedName };
+
+// Reviews a bulk-reclassify job's pending suggestion for one product — Apply
+// merges it into the product (via the existing PUT route, which also clears
+// the suggestion fields), Dismiss just clears them without changing the
+// product. Self-contained so it doesn't need to touch ProductForm.tsx.
+function SuggestionBadge({ product }: { product: ProductRow }) {
+  const queryClient = useQueryClient();
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () =>
+      axios
+        .get<{ categories: Category[] }>("/api/categories")
+        .then((res) => res.data.categories),
+  });
+
+  const applyMutation = useMutation({
+    mutationFn: () => {
+      const body: UpdateProductInput = {
+        name: product.name,
+        description: product.description ?? undefined,
+        price: product.price,
+        stock: product.stock,
+        lowStockThreshold: product.lowStockThreshold,
+        categoryId: product.aiSuggestedCategoryId!,
+        assignedAgentId: product.assignedAgent?.id,
+        tags: [...product.tags, ...product.aiSuggestedTags],
+      };
+      return axios.put(`/api/products/${product.id}`, body);
+    },
+    onSuccess: () => {
+      if (product.aiSuggestedCategoryId) pingClassificationAccepted("category");
+      for (const tag of product.aiSuggestedTags) {
+        if (!product.tags.includes(tag)) pingClassificationAccepted("tag");
+      }
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
+  const dismissMutation = useMutation({
+    mutationFn: () => axios.post(`/api/products/${product.id}/dismiss-suggestion`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+  });
+
+  if (!product.aiSuggestedAt) return null;
+
+  const suggestedCategory = categories?.find((c) => c.id === product.aiSuggestedCategoryId);
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`Pending AI suggestion for ${product.name.en}`}
+          />
+        }
+      >
+        <Sparkles className="text-primary" />
+      </PopoverTrigger>
+      <PopoverContent>
+        <div className="space-y-2 text-sm">
+          <p className="font-medium">Suggested</p>
+          {suggestedCategory && (
+            <p>
+              Category: <span className="text-muted-foreground">{suggestedCategory.name.en}</span>
+            </p>
+          )}
+          {product.aiSuggestedTags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {product.aiSuggestedTags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2 pt-1">
+            <Button size="sm" onClick={() => applyMutation.mutate()} disabled={applyMutation.isPending}>
+              Apply
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => dismissMutation.mutate()}
+              disabled={dismissMutation.isPending}
+            >
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export const STOCK_STATUSES = ["in-stock", "low-stock", "out-of-stock"] as const;
 export type StockStatus = (typeof STOCK_STATUSES)[number];
@@ -94,6 +212,26 @@ export default function ProductsTable({
         cell: ({ row }) => (
           <span className="text-muted-foreground">{row.original.category.name.en}</span>
         ),
+      }),
+      columnHelper.display({
+        id: "tags",
+        header: "Tags",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            {row.original.tags.map((tag) => (
+              <Badge key={tag} variant="secondary">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        ),
+      }),
+      columnHelper.display({
+        id: "suggestion",
+        header: () => <span className="sr-only">AI suggestion</span>,
+        enableSorting: false,
+        cell: ({ row }) => <SuggestionBadge product={row.original} />,
       }),
       columnHelper.accessor((row) => row.assignedAgent?.name ?? "", {
         id: "agent",
@@ -210,6 +348,12 @@ export default function ProductsTable({
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-3 w-20" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-3 w-20" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="size-7 rounded-lg" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="ml-auto h-3 w-10" />
