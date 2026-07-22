@@ -48,6 +48,9 @@
   "products": {
     "title": "Products",
     "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Search products…",
+      "clearSearch": "Clear search",
       "category": "Category",
       "allCategories": "All categories",
       "tag": "Tag",

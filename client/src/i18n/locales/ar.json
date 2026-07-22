@@ -48,6 +48,9 @@
   "products": {
     "title": "المنتجات",
     "filters": {
+      "search": "بحث",
+      "searchPlaceholder": "ابحث عن المنتجات…",
+      "clearSearch": "مسح البحث",
       "category": "الفئة",
       "allCategories": "كل الفئات",
       "tag": "الوسم",

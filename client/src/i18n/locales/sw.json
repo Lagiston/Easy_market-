@@ -48,6 +48,9 @@
   "products": {
     "title": "Bidhaa",
     "filters": {
+      "search": "Tafuta",
+      "searchPlaceholder": "Tafuta bidhaa…",
+      "clearSearch": "Futa utafutaji",
       "category": "Kategoria",
       "allCategories": "Kategoria zote",
       "tag": "Lebo",

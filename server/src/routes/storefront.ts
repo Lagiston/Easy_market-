@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import {
   storefrontProductListQuerySchema,
   STOREFRONT_PAGE_SIZE,
+  LANGUAGES,
   type StorefrontProductSort,
 } from "@es-market/core";
 
@@ -35,10 +36,48 @@ storefrontRouter.get("/storefront/products", async (req, res) => {
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { categoryId, tag, minPrice, maxPrice, sort, page } = parsed.data;
+  const { search, categoryId, tag, minPrice, maxPrice, sort, page } = parsed.data;
+
+  // Tags are a plain string array (no JSON/text-search support on them), so a
+  // substring match needs the candidate tag values resolved in JS first, then
+  // passed to `hasSome` — same two-step approach as the /storefront/tags
+  // flattening below, just filtered to the ones matching the search term.
+  let matchingTags: string[] = [];
+  if (search) {
+    const productsWithTags = await prisma.product.findMany({
+      where: { deletedAt: null },
+      select: { tags: true },
+    });
+    const query = search.toLowerCase();
+    matchingTags = [
+      ...new Set(productsWithTags.flatMap((product) => product.tags)),
+    ].filter((existingTag) => existingTag.includes(query));
+  }
 
   const where: Prisma.ProductWhereInput = {
     deletedAt: null,
+    ...(search
+      ? {
+          OR: [
+            ...LANGUAGES.flatMap((lang) => [
+              { name: { path: [lang], string_contains: search, mode: "insensitive" as const } },
+              {
+                description: {
+                  path: [lang],
+                  string_contains: search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                category: {
+                  name: { path: [lang], string_contains: search, mode: "insensitive" as const },
+                },
+              },
+            ]),
+            ...(matchingTags.length > 0 ? [{ tags: { hasSome: matchingTags } }] : []),
+          ],
+        }
+      : {}),
     ...(categoryId ? { categoryId } : {}),
     ...(tag ? { tags: { has: tag } } : {}),
     ...(minPrice !== undefined || maxPrice !== undefined

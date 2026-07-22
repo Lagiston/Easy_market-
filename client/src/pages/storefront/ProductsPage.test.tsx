@@ -18,7 +18,7 @@ const products: StorefrontProduct[] = [
     price: 1500,
     stock: 20,
     imageUrl: null,
-    tags: [],
+    tags: ["organic"],
     category: { id: "c1", name: { en: "Groceries" } },
   },
   {
@@ -105,6 +105,57 @@ describe("storefront ProductsPage", () => {
     expect(await screen.findByText("أرز ٥ كجم")).toBeInTheDocument();
     // No Arabic translation → falls back to English
     expect(screen.getByText("Orange Juice")).toBeInTheDocument();
+  });
+
+  it("filters by search after the input is debounced", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    await user.type(screen.getByLabelText("Search", { exact: true }), "rice");
+
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({ search: "rice", sort: "newest", page: 1 });
+    });
+  });
+
+  it("shows a clear button while searching, and clearing it removes the search filter", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    expect(screen.queryByLabelText("Clear search")).not.toBeInTheDocument();
+
+    const searchInput = screen.getByLabelText("Search", { exact: true });
+    await user.type(searchInput, "rice");
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({ search: "rice", sort: "newest", page: 1 });
+    });
+
+    await user.click(await screen.findByLabelText("Clear search"));
+
+    expect(searchInput).toHaveValue("");
+    expect(screen.queryByLabelText("Clear search")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({ sort: "newest", page: 1 });
+    });
+  });
+
+  it("filters by a product's tag when its badge is clicked, without navigating", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: "organic" }));
+
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({ tag: "organic", sort: "newest", page: 1 });
+    });
+    // Still on the products page — the tag badge isn't the product link.
+    expect(screen.getByText("Rice 5kg")).toBeInTheDocument();
   });
 
   it("filters by category", async () => {

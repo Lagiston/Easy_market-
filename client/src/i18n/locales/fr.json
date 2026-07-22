@@ -48,6 +48,9 @@
   "products": {
     "title": "Produits",
     "filters": {
+      "search": "Rechercher",
+      "searchPlaceholder": "Rechercher des produits…",
+      "clearSearch": "Effacer la recherche",
       "category": "Catégorie",
       "allCategories": "Toutes les catégories",
       "tag": "Étiquette",

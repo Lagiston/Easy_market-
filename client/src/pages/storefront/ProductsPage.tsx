@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ImageOff } from "lucide-react";
+import { ImageOff, Search, X } from "lucide-react";
 import {
   STOREFRONT_PAGE_SIZE,
   STOREFRONT_PRODUCT_SORTS,
@@ -12,7 +12,7 @@ import {
   type StorefrontProductSort,
 } from "@es-market/core";
 import { localize } from "@/lib/localize";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +58,8 @@ export default function ProductsPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
 
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryId, setCategoryId] = useState(ALL_CATEGORIES);
   const [tag, setTag] = useState(ALL_TAGS);
   const [minPrice, setMinPrice] = useState("");
@@ -65,6 +67,11 @@ export default function ProductsPage() {
   const [debouncedPrices, setDebouncedPrices] = useState({ minPrice: "", maxPrice: "" });
   const [sort, setSort] = useState<StorefrontProductSort>("newest");
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(timeout);
+  }, [search]);
 
   useEffect(() => {
     const timeout = setTimeout(
@@ -77,7 +84,7 @@ export default function ProductsPage() {
   // Changing any filter or the sort invalidates the current page's meaning.
   useEffect(() => {
     setPage(1);
-  }, [categoryId, tag, debouncedPrices.minPrice, debouncedPrices.maxPrice, sort]);
+  }, [debouncedSearch, categoryId, tag, debouncedPrices.minPrice, debouncedPrices.maxPrice, sort]);
 
   const { data: categoriesData } = useQuery({
     queryKey: ["storefront", "categories"],
@@ -97,6 +104,7 @@ export default function ProductsPage() {
     queryKey: [
       "storefront",
       "products",
+      debouncedSearch,
       categoryId,
       tag,
       debouncedPrices.minPrice,
@@ -108,6 +116,7 @@ export default function ProductsPage() {
       axios
         .get<{ products: StorefrontProduct[]; total: number }>("/api/storefront/products", {
           params: {
+            ...(debouncedSearch ? { search: debouncedSearch } : {}),
             ...(categoryId !== ALL_CATEGORIES ? { categoryId } : {}),
             ...(tag !== ALL_TAGS ? { tag } : {}),
             ...(debouncedPrices.minPrice ? { minPrice: debouncedPrices.minPrice } : {}),
@@ -124,6 +133,31 @@ export default function ProductsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <h1 className="text-2xl font-semibold">{t("products.title")}</h1>
+
+      <div className="relative max-w-sm">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 start-3 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          type="text"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={t("products.filters.searchPlaceholder")}
+          aria-label={t("products.filters.search")}
+          className={search ? "ps-9 pe-9" : "ps-9"}
+        />
+        {search && (
+          <button
+            type="button"
+            aria-label={t("products.filters.clearSearch")}
+            onClick={() => setSearch("")}
+            className="absolute top-1/2 end-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-end gap-4">
         <div className="space-y-1.5">
@@ -227,8 +261,11 @@ export default function ProductsPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.products.map((product) => (
-              <Link key={product.id} to={`/products/${product.id}`} className="block">
-                <Card className="h-full overflow-hidden py-0 transition-colors hover:border-primary">
+              <Card
+                key={product.id}
+                className="h-full overflow-hidden py-0 transition-colors hover:border-primary"
+              >
+                <Link to={`/products/${product.id}`} className="block">
                   {product.imageUrl ? (
                     <img
                       src={product.imageUrl}
@@ -243,7 +280,7 @@ export default function ProductsPage() {
                       <ImageOff className="size-8 text-muted-foreground" />
                     </div>
                   )}
-                  <CardContent className="space-y-1 p-4">
+                  <CardContent className="space-y-1 p-4 pb-0">
                     <div className="flex items-start justify-between gap-2">
                       <h2 className="font-medium">{localize(product.name, language)}</h2>
                       {product.stock === 0 && (
@@ -253,19 +290,26 @@ export default function ProductsPage() {
                     <p className="text-sm text-muted-foreground">
                       {localize(product.category.name, language)}
                     </p>
-                    {product.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {product.tags.map((productTag) => (
-                          <Badge key={productTag} variant="secondary">
-                            {productTag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    <p className="font-semibold">{product.price}</p>
                   </CardContent>
-                </Card>
-              </Link>
+                </Link>
+                <CardContent className="space-y-1 p-4 pt-1">
+                  {product.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {product.tags.map((productTag) => (
+                        <button
+                          key={productTag}
+                          type="button"
+                          onClick={() => setTag(productTag)}
+                          className={`${badgeVariants({ variant: "secondary" })} hover:bg-secondary/80`}
+                        >
+                          {productTag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <p className="font-semibold">{product.price}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
           <Pagination>

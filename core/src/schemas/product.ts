@@ -112,6 +112,7 @@ export type StorefrontProductSort = (typeof STOREFRONT_PRODUCT_SORTS)[number];
 export const STOREFRONT_PAGE_SIZE = 12;
 
 export const storefrontProductListQuerySchema = z.object({
+  search: z.string().trim().max(200).optional(),
   categoryId: z.string().trim().min(1).optional(),
   tag: z.string().trim().min(1).max(50).optional(),
   minPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
