@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { Router, type Response } from "express";
-import { InquiryChannel, InquiryStatus, MessageSender, Role } from "../generated/prisma/client";
+import { InquiryChannel, InquiryStatus, MessageSender, DraftStatus, Role } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth } from "../middleware/require-auth";
+import { classifyInquiry } from "../lib/inquiry-classification";
 import {
   addMessageSchema,
   assignInquirySchema,
@@ -34,6 +35,10 @@ inquiriesRouter.post("/storefront/inquiries", async (req, res) => {
         create: [{ id: randomUUID(), sender: MessageSender.CUSTOMER, body: message }],
       },
     },
+  });
+
+  void classifyInquiry(inquiry.id, message, language).catch((error) => {
+    console.error("Unhandled inquiry classification error:", error);
   });
 
   res.status(201).json({ inquiry: { id: inquiry.id } });
@@ -160,6 +165,35 @@ inquiriesRouter.get("/inquiries/attention-count", requireAuth, async (req, res) 
   res.json({ count });
 });
 
+// Resolves each message's sourceKbArticleIds into { id, title } pairs (English
+// title; these are staff-facing citations, not a customer-facing surface, so
+// no per-language lookup is needed). Tolerates ids whose article was later
+// deleted — the historical citation still shows, just with a fallback label,
+// rather than silently vanishing.
+async function withResolvedSources<T extends { messages: { sourceKbArticleIds: string[] }[] }>(
+  inquiry: T,
+) {
+  const articleIds = [...new Set(inquiry.messages.flatMap((m) => m.sourceKbArticleIds))];
+  const articles = articleIds.length
+    ? await prisma.kbArticle.findMany({
+        where: { id: { in: articleIds } },
+        select: { id: true, title: true },
+      })
+    : [];
+  const titleById = new Map(articles.map((a) => [a.id, (a.title as { en: string }).en]));
+
+  return {
+    ...inquiry,
+    messages: inquiry.messages.map((message) => ({
+      ...message,
+      sources: message.sourceKbArticleIds.map((articleId) => ({
+        id: articleId,
+        title: titleById.get(articleId) ?? "Deleted article",
+      })),
+    })),
+  };
+}
+
 inquiriesRouter.get<{ id: string }>("/inquiries/:id", requireAuth, async (req, res) => {
   const inquiry = await prisma.inquiry.findUnique({
     where: { id: req.params.id },
@@ -169,7 +203,7 @@ inquiriesRouter.get<{ id: string }>("/inquiries/:id", requireAuth, async (req, r
     res.status(404).json({ error: "Inquiry not found" });
     return;
   }
-  res.json({ inquiry });
+  res.json({ inquiry: await withResolvedSources(inquiry) });
 });
 
 // 404 when the inquiry doesn't exist, 409 when it exists but a guarded
@@ -189,6 +223,17 @@ async function respondWithInquiry(res: Response, id: string) {
     include: inquiryInclude,
   });
   res.json({ inquiry });
+}
+
+// Used by the draft-review actions (approve/discard) so their response
+// includes the full, updated thread with resolved sources — same shape as
+// GET /inquiries/:id — for the client to swap in immediately.
+async function respondWithInquiryThread(res: Response, id: string) {
+  const inquiry = await prisma.inquiry.findUniqueOrThrow({
+    where: { id },
+    include: inquiryWithMessagesInclude,
+  });
+  res.json({ inquiry: await withResolvedSources(inquiry) });
 }
 
 // Race-safe: only succeeds if the inquiry was still unassigned.
@@ -273,6 +318,93 @@ inquiriesRouter.post<{ id: string }>("/inquiries/:id/messages", requireAuth, asy
 
   res.status(201).json({ message });
 });
+
+// Approve an AI_DRAFT message: mints a new STAFF message with the (possibly
+// edited) text — the draft row itself stays immutable history, per Message's
+// existing no-mutation convention — and marks the draft SENT_UNEDITED or
+// SENT_EDITED depending on whether the agent changed the text.
+inquiriesRouter.post<{ id: string; messageId: string }>(
+  "/inquiries/:id/messages/:messageId/approve",
+  requireAuth,
+  async (req, res) => {
+    const parsed = addMessageSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]!.message });
+      return;
+    }
+    const { id, messageId } = req.params;
+
+    const inquiry = await prisma.inquiry.findUnique({ where: { id } });
+    if (!inquiry) {
+      res.status(404).json({ error: "Inquiry not found" });
+      return;
+    }
+    if (inquiry.status === InquiryStatus.CLOSED) {
+      res.status(409).json({ error: "This conversation is closed" });
+      return;
+    }
+
+    const draft = await prisma.message.findFirst({
+      where: { id: messageId, inquiryId: id, sender: MessageSender.AI_DRAFT },
+    });
+    if (!draft) {
+      res.status(404).json({ error: "Draft not found" });
+      return;
+    }
+
+    const wasEdited = parsed.data.message.trim() !== draft.body.trim();
+    const updated = await prisma.message.updateMany({
+      where: { id: messageId, inquiryId: id, draftStatus: DraftStatus.PENDING },
+      data: { draftStatus: wasEdited ? DraftStatus.SENT_EDITED : DraftStatus.SENT_UNEDITED },
+    });
+    if (updated.count === 0) {
+      res.status(409).json({ error: "This draft has already been reviewed" });
+      return;
+    }
+
+    await prisma.message.create({
+      data: {
+        id: randomUUID(),
+        inquiryId: id,
+        sender: MessageSender.STAFF,
+        authorUserId: req.user.id,
+        body: parsed.data.message,
+      },
+    });
+    await prisma.inquiry.update({ where: { id }, data: { updatedAt: new Date() } });
+
+    await respondWithInquiryThread(res, id);
+  },
+);
+
+// Discard an AI_DRAFT message without sending it — the agent will write a
+// reply manually via the existing reply box. No new message is created.
+inquiriesRouter.post<{ id: string; messageId: string }>(
+  "/inquiries/:id/messages/:messageId/discard",
+  requireAuth,
+  async (req, res) => {
+    const { id, messageId } = req.params;
+
+    const draft = await prisma.message.findFirst({
+      where: { id: messageId, inquiryId: id, sender: MessageSender.AI_DRAFT },
+    });
+    if (!draft) {
+      res.status(404).json({ error: "Draft not found" });
+      return;
+    }
+
+    const updated = await prisma.message.updateMany({
+      where: { id: messageId, inquiryId: id, draftStatus: DraftStatus.PENDING },
+      data: { draftStatus: DraftStatus.DISCARDED },
+    });
+    if (updated.count === 0) {
+      res.status(409).json({ error: "This draft has already been reviewed" });
+      return;
+    }
+
+    await respondWithInquiryThread(res, id);
+  },
+);
 
 // Hands the inquiry to a specific admin and stamps escalatedAt — orthogonal to
 // `status` (an OPEN or RESOLVED inquiry can also be escalated); no de-escalate

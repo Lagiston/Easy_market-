@@ -40,11 +40,21 @@ export async function searchKbArticles(
   const column = Prisma.raw(`"${SEARCH_COLUMN[language]}"`);
   const config = TS_CONFIG[language];
 
+  // plainto_tsquery ANDs every lexeme in the input, so a realistic multi-word
+  // customer question (many of whose words won't literally appear in a
+  // short KB article) matches nothing even when an article is clearly
+  // relevant. Take plainto_tsquery's already-stemmed/stopword-filtered
+  // output and OR the terms together instead — a standard trick for
+  // natural-language-input search — then re-parse via to_tsquery. Query text
+  // itself is still only ever passed as a parameterized value, never
+  // interpolated into raw SQL.
+  const orQuery = Prisma.sql`to_tsquery(${config}, replace(plainto_tsquery(${config}, ${query})::text, ' & ', ' | '))`;
+
   return prisma.$queryRaw<KbSearchResult[]>(Prisma.sql`
     SELECT "id", "title", "body", "topic",
-      ts_rank(${column}, plainto_tsquery(${config}, ${query})) AS rank
+      ts_rank(${column}, ${orQuery}) AS rank
     FROM "kb_article"
-    WHERE "deletedAt" IS NULL AND ${column} @@ plainto_tsquery(${config}, ${query})
+    WHERE "deletedAt" IS NULL AND ${column} @@ ${orQuery}
     ORDER BY rank DESC
     LIMIT ${limit}
   `);

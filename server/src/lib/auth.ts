@@ -2,16 +2,10 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { Role } from "@es-market/core";
 import { prisma } from "./prisma";
+import { requiredEnv } from "./env";
 
 // Fail fast on missing auth env: Better Auth would otherwise fall back to a
 // publicly known default secret (outside NODE_ENV=production) and localhost URLs.
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),

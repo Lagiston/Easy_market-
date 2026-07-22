@@ -24,10 +24,12 @@ type Overrides = {
   escalatedAt?: string | null;
   messages?: {
     id: string;
-    sender: "CUSTOMER" | "STAFF";
+    sender: "CUSTOMER" | "STAFF" | "AI_DRAFT";
     body: string;
     createdAt: string;
     author: { id: string; name: string } | null;
+    draftStatus?: "PENDING" | "SENT_UNEDITED" | "SENT_EDITED" | "DISCARDED" | null;
+    sources?: { id: string; title: string }[];
   }[];
 };
 
@@ -267,5 +269,118 @@ describe("InquiryDetailPage", () => {
     await screen.findByText("Jane Doe");
     expect(screen.queryByText("Escalation")).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox", { name: "Escalation" })).not.toBeInTheDocument();
+  });
+
+  it("shows a pending AI draft with sources and an editable reply", async () => {
+    mockDetail(
+      inquiry({
+        messages: [
+          {
+            id: "m1",
+            sender: "CUSTOMER",
+            body: "Do you have rice in stock?",
+            createdAt: "2026-07-18T12:00:00.000Z",
+            author: null,
+          },
+          {
+            id: "m2",
+            sender: "AI_DRAFT",
+            body: "Yes, rice is currently in stock.",
+            createdAt: "2026-07-18T12:01:00.000Z",
+            author: null,
+            draftStatus: "PENDING",
+            sources: [{ id: "kb1", title: "Stock levels" }],
+          },
+        ],
+      }),
+    );
+    renderPage();
+
+    expect(await screen.findByText("AI draft")).toBeInTheDocument();
+    expect(screen.getByText("Sources: Stock levels")).toBeInTheDocument();
+    expect(screen.getByLabelText("Draft reply")).toHaveValue("Yes, rice is currently in stock.");
+    expect(screen.getByRole("button", { name: "Approve & send" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
+  });
+
+  it("approves a draft with edits and sends the edited text", async () => {
+    mockDetail(
+      inquiry({
+        messages: [
+          {
+            id: "m2",
+            sender: "AI_DRAFT",
+            body: "Yes, rice is currently in stock.",
+            createdAt: "2026-07-18T12:01:00.000Z",
+            author: null,
+            draftStatus: "PENDING",
+            sources: [],
+          },
+        ],
+      }),
+    );
+    mockedPost.mockResolvedValueOnce({ data: {} });
+    renderPage();
+
+    const textbox = await screen.findByLabelText("Draft reply");
+    await userEvent.clear(textbox);
+    await userEvent.type(textbox, "Yes, plenty of rice in stock right now.");
+    await userEvent.click(screen.getByRole("button", { name: "Approve & send" }));
+
+    await waitFor(() =>
+      expect(mockedPost).toHaveBeenCalledWith("/api/inquiries/i1/messages/m2/approve", {
+        message: "Yes, plenty of rice in stock right now.",
+      }),
+    );
+  });
+
+  it("discards a draft", async () => {
+    mockDetail(
+      inquiry({
+        messages: [
+          {
+            id: "m2",
+            sender: "AI_DRAFT",
+            body: "Yes, rice is currently in stock.",
+            createdAt: "2026-07-18T12:01:00.000Z",
+            author: null,
+            draftStatus: "PENDING",
+            sources: [],
+          },
+        ],
+      }),
+    );
+    mockedPost.mockResolvedValueOnce({ data: {} });
+    renderPage();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Discard" }));
+
+    await waitFor(() =>
+      expect(mockedPost).toHaveBeenCalledWith("/api/inquiries/i1/messages/m2/discard"),
+    );
+  });
+
+  it("renders a reviewed draft without action buttons", async () => {
+    mockDetail(
+      inquiry({
+        messages: [
+          {
+            id: "m2",
+            sender: "AI_DRAFT",
+            body: "Yes, rice is currently in stock.",
+            createdAt: "2026-07-18T12:01:00.000Z",
+            author: null,
+            draftStatus: "SENT_EDITED",
+            sources: [],
+          },
+        ],
+      }),
+    );
+    renderPage();
+
+    expect(await screen.findByText("Sent with edits")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve & send" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Discard" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Draft reply")).not.toBeInTheDocument();
   });
 });

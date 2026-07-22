@@ -106,6 +106,7 @@ model Product {
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
   orderItems        OrderItem[]
+  concernedInquiries Inquiry[] @relation("InquiryConcernedProduct")
 
   @@index([categoryId])
   @@index([assignedAgentId])
@@ -186,6 +187,7 @@ enum InquiryStatus {
 enum MessageSender {
   CUSTOMER
   STAFF
+  AI_DRAFT
 }
 
 model Inquiry {
@@ -205,6 +207,17 @@ model Inquiry {
   // (or RESOLVED) and escalated at the same time; escalation doesn't replace
   // the OPEN/RESOLVED/CLOSED lifecycle.
   escalatedAt     DateTime?
+  // AI classification (Phase 6.4) — all nullable, populated fire-and-forget
+  // after inquiry creation. aiTopic/aiUrgency are plain strings (not Prisma
+  // enums), matching the `language` precedent. aiProductId mirrors
+  // assignedAgentId's nullable-FK pattern; "auto-routing to queues" means the
+  // classifier sets assignedAgentId to the concerned product's agent rather
+  // than introducing a new queue concept.
+  aiTopic         String?
+  aiUrgency       String?
+  aiConfidence    Float?
+  aiProductId     String?
+  aiProduct       Product?       @relation("InquiryConcernedProduct", fields: [aiProductId], references: [id])
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   messages        Message[]
@@ -212,6 +225,7 @@ model Inquiry {
   @@index([assignedAgentId])
   @@index([status])
   @@index([status, assignedAgentId])
+  @@index([aiProductId])
   @@map("inquiry")
 }
 
@@ -223,10 +237,27 @@ model Message {
   authorUserId String?
   author       User?         @relation("MessageAuthor", fields: [authorUserId], references: [id])
   body         String
+  // Ids of KB articles that informed an AI_DRAFT reply (empty otherwise) —
+  // a plain string list, not a relation, mirroring OrderItem's productName
+  // snapshot: historical context for 6.7's "view draft with sources" UI, not
+  // something needing referential integrity against articles that may later
+  // change or be deleted.
+  sourceKbArticleIds String[]    @default([])
+  // Meaningful only on AI_DRAFT rows: PENDING until an agent reviews it, then
+  // SENT_UNEDITED/SENT_EDITED (a new STAFF message is minted, this row stays
+  // immutable history) or DISCARDED (no reply sent). Null for CUSTOMER/STAFF.
+  draftStatus  DraftStatus?
   createdAt    DateTime      @default(now())
 
   @@index([inquiryId])
   @@map("message")
+}
+
+enum DraftStatus {
+  PENDING
+  SENT_UNEDITED
+  SENT_EDITED
+  DISCARDED
 }
 
 model KbArticle {

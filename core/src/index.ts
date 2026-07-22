@@ -77,6 +77,8 @@ export {
   INQUIRY_STATUSES,
   MessageSender,
   MESSAGE_SENDERS,
+  DraftStatus,
+  DRAFT_STATUSES,
   createInquirySchema,
   type CreateInquiryInput,
   type CreateInquiryFormInput,
@@ -93,6 +95,13 @@ export {
   escalateInquirySchema,
   type EscalateInquiryInput,
 } from "./schemas/inquiry";
+export {
+  INQUIRY_URGENCIES,
+  inquiryClassificationSchema,
+  type InquiryUrgency,
+  type InquiryClassification,
+} from "./schemas/inquiry-classification";
+export { inquiryDraftSchema, type InquiryDraft } from "./schemas/inquiry-draft";
 export {
   kbArticleBodySchema,
   createKbArticleSchema,

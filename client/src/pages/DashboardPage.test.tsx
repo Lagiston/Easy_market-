@@ -47,7 +47,14 @@ const categories = [
   { id: "c2", name: { en: "Beverages" } },
 ];
 
-const stats = { products: 3, orders: 12, lowStock: 1, openInquiries: 4, escalatedInquiries: 2 };
+const stats = {
+  products: 3,
+  orders: 12,
+  lowStock: 1,
+  openInquiries: 4,
+  escalatedInquiries: 2,
+  draftSuccessRate: 82,
+};
 
 describe("DashboardPage", () => {
   beforeEach(() => {
@@ -74,11 +81,33 @@ describe("DashboardPage", () => {
     const lowStockTile = screen.getByText("Low-stock items").closest("[data-slot=card]")!;
     const openInquiriesTile = screen.getByText("Open inquiries").closest("[data-slot=card]")!;
     const escalatedTile = screen.getByText("Escalated inquiries").closest("[data-slot=card]")!;
+    const draftRateTile = screen.getByText("Draft success rate").closest("[data-slot=card]")!;
     expect(await within(productsTile as HTMLElement).findByText("3")).toBeInTheDocument();
     expect(within(ordersTile as HTMLElement).getByText("12")).toBeInTheDocument();
     expect(within(lowStockTile as HTMLElement).getByText("1")).toBeInTheDocument();
     expect(within(openInquiriesTile as HTMLElement).getByText("4")).toBeInTheDocument();
     expect(within(escalatedTile as HTMLElement).getByText("2")).toBeInTheDocument();
+    expect(within(draftRateTile as HTMLElement).getByText("82%")).toBeInTheDocument();
+  });
+
+  it("shows a dash for the draft success rate when no drafts have been reviewed yet", async () => {
+    mockedAxios.get.mockImplementation((url: string) =>
+      url === "/api/categories"
+        ? Promise.resolve({ data: { categories } })
+        : url === "/api/dashboard/stats"
+          ? Promise.resolve({ data: { stats: { ...stats, draftSuccessRate: null } } })
+          : Promise.resolve({ data: { products } }),
+    );
+    renderWithQuery(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+
+    const draftRateTile = (await screen.findByText("Draft success rate")).closest(
+      "[data-slot=card]",
+    ) as HTMLElement;
+    expect(await within(draftRateTile).findByText("—")).toBeInTheDocument();
   });
 
   it("shows all products by default", async () => {

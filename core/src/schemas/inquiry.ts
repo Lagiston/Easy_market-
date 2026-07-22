@@ -34,11 +34,33 @@ export const INQUIRY_STATUSES = [
 export const MessageSender = {
   CUSTOMER: "CUSTOMER",
   STAFF: "STAFF",
+  AI_DRAFT: "AI_DRAFT",
 } as const;
 
 export type MessageSender = (typeof MessageSender)[keyof typeof MessageSender];
 
-export const MESSAGE_SENDERS = [MessageSender.CUSTOMER, MessageSender.STAFF] as const;
+export const MESSAGE_SENDERS = [
+  MessageSender.CUSTOMER,
+  MessageSender.STAFF,
+  MessageSender.AI_DRAFT,
+] as const;
+
+// Mirrors the `DraftStatus` Prisma enum. Meaningful only on AI_DRAFT messages.
+export const DraftStatus = {
+  PENDING: "PENDING",
+  SENT_UNEDITED: "SENT_UNEDITED",
+  SENT_EDITED: "SENT_EDITED",
+  DISCARDED: "DISCARDED",
+} as const;
+
+export type DraftStatus = (typeof DraftStatus)[keyof typeof DraftStatus];
+
+export const DRAFT_STATUSES = [
+  DraftStatus.PENDING,
+  DraftStatus.SENT_UNEDITED,
+  DraftStatus.SENT_EDITED,
+  DraftStatus.DISCARDED,
+] as const;
 
 const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
 const EMAIL_ERROR = "A valid email is required";

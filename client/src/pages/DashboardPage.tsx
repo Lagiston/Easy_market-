@@ -33,6 +33,7 @@ type DashboardStats = {
   lowStock: number;
   openInquiries: number;
   escalatedInquiries: number;
+  draftSuccessRate: number | null;
 };
 
 const ALL_CATEGORIES = "all";
@@ -47,9 +48,11 @@ const STATUS_LABELS: Record<StockStatus, string> = {
 function StatCard({
   label,
   value,
+  suffix = "",
 }: {
   label: string;
-  value: number | undefined;
+  value: number | null | undefined;
+  suffix?: string;
 }) {
   return (
     <Card>
@@ -58,7 +61,9 @@ function StatCard({
         {value === undefined ? (
           <Skeleton className="h-8 w-12" />
         ) : (
-          <CardTitle className="text-2xl tabular-nums">{value}</CardTitle>
+          <CardTitle className="text-2xl tabular-nums">
+            {value === null ? "—" : `${value}${suffix}`}
+          </CardTitle>
         )}
       </CardHeader>
     </Card>
@@ -111,12 +116,13 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <div className="grid gap-4 sm:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Products" value={stats?.products} />
         <StatCard label="Orders" value={stats?.orders} />
         <StatCard label="Low-stock items" value={stats?.lowStock} />
         <StatCard label="Open inquiries" value={stats?.openInquiries} />
         <StatCard label="Escalated inquiries" value={stats?.escalatedInquiries} />
+        <StatCard label="Draft success rate" value={stats?.draftSuccessRate} suffix="%" />
       </div>
       <Card>
         <CardHeader className="space-y-1.5">

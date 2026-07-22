@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import {
   addMessageSchema,
   InquiryStatus,
   MessageSender,
+  DraftStatus,
   Role,
   type AddMessageFormInput,
   type Language,
@@ -46,6 +48,14 @@ type ThreadMessage = {
   body: string;
   createdAt: string;
   author: { id: string; name: string } | null;
+  draftStatus: DraftStatus | null;
+  sources: { id: string; title: string }[];
+};
+
+const DRAFT_STATUS_LABELS: Record<Exclude<DraftStatus, "PENDING">, string> = {
+  SENT_UNEDITED: "Sent as-is",
+  SENT_EDITED: "Sent with edits",
+  DISCARDED: "Discarded",
 };
 
 type InquiryThread = InquiryRow & { messages: ThreadMessage[]; language: Language };
@@ -80,6 +90,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export default function InquiryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const [draftEdits, setDraftEdits] = useState<Record<string, string>>({});
 
   const { data: inquiry, isPending, error } = useQuery({
     queryKey: ["inquiries", id],
@@ -125,6 +136,16 @@ export default function InquiryDetailPage() {
       axios.post(`/api/inquiries/${id}/escalate`, { agentId }),
     onSuccess: invalidateInquiry,
   });
+  const approveDraftMutation = useMutation({
+    mutationFn: ({ messageId, message }: { messageId: string; message: string }) =>
+      axios.post(`/api/inquiries/${id}/messages/${messageId}/approve`, { message }),
+    onSuccess: invalidateInquiry,
+  });
+  const discardDraftMutation = useMutation({
+    mutationFn: (messageId: string) =>
+      axios.post(`/api/inquiries/${id}/messages/${messageId}/discard`),
+    onSuccess: invalidateInquiry,
+  });
 
   const replyForm = useForm<AddMessageFormInput>({
     resolver: zodResolver(addMessageSchema),
@@ -159,7 +180,11 @@ export default function InquiryDetailPage() {
             ? extractServerError(assignMutation.error, "Could not assign the inquiry. Please try again.")
             : escalateMutation.isError
               ? extractServerError(escalateMutation.error, "Could not escalate the inquiry. Please try again.")
-              : null;
+              : approveDraftMutation.isError
+                ? extractServerError(approveDraftMutation.error, "Could not send the draft. Please try again.")
+                : discardDraftMutation.isError
+                  ? extractServerError(discardDraftMutation.error, "Could not discard the draft. Please try again.")
+                  : null;
 
   const notFound = isAxiosError(error) && error.response?.status === 404;
   const isClosed = inquiry?.status === InquiryStatus.CLOSED;
@@ -264,22 +289,84 @@ export default function InquiryDetailPage() {
             )}
 
             <div className="space-y-3 rounded-lg border p-4">
-              {inquiry.messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={
-                    message.sender === MessageSender.STAFF
-                      ? "ms-auto max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground"
-                      : "me-auto max-w-[85%] rounded-lg bg-muted px-3 py-2 text-sm"
-                  }
-                >
-                  <p className="whitespace-pre-wrap">{message.body}</p>
-                  <p className="mt-1 text-[10px] opacity-70">
-                    {message.author ? `${message.author.name} — ` : ""}
-                    {new Date(message.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+              {inquiry.messages.map((message) =>
+                message.sender === MessageSender.AI_DRAFT ? (
+                  <div key={message.id} className="max-w-full rounded-lg border border-dashed p-3 text-sm">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <Badge variant="outline">AI draft</Badge>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(message.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    {message.sources.length > 0 && (
+                      <p className="mb-2 text-xs text-muted-foreground">
+                        Sources: {message.sources.map((source) => source.title).join(", ")}
+                      </p>
+                    )}
+                    {message.draftStatus === DraftStatus.PENDING ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          rows={3}
+                          dir={inquiry.language === "ar" ? "rtl" : "ltr"}
+                          lang={inquiry.language}
+                          aria-label="Draft reply"
+                          value={draftEdits[message.id] ?? message.body}
+                          onChange={(event) =>
+                            setDraftEdits((prev) => ({
+                              ...prev,
+                              [message.id]: event.target.value,
+                            }))
+                          }
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            disabled={approveDraftMutation.isPending || discardDraftMutation.isPending}
+                            onClick={() =>
+                              approveDraftMutation.mutate({
+                                messageId: message.id,
+                                message: draftEdits[message.id] ?? message.body,
+                              })
+                            }
+                          >
+                            Approve &amp; send
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={approveDraftMutation.isPending || discardDraftMutation.isPending}
+                            onClick={() => discardDraftMutation.mutate(message.id)}
+                          >
+                            Discard
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">
+                        <p className="whitespace-pre-wrap">{message.body}</p>
+                        <p className="mt-1 text-[10px]">
+                          {message.draftStatus && DRAFT_STATUS_LABELS[message.draftStatus as Exclude<DraftStatus, "PENDING">]}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    key={message.id}
+                    className={
+                      message.sender === MessageSender.STAFF
+                        ? "ms-auto max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground"
+                        : "me-auto max-w-[85%] rounded-lg bg-muted px-3 py-2 text-sm"
+                    }
+                  >
+                    <p className="whitespace-pre-wrap">{message.body}</p>
+                    <p className="mt-1 text-[10px] opacity-70">
+                      {message.author ? `${message.author.name} — ` : ""}
+                      {new Date(message.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                ),
+              )}
             </div>
 
             {isClosed ? (

@@ -9,9 +9,12 @@
     "seed": "bun prisma/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/gateway": "4.0.26",
+    "@ai-sdk/openai": "^4.0.17",
     "@es-market/core": "workspace:*",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "ai": "^7.0.34",
     "better-auth": "^1.6.23",
     "express": "^5.1.0",
     "express-rate-limit": "^8.5.2",
