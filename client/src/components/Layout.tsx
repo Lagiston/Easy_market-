@@ -74,14 +74,6 @@ export default function Layout({ user }: { user: SessionUser }) {
         )}
         {user.role === Role.ADMIN && (
           <Link
-            to="/admin/dashboard"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            Dashboard
-          </Link>
-        )}
-        {user.role === Role.ADMIN && (
-          <Link
             to="/admin/categories"
             className="text-sm text-muted-foreground hover:text-foreground"
           >

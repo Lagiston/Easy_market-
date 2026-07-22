@@ -20,7 +20,6 @@ import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
 import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
-import DashboardPage from "./pages/DashboardPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import KbArticlesPage from "./pages/KbArticlesPage";
 
@@ -49,7 +48,6 @@ function App() {
         <Route path="users" element={<UsersPage />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="products/:id" element={<ProductDetailPage />} />
-        <Route path="dashboard" element={<DashboardPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="kb-articles" element={<KbArticlesPage />} />
         <Route path="settings" element={<SettingsPage />} />
