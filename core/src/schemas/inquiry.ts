@@ -51,6 +51,9 @@ export const DraftStatus = {
   SENT_UNEDITED: "SENT_UNEDITED",
   SENT_EDITED: "SENT_EDITED",
   DISCARDED: "DISCARDED",
+  // Set when attemptAutoResolve (server/src/lib/inquiry-auto-resolve.ts) sends
+  // a reply automatically from knowledge-base.md, with no staff review.
+  AUTO_RESOLVED: "AUTO_RESOLVED",
 } as const;
 
 export type DraftStatus = (typeof DraftStatus)[keyof typeof DraftStatus];
@@ -60,6 +63,7 @@ export const DRAFT_STATUSES = [
   DraftStatus.SENT_UNEDITED,
   DraftStatus.SENT_EDITED,
   DraftStatus.DISCARDED,
+  DraftStatus.AUTO_RESOLVED,
 ] as const;
 
 const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";

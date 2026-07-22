@@ -226,6 +226,13 @@ model Inquiry {
   aiConfidence    Float?
   aiProductId     String?
   aiProduct       Product?       @relation("InquiryConcernedProduct", fields: [aiProductId], references: [id])
+  // Set when applyAutoResolve (server/src/lib/inquiry-auto-resolve.ts) sends
+  // a reply automatically from the static knowledge-base.md doc, with no
+  // staff review — orthogonal to `status` the same way escalatedAt is,
+  // though in practice it's only ever set alongside status: RESOLVED.
+  // Indexed because GET /inquiries and /inquiries/attention-count both
+  // filter on it, unlike escalatedAt which isn't a list filter.
+  autoResolvedAt  DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   messages        Message[]
@@ -234,6 +241,7 @@ model Inquiry {
   @@index([status])
   @@index([status, assignedAgentId])
   @@index([aiProductId])
+  @@index([autoResolvedAt])
   @@map("inquiry")
 }
 
@@ -266,6 +274,7 @@ enum DraftStatus {
   SENT_UNEDITED
   SENT_EDITED
   DISCARDED
+  AUTO_RESOLVED
 }
 
 model KbArticle {

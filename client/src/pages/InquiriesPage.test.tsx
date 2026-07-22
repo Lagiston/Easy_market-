@@ -28,6 +28,7 @@ function inquiry(overrides: Partial<InquiryRow> = {}): InquiryRow {
     customerPhone: null,
     assignedAgent: null,
     escalatedAt: null,
+    autoResolvedAt: null,
     createdAt: "2026-07-18T12:00:00.000Z",
     updatedAt: "2026-07-18T12:00:00.000Z",
     ...overrides,

@@ -22,13 +22,14 @@ type Overrides = {
   language?: "en" | "ar" | "sw" | "fr";
   assignedAgent?: { id: string; name: string } | null;
   escalatedAt?: string | null;
+  autoResolvedAt?: string | null;
   messages?: {
     id: string;
     sender: "CUSTOMER" | "STAFF" | "AI_DRAFT";
     body: string;
     createdAt: string;
     author: { id: string; name: string } | null;
-    draftStatus?: "PENDING" | "SENT_UNEDITED" | "SENT_EDITED" | "DISCARDED" | null;
+    draftStatus?: "PENDING" | "SENT_UNEDITED" | "SENT_EDITED" | "DISCARDED" | "AUTO_RESOLVED" | null;
     sources?: { id: string; title: string }[];
   }[];
 };
@@ -44,6 +45,7 @@ function inquiry(overrides: Overrides = {}) {
     customerPhone: "0712345678",
     assignedAgent: null,
     escalatedAt: null,
+    autoResolvedAt: null,
     createdAt: "2026-07-18T12:00:00.000Z",
     updatedAt: "2026-07-18T13:00:00.000Z",
     messages: [
@@ -379,6 +381,41 @@ describe("InquiryDetailPage", () => {
     renderPage();
 
     expect(await screen.findByText("Sent with edits")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve & send" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Discard" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Draft reply")).not.toBeInTheDocument();
+  });
+
+  it("renders an auto-resolved inquiry with no review actions and a header badge", async () => {
+    mockDetail(
+      inquiry({
+        status: InquiryStatus.RESOLVED,
+        autoResolvedAt: "2026-07-18T12:02:00.000Z",
+        messages: [
+          {
+            id: "m1",
+            sender: "CUSTOMER",
+            body: "How do I reset my password?",
+            createdAt: "2026-07-18T12:00:00.000Z",
+            author: null,
+          },
+          {
+            id: "m2",
+            sender: "AI_DRAFT",
+            body: "Go to the login page and click Forgot Password.",
+            createdAt: "2026-07-18T12:01:00.000Z",
+            author: null,
+            draftStatus: "AUTO_RESOLVED",
+            sources: [],
+          },
+        ],
+      }),
+    );
+    renderPage();
+
+    expect(await screen.findByText("Auto-resolved by AI")).toBeInTheDocument();
+    const autoResolvedMentions = screen.getAllByText(/Auto-resolved/);
+    expect(autoResolvedMentions.length).toBeGreaterThan(1); // header badge + message label
     expect(screen.queryByRole("button", { name: "Approve & send" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Discard" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Draft reply")).not.toBeInTheDocument();

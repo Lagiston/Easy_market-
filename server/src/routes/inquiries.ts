@@ -143,8 +143,12 @@ inquiriesRouter.get("/inquiries", requireAuth, async (req, res) => {
         ? { assignedAgentId: null }
         : {};
 
+  // Inquiries the AI auto-resolved (server/src/lib/inquiry-auto-resolve.ts)
+  // never needed a human, so they're excluded from every queue/status view
+  // here — always, not behind a toggle. Still reachable via GET /inquiries/:id
+  // for audit.
   const inquiries = await prisma.inquiry.findMany({
-    where: { ...queueWhere, ...(status ? { status } : {}) },
+    where: { ...queueWhere, ...(status ? { status } : {}), autoResolvedAt: null },
     include: inquiryInclude,
     orderBy: { updatedAt: "desc" },
   });
@@ -159,6 +163,9 @@ inquiriesRouter.get("/inquiries/attention-count", requireAuth, async (req, res) 
   const count = await prisma.inquiry.count({
     where: {
       status: { not: InquiryStatus.CLOSED },
+      // Auto-resolved inquiries are unclaimed by design (nothing to claim),
+      // so without this they'd otherwise inflate this "needs attention" badge.
+      autoResolvedAt: null,
       OR: [{ assignedAgentId: null }, { escalatedAt: { not: null } }],
     },
   });

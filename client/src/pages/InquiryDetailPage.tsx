@@ -56,6 +56,7 @@ const DRAFT_STATUS_LABELS: Record<Exclude<DraftStatus, "PENDING">, string> = {
   SENT_UNEDITED: "Sent as-is",
   SENT_EDITED: "Sent with edits",
   DISCARDED: "Discarded",
+  AUTO_RESOLVED: "Auto-resolved by AI",
 };
 
 type InquiryThread = InquiryRow & { messages: ThreadMessage[]; language: Language };
@@ -222,6 +223,11 @@ export default function InquiryDetailPage() {
               {inquiry.customerName}
               <InquiryStatusBadge status={inquiry.status} />
               <Badge variant="outline">{LANGUAGE_LABELS[inquiry.language]}</Badge>
+              {inquiry.autoResolvedAt !== null && (
+                <Badge variant="outline">
+                  Auto-resolved {new Date(inquiry.autoResolvedAt).toLocaleString()}
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription>Received {new Date(inquiry.createdAt).toLocaleString()}</CardDescription>
           </CardHeader>

@@ -22,6 +22,7 @@ export type InquiryRow = {
   customerPhone: string | null;
   assignedAgent: { id: string; name: string } | null;
   escalatedAt: string | null;
+  autoResolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
