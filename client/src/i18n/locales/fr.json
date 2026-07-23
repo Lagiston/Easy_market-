@@ -69,7 +69,8 @@
     "backToList": "Retour aux produits",
     "outOfStock": "Rupture de stock",
     "noImage": "Pas d'image",
-    "pagination": "Page {{page}} sur {{totalPages}}"
+    "pagination": "Page {{page}} sur {{totalPages}}",
+    "relatedTitle": "Produits associés"
   },
   "cart": {
     "nav": "Panier",

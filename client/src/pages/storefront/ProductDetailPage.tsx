@@ -18,12 +18,18 @@ export default function ProductDetailPage() {
   const { addItem } = useCart();
   const [activeImage, setActiveImage] = useState(0);
 
+  // Merges relatedProducts onto the product object (rather than keeping the
+  // envelope's two top-level fields separate) so `product` stays the direct
+  // useQuery `data` alias below — that's what lets the isPending/notFound/
+  // error ternary narrow `product` to defined in the success branch.
   const { data: product, isPending, error } = useQuery({
     queryKey: ["storefront", "product", id],
     queryFn: () =>
       axios
-        .get<{ product: StorefrontProduct }>(`/api/storefront/products/${id}`)
-        .then((res) => res.data.product),
+        .get<{ product: StorefrontProduct; relatedProducts: StorefrontProduct[] }>(
+          `/api/storefront/products/${id}`,
+        )
+        .then((res) => ({ ...res.data.product, relatedProducts: res.data.relatedProducts ?? [] })),
   });
 
   const notFound = isAxiosError(error) && error.response?.status === 404;
@@ -136,6 +142,44 @@ export default function ProductDetailPage() {
               <ShoppingCart />
               {t("cart.addToCart")}
             </Button>
+          </div>
+        </div>
+      )}
+      {!isPending && !notFound && !error && product.relatedProducts.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold">{t("products.relatedTitle")}</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {product.relatedProducts.map((related) => (
+              <Link
+                key={related.id}
+                to={`/products/${related.id}`}
+                className="block overflow-hidden rounded-md border transition-colors hover:border-primary"
+              >
+                {related.images[0] ? (
+                  <img
+                    src={related.images[0]}
+                    alt={localize(related.name, language)}
+                    className="aspect-square w-full object-cover"
+                  />
+                ) : (
+                  <div
+                    aria-label={t("products.noImage")}
+                    className="flex aspect-square w-full items-center justify-center bg-muted"
+                  >
+                    <ImageOff className="size-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="space-y-1 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium">{localize(related.name, language)}</p>
+                    {related.stock === 0 && (
+                      <Badge variant="destructive">{t("products.outOfStock")}</Badge>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold">{related.price}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       )}

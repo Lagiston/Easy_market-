@@ -1,5 +1,6 @@
 import ProductForm from "@/components/ProductForm";
 import ProductImageUpload from "@/components/ProductImageUpload";
+import ProductVariantLinks from "@/components/ProductVariantLinks";
 import type { ProductRow } from "@/components/ProductsTable";
 import {
   Dialog,
@@ -36,6 +37,7 @@ export default function EditProductDialog({
               images={product.images}
               onUploaded={onProductChange}
             />
+            <ProductVariantLinks productId={product.id} />
             <ProductForm product={product} onSuccess={() => onOpenChange(false)} />
           </>
         )}

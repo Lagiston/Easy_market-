@@ -177,6 +177,12 @@ model Product {
   // capped at MAX_PRODUCT_IMAGES in core/src/schemas/product.ts).
   images            String[]  @default([])
   tags              String[]  @default([])
+  // Groups products that are "the same item, different variant" (e.g. color)
+  // so the storefront PDP can cross-link them. Server-generated (randomUUID)
+  // the first time a product is linked to another — never client-supplied.
+  // Symmetric by construction (a plain shared token, not a directional
+  // relation), so no bidirectional-sync bookkeeping is needed.
+  variantGroupId    String?
   // Populated by the bulk "reclassify all products" pg-boss job — a pending
   // suggestion for staff to accept/dismiss, never auto-applied. Unrelated to
   // the synchronous single-product "Suggest with AI" flow in the create/edit
@@ -196,6 +202,7 @@ model Product {
 
   @@index([categoryId])
   @@index([assignedAgentId])
+  @@index([variantGroupId])
   @@map("product")
 }
 

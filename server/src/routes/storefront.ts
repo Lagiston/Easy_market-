@@ -105,15 +105,26 @@ storefrontRouter.get("/storefront/products", async (req, res) => {
 });
 
 storefrontRouter.get<{ id: string }>("/storefront/products/:id", async (req, res) => {
+  // variantGroupId is only selected here (not in publicProductSelect, used
+  // by the list route too) to resolve siblings below — it's never itself
+  // included in the response, only the resolved relatedProducts are.
   const product = await prisma.product.findFirst({
     where: { id: req.params.id, deletedAt: null },
-    select: publicProductSelect,
+    select: { ...publicProductSelect, variantGroupId: true },
   });
   if (!product) {
     res.status(404).json({ error: "Product not found" });
     return;
   }
-  res.json({ product });
+  const { variantGroupId, ...publicProduct } = product;
+  const relatedProducts = variantGroupId
+    ? await prisma.product.findMany({
+        where: { variantGroupId, deletedAt: null, id: { not: product.id } },
+        select: publicProductSelect,
+        orderBy: { createdAt: "asc" },
+      })
+    : [];
+  res.json({ product: publicProduct, relatedProducts });
 });
 
 storefrontRouter.get("/storefront/categories", async (_req, res) => {

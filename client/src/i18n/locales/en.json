@@ -69,7 +69,8 @@
     "backToList": "Back to products",
     "outOfStock": "Out of stock",
     "noImage": "No image",
-    "pagination": "Page {{page}} of {{totalPages}}"
+    "pagination": "Page {{page}} of {{totalPages}}",
+    "relatedTitle": "Related products"
   },
   "cart": {
     "nav": "Cart",

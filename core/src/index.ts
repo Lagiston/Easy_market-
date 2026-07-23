@@ -35,6 +35,8 @@ export {
   SORT_ORDERS,
   PRODUCTS_PAGE_SIZE,
   MAX_PRODUCT_IMAGES,
+  linkVariantSchema,
+  type LinkVariantInput,
   STOREFRONT_PRODUCT_SORTS,
   STOREFRONT_PAGE_SIZE,
   storefrontProductListQuerySchema,

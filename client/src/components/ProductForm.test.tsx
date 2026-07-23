@@ -275,7 +275,7 @@ describe("ProductForm AI suggestions", () => {
   function mockClassify(
     result:
       | { categoryId: string | null; tags: string[]; confidence: number }
-      | Promise<never>,
+      | Promise<{ data: unknown }>,
   ) {
     mockedAxios.post.mockImplementation((url: string) => {
       if (url === "/api/ai/classify-product") {
@@ -318,7 +318,7 @@ describe("ProductForm AI suggestions", () => {
 
   it("shows a pending state while the suggestion request is in flight", async () => {
     let resolveRequest!: (value: { data: unknown }) => void;
-    mockClassify(new Promise((resolve) => (resolveRequest = resolve)));
+    mockClassify(new Promise<{ data: unknown }>((resolve) => (resolveRequest = resolve)));
     const user = userEvent.setup();
     renderForm();
 

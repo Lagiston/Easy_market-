@@ -69,7 +69,8 @@
     "backToList": "العودة إلى المنتجات",
     "outOfStock": "غير متوفر",
     "noImage": "بدون صورة",
-    "pagination": "صفحة {{page}} من {{totalPages}}"
+    "pagination": "صفحة {{page}} من {{totalPages}}",
+    "relatedTitle": "منتجات ذات صلة"
   },
   "cart": {
     "nav": "السلة",

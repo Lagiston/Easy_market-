@@ -245,7 +245,7 @@ export default function InquiryDetailPage() {
               <Select
                 value={inquiry.assignedAgent?.id ?? "unassigned"}
                 onValueChange={(value) =>
-                  assignMutation.mutate(value === "unassigned" ? "" : value)
+                  assignMutation.mutate(!value || value === "unassigned" ? "" : value)
                 }
               >
                 <SelectTrigger id="inquiry-assign" className="w-full">
@@ -276,7 +276,15 @@ export default function InquiryDetailPage() {
                     Escalated {new Date(inquiry.escalatedAt).toLocaleString()}
                   </Badge>
                 ) : (
-                  <Select value="" onValueChange={(value) => escalateMutation.mutate(value)}>
+                  <Select
+                    value=""
+                    onValueChange={(value) => {
+                      // No "unassigned"/clear option here (escalation always
+                      // hands off to a specific admin) — a null value has no
+                      // meaningful action to take.
+                      if (value) escalateMutation.mutate(value);
+                    }}
+                  >
                     <SelectTrigger id="inquiry-escalate" className="w-full">
                       <SelectValue placeholder="Escalate to admin…" />
                     </SelectTrigger>

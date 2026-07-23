@@ -161,4 +161,35 @@ describe("storefront ProductDetailPage", () => {
       await screen.findByText("Could not load products. Please try again."),
     ).toBeInTheDocument();
   });
+
+  it("renders no related-products section when there are none", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product, relatedProducts: [] } });
+    renderPage();
+
+    await screen.findByText("Rice 5kg");
+    expect(screen.queryByText("Related products")).not.toBeInTheDocument();
+  });
+
+  it("renders a related-products section linking to each sibling", async () => {
+    const sibling: StorefrontProduct = {
+      id: "p2",
+      name: { en: "Rice 10kg" },
+      description: null,
+      price: 2800,
+      stock: 0,
+      images: [],
+      tags: [],
+      category: { id: "c1", name: { en: "Groceries" } },
+    };
+    mockedGet.mockResolvedValueOnce({ data: { product, relatedProducts: [sibling] } });
+    renderPage();
+
+    expect(await screen.findByText("Related products")).toBeInTheDocument();
+    expect(screen.getByText("Rice 10kg")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Rice 10kg/ })).toHaveAttribute(
+      "href",
+      "/products/p2",
+    );
+    expect(screen.getByText("Out of stock")).toBeInTheDocument();
+  });
 });

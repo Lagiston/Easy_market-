@@ -16,6 +16,7 @@ import {
   productListQuerySchema,
   reclassifyStatusQuerySchema,
   dismissProductSuggestionSchema,
+  linkVariantSchema,
   PRODUCTS_PAGE_SIZE,
   MAX_PRODUCT_IMAGES,
   type ProductSortField,
@@ -28,6 +29,26 @@ const productInclude = {
   category: true,
   assignedAgent: { select: { id: true, name: true } },
 } as const;
+
+const variantSummarySelect = {
+  id: true,
+  name: true,
+  price: true,
+  images: true,
+  stock: true,
+} as const;
+
+// Sibling products sharing this product's variant group (e.g. other colors
+// of the same item), excluding itself and soft-deleted rows. Only the
+// single-product routes below resolve this — the paginated list route stays
+// cheap and untouched.
+function resolveVariants(productId: string, variantGroupId: string | null) {
+  if (!variantGroupId) return Promise.resolve([]);
+  return prisma.product.findMany({
+    where: { variantGroupId, deletedAt: null, id: { not: productId } },
+    select: variantSummarySelect,
+  });
+}
 
 const IMAGE_EXTENSIONS: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -267,7 +288,8 @@ productsRouter.get<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     res.status(404).json({ error: "Product not found" });
     return;
   }
-  res.json({ product });
+  const variants = await resolveVariants(product.id, product.variantGroupId);
+  res.json({ product, variants });
 });
 
 productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Role.ADMIN), async (req, res) => {
@@ -436,5 +458,114 @@ productsRouter.delete<{ id: string; filename: string }>(
     });
     await unlink(path.join(productImagesDir, req.params.filename)).catch(() => {});
     res.json({ product });
+  },
+);
+
+productsRouter.post<{ id: string }>(
+  "/products/:id/variants",
+  requireAuth,
+  requireRole(Role.ADMIN),
+  async (req, res) => {
+    const parsed = linkVariantSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]!.message });
+      return;
+    }
+    const productId = req.params.id;
+    const { productId: otherId } = parsed.data;
+
+    if (otherId === productId) {
+      res.status(400).json({ error: "A product can't be linked to itself" });
+      return;
+    }
+
+    const [target, other] = await Promise.all([
+      prisma.product.findUnique({ where: { id: productId } }),
+      prisma.product.findUnique({ where: { id: otherId } }),
+    ]);
+    if (!target || target.deletedAt) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    if (!other || other.deletedAt) {
+      res.status(404).json({ error: "That product was not found" });
+      return;
+    }
+
+    // Already linked (same non-null group) — idempotent no-op.
+    if (target.variantGroupId && target.variantGroupId === other.variantGroupId) {
+      const product = await prisma.product.findUnique({
+        where: { id: productId },
+        include: productInclude,
+      });
+      const variants = await resolveVariants(productId, target.variantGroupId);
+      res.json({ product, variants });
+      return;
+    }
+
+    // No silent merging of two existing groups — the admin has to explicitly
+    // remove `other` from its current group first.
+    if (other.variantGroupId && other.variantGroupId !== target.variantGroupId) {
+      res.status(409).json({
+        error: "That product already belongs to a different variant group — remove it from that group first",
+      });
+      return;
+    }
+
+    const groupId = target.variantGroupId ?? randomUUID();
+    await prisma.$transaction([
+      prisma.product.update({ where: { id: productId }, data: { variantGroupId: groupId } }),
+      prisma.product.update({ where: { id: otherId }, data: { variantGroupId: groupId } }),
+    ]);
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: productInclude,
+    });
+    const variants = await resolveVariants(productId, groupId);
+    res.json({ product, variants });
+  },
+);
+
+productsRouter.delete<{ id: string; variantProductId: string }>(
+  "/products/:id/variants/:variantProductId",
+  requireAuth,
+  requireRole(Role.ADMIN),
+  async (req, res) => {
+    const productId = req.params.id;
+    const { variantProductId } = req.params;
+
+    const [target, other] = await Promise.all([
+      prisma.product.findUnique({ where: { id: productId } }),
+      prisma.product.findUnique({ where: { id: variantProductId } }),
+    ]);
+    if (!target || target.deletedAt) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    if (!other || !target.variantGroupId || other.variantGroupId !== target.variantGroupId) {
+      res.status(404).json({ error: "That product is not linked to this one" });
+      return;
+    }
+
+    await prisma.product.update({ where: { id: variantProductId }, data: { variantGroupId: null } });
+
+    // A "group" of one lone remaining member is meaningless — clear it too.
+    const remaining = await prisma.product.count({
+      where: { variantGroupId: target.variantGroupId, deletedAt: null },
+    });
+    if (remaining <= 1) {
+      await prisma.product.updateMany({
+        where: { variantGroupId: target.variantGroupId },
+        data: { variantGroupId: null },
+      });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: productInclude,
+    });
+    const variants = await resolveVariants(productId, product?.variantGroupId ?? null);
+    res.json({ product, variants });
   },
 );

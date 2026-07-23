@@ -93,6 +93,17 @@ export const PRODUCTS_PAGE_SIZE = 10;
 // server (to actually enforce it) need the same bound.
 export const MAX_PRODUCT_IMAGES = 8;
 
+// Body for POST /products/:id/variants — links another product into this
+// product's variant group (e.g. a different color of the same item). Its
+// own endpoint, like the image routes, rather than folded into
+// create/updateProductSchema.
+const VARIANT_PRODUCT_ID_ERROR = "A product id is required";
+export const linkVariantSchema = z.object({
+  productId: z.string(VARIANT_PRODUCT_ID_ERROR).trim().min(1, VARIANT_PRODUCT_ID_ERROR).max(100),
+});
+
+export type LinkVariantInput = z.infer<typeof linkVariantSchema>;
+
 export const productListQuerySchema = z.object({
   sortBy: z.enum(PRODUCT_SORT_FIELDS).default("createdAt"),
   sortOrder: z.enum(SORT_ORDERS).default("desc"),

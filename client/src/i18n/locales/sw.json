@@ -69,7 +69,8 @@
     "backToList": "Rudi kwenye bidhaa",
     "outOfStock": "Imeisha",
     "noImage": "Hakuna picha",
-    "pagination": "Ukurasa {{page}} kati ya {{totalPages}}"
+    "pagination": "Ukurasa {{page}} kati ya {{totalPages}}",
+    "relatedTitle": "Bidhaa zinazohusiana"
   },
   "cart": {
     "nav": "Kikapu",
