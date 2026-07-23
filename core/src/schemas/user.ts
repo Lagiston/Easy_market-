@@ -14,6 +14,12 @@ export type Role = (typeof Role)[keyof typeof Role];
 const NAME_ERROR = "Name must be at least 3 characters";
 const EMAIL_ERROR = "A valid email is required";
 const PASSWORD_ERROR = "Password must be at least 8 characters";
+// Bcrypt-family hashers silently truncate beyond 72 bytes; better-auth's
+// scrypt-based default doesn't have that specific ceiling, but an unbounded
+// password still means an attacker-chosen payload size feeds straight into
+// the hashing cost on every signup/login attempt — same reasoning as every
+// other free-text field in this codebase needing an explicit .max().
+const PASSWORD_MAX_ERROR = "Password must be 200 characters or fewer";
 
 export const createUserSchema = z.object({
   name: z
@@ -24,7 +30,7 @@ export const createUserSchema = z.object({
     // Sanitizing markup-only input can empty the value after the min check.
     .refine((value) => value.length >= 3, NAME_ERROR),
   email: z.string(EMAIL_ERROR).trim().toLowerCase().pipe(z.email(EMAIL_ERROR)),
-  password: z.string(PASSWORD_ERROR).trim().min(8, PASSWORD_ERROR),
+  password: z.string(PASSWORD_ERROR).trim().min(8, PASSWORD_ERROR).max(200, PASSWORD_MAX_ERROR),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
@@ -34,6 +40,7 @@ export const updateUserSchema = createUserSchema.extend({
   password: z
     .string(PASSWORD_ERROR)
     .trim()
+    .max(200, PASSWORD_MAX_ERROR)
     .refine((value) => value === "" || value.length >= 8, PASSWORD_ERROR),
 });
 

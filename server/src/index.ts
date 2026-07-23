@@ -2,6 +2,7 @@ import "./instrument";
 
 import * as Sentry from "@sentry/node";
 import express from "express";
+import helmet from "helmet";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { customerAuth } from "./lib/customer-auth";
@@ -32,6 +33,21 @@ import { registerProductStockSnapshotWorker } from "./lib/product-stock-snapshot
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
+
+// Explicit opt-in only — an unconfigured VPS deployment sits directly on the
+// internet with no reverse proxy in front, and blindly trusting
+// X-Forwarded-For in that case would let any client spoof the IP
+// express-rate-limit keys its buckets on, bypassing every per-IP limiter
+// below. Only set TRUST_PROXY_HOPS once a real reverse proxy/load balancer
+// (nginx, Caddy, a platform LB, ...) is actually in front of this process —
+// the value is the number of proxy hops to trust (usually 1).
+if (process.env.TRUST_PROXY_HOPS) {
+  app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS));
+}
+
+// API-only server (no HTML views), so helmet's default CSP/HSTS/frame/nosniff
+// defaults are safe as-is — nothing here renders untrusted markup.
+app.use(helmet());
 
 // POST /customer/orders/link-by-phone is rate-limited too, but per signed-in
 // customer rather than per IP — see linkOrdersLimiter's own comment. That
