@@ -53,7 +53,6 @@ Goal: customer places a pay-on-delivery order; staff manage it.
 - [x] 4.5 Stock decrement on order placement; restore on cancellation
 - [x] 4.6 Dashboard: order list with status filter, order detail, status transitions, cancel
 - [x] 4.7 Dashboard overview page: counts of products, orders, low-stock items
-- [x] 4.7b Sold-out products chart: daily `ProductStockSnapshot` (count + product ids) taken via a pg-boss cron job just after midnight UTC; `GET /api/dashboard/sold-out-history` returns a 30-day series (`null` for days before tracking started, distinct from a confirmed zero) rendered as a bar chart (`SoldOutChart.tsx`) on the overview page, clicking a day opens `SoldOutProductsDialog.tsx` (`GET /api/dashboard/sold-out-history/:date`) listing that day's sold-out products linked to their product page
 
 **Demo:** end-to-end order — customer checks out, staff confirms and completes it.
 
@@ -96,8 +95,8 @@ Goal: AI classifies inquiries and drafts replies; agents approve every send.
 Goal: catalog stays consistently organized with AI help.
 
 - [x] 7.1 Classification endpoint (GPT-5.6 Luna): suggest category + tags from product name/description
-- [x] 7.2 Product form integration: suggestions shown on create, staff accept/override
-- [x] 7.3 Tags in schema + tag filtering on storefront
+- [ ] 7.2 Product form integration: suggestions shown on create, staff accept/override
+- [ ] 7.3 Tags in schema + tag filtering on storefront
 
 **Demo:** staff types a product description; category and tags appear pre-filled.
 
