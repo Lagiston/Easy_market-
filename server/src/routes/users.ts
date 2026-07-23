@@ -83,7 +83,7 @@ usersRouter.put<{ id: string }>("/users/:id", requireAuth, requireRole(Role.ADMI
   const userId = req.params.id;
 
   const target = await prisma.user.findUnique({ where: { id: userId } });
-  if (!target) {
+  if (!target || target.deletedAt) {
     res.status(404).json({ error: "User not found" });
     return;
   }

@@ -56,6 +56,7 @@ function loadCart(): CartItem[] {
 }
 
 function clampQuantity(quantity: number, stock: number) {
+  if (stock === 0) return 0;
   return Math.max(1, Math.min(quantity, stock));
 }
 
@@ -75,23 +76,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems((current) => {
           const existing = current.find((item) => item.productId === product.productId);
           if (!existing) {
-            return [...current, { ...product, quantity: clampQuantity(quantity, product.stock) }];
+            const clamped = clampQuantity(quantity, product.stock);
+            // Out of stock — nothing to add rather than a zero-quantity item.
+            if (clamped === 0) return current;
+            return [...current, { ...product, quantity: clamped }];
+          }
+          const clamped = clampQuantity(existing.quantity + quantity, product.stock);
+          if (clamped === 0) {
+            return current.filter((item) => item.productId !== product.productId);
           }
           // Refresh the snapshot too — the product may have changed since it was added.
           return current.map((item) =>
-            item.productId === product.productId
-              ? { ...product, quantity: clampQuantity(item.quantity + quantity, product.stock) }
-              : item,
+            item.productId === product.productId ? { ...product, quantity: clamped } : item,
           );
         }),
       updateQuantity: (productId, quantity) =>
-        setItems((current) =>
-          current.map((item) =>
-            item.productId === productId
-              ? { ...item, quantity: clampQuantity(quantity, item.stock) }
-              : item,
-          ),
-        ),
+        setItems((current) => {
+          const existing = current.find((item) => item.productId === productId);
+          if (!existing) return current;
+          const clamped = clampQuantity(quantity, existing.stock);
+          if (clamped === 0) return current.filter((item) => item.productId !== productId);
+          return current.map((item) =>
+            item.productId === productId ? { ...item, quantity: clamped } : item,
+          );
+        }),
       removeItem: (productId) =>
         setItems((current) => current.filter((item) => item.productId !== productId)),
       clearCart: () => setItems([]),

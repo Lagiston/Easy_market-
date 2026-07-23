@@ -309,7 +309,7 @@ export default function InquiryDetailPage() {
                         Sources: {message.sources.map((source) => source.title).join(", ")}
                       </p>
                     )}
-                    {message.draftStatus === DraftStatus.PENDING ? (
+                    {message.draftStatus === DraftStatus.PENDING && !isClosed ? (
                       <div className="space-y-2">
                         <Textarea
                           rows={3}
@@ -346,6 +346,13 @@ export default function InquiryDetailPage() {
                             Discard
                           </Button>
                         </div>
+                      </div>
+                    ) : message.draftStatus === DraftStatus.PENDING ? (
+                      // Closed with the draft never reviewed — approve/discard would
+                      // both now 409 server-side, so just show it as unreviewed history.
+                      <div className="text-muted-foreground">
+                        <p className="whitespace-pre-wrap">{message.body}</p>
+                        <p className="mt-1 text-[10px]">Not reviewed — conversation closed</p>
                       </div>
                     ) : (
                       <div className="text-muted-foreground">

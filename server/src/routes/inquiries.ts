@@ -392,6 +392,16 @@ inquiriesRouter.post<{ id: string; messageId: string }>(
   async (req, res) => {
     const { id, messageId } = req.params;
 
+    const inquiry = await prisma.inquiry.findUnique({ where: { id } });
+    if (!inquiry) {
+      res.status(404).json({ error: "Inquiry not found" });
+      return;
+    }
+    if (inquiry.status === InquiryStatus.CLOSED) {
+      res.status(409).json({ error: "This conversation is closed" });
+      return;
+    }
+
     const draft = await prisma.message.findFirst({
       where: { id: messageId, inquiryId: id, sender: MessageSender.AI_DRAFT },
     });

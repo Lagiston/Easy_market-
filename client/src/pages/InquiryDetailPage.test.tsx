@@ -362,6 +362,88 @@ describe("InquiryDetailPage", () => {
     );
   });
 
+  it("approves a draft unedited and marks it sent as-is once the refetch resolves", async () => {
+    const pending = inquiry({
+      messages: [
+        {
+          id: "m2",
+          sender: "AI_DRAFT",
+          body: "Yes, rice is currently in stock.",
+          createdAt: "2026-07-18T12:01:00.000Z",
+          author: null,
+          draftStatus: "PENDING",
+          sources: [],
+        },
+      ],
+    });
+    const sent = { ...pending, messages: [{ ...pending.messages[0]!, draftStatus: "SENT_UNEDITED" as const }] };
+    let inquiryCallCount = 0;
+    mockedGet.mockImplementation((url: string) => {
+      if (url === "/api/users") return Promise.resolve({ data: { users: agents } });
+      inquiryCallCount += 1;
+      return Promise.resolve({ data: { inquiry: inquiryCallCount === 1 ? pending : sent } });
+    });
+    mockedPost.mockResolvedValueOnce({ data: {} });
+    renderPage();
+
+    await screen.findByLabelText("Draft reply");
+    await userEvent.click(screen.getByRole("button", { name: "Approve & send" }));
+
+    await waitFor(() =>
+      expect(mockedPost).toHaveBeenCalledWith("/api/inquiries/i1/messages/m2/approve", {
+        message: "Yes, rice is currently in stock.",
+      }),
+    );
+
+    expect(await screen.findByText("Sent as-is")).toBeInTheDocument();
+  });
+
+  it("renders a 'Deleted article' source title as sent by the server", async () => {
+    mockDetail(
+      inquiry({
+        messages: [
+          {
+            id: "m2",
+            sender: "AI_DRAFT",
+            body: "Yes, rice is currently in stock.",
+            createdAt: "2026-07-18T12:01:00.000Z",
+            author: null,
+            draftStatus: "SENT_UNEDITED",
+            sources: [{ id: "kb1", title: "Deleted article" }],
+          },
+        ],
+      }),
+    );
+    renderPage();
+
+    expect(await screen.findByText("Sources: Deleted article")).toBeInTheDocument();
+  });
+
+  it("shows a pending draft on a closed inquiry as unreviewed history, with no action buttons", async () => {
+    mockDetail(
+      inquiry({
+        status: InquiryStatus.CLOSED,
+        messages: [
+          {
+            id: "m2",
+            sender: "AI_DRAFT",
+            body: "Yes, rice is currently in stock.",
+            createdAt: "2026-07-18T12:01:00.000Z",
+            author: null,
+            draftStatus: "PENDING",
+            sources: [],
+          },
+        ],
+      }),
+    );
+    renderPage();
+
+    expect(await screen.findByText("Not reviewed — conversation closed")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve & send" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Discard" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Draft reply")).not.toBeInTheDocument();
+  });
+
   it("renders a reviewed draft without action buttons", async () => {
     mockDetail(
       inquiry({

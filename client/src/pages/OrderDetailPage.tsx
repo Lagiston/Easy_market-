@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { FulfillmentType, OrderStatus } from "@es-market/core";
+import { CALL_ATTEMPTS_BEFORE_CANCEL, FulfillmentType, OrderStatus } from "@es-market/core";
 import {
   canCancel,
   canComplete,
@@ -12,6 +12,7 @@ import {
 } from "@/components/OrdersTable";
 import OrderStatusBadge, { CANCEL_REASON_LABELS } from "@/components/OrderStatusBadge";
 import CancelOrderDialog from "./CancelOrderDialog";
+import CancelUnreachableOrderDialog from "./CancelUnreachableOrderDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -49,6 +50,9 @@ export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [cancellingOrder, setCancellingOrder] = useState<OrderRow | null>(null);
+  const [cancellingUnreachableOrder, setCancellingUnreachableOrder] = useState<OrderRow | null>(
+    null,
+  );
 
   const { data: order, isPending, error } = useQuery({
     queryKey: ["orders", id],
@@ -198,6 +202,16 @@ export default function OrderDetailPage() {
                   <Button disabled={actionsPending} onClick={() => confirmMutation.mutate()}>
                     Confirm order
                   </Button>
+                  {order.callAttempts >= CALL_ATTEMPTS_BEFORE_CANCEL && (
+                    <Button
+                      variant="outline"
+                      className="text-destructive"
+                      disabled={actionsPending}
+                      onClick={() => setCancellingUnreachableOrder(order)}
+                    >
+                      Cancel unreachable order
+                    </Button>
+                  )}
                 </>
               )}
               {canGoOutForDelivery(order) && (
@@ -227,6 +241,12 @@ export default function OrderDetailPage() {
         order={cancellingOrder}
         onOpenChange={(open) => {
           if (!open) setCancellingOrder(null);
+        }}
+      />
+      <CancelUnreachableOrderDialog
+        order={cancellingUnreachableOrder}
+        onOpenChange={(open) => {
+          if (!open) setCancellingUnreachableOrder(null);
         }}
       />
     </div>
