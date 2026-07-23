@@ -99,6 +99,25 @@ describe("storefront ProductDetailPage", () => {
     );
   });
 
+  it("renders tags as links back to the product list, filtered by that tag", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product: { ...product, tags: ["organic"] } } });
+    renderPage();
+
+    expect(await screen.findByRole("link", { name: "organic" })).toHaveAttribute(
+      "href",
+      "/products?tag=organic",
+    );
+  });
+
+  it("renders no tag links when the product has no tags", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    await screen.findByText("Rice 5kg");
+    // Only the "back to products" link should exist — no tag chips to render.
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+  });
+
   it("shows a not-found message when the product does not exist", async () => {
     mockedGet.mockRejectedValueOnce(axiosErrorWithStatus(404));
     renderPage();

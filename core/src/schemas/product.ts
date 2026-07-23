@@ -114,7 +114,16 @@ export const STOREFRONT_PAGE_SIZE = 12;
 export const storefrontProductListQuerySchema = z.object({
   search: z.string().trim().max(200).optional(),
   categoryId: z.string().trim().min(1).optional(),
-  tag: z.string().trim().min(1).max(50).optional(),
+  // Lowercased for the same reason tagSchema is — stored tags are always
+  // lowercase, so a differently-cased query param (e.g. a hand-typed URL)
+  // would otherwise silently match nothing via the exact-match `has` filter.
+  tag: z
+    .string()
+    .trim()
+    .min(1)
+    .max(50)
+    .transform((value) => value.toLowerCase())
+    .optional(),
   minPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
   maxPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
   sort: z.enum(STOREFRONT_PRODUCT_SORTS).default("newest"),

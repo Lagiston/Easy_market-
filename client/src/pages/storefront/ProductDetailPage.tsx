@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, ImageOff, ShoppingCart } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { StorefrontProduct } from "./ProductsPage";
@@ -77,9 +77,13 @@ export default function ProductDetailPage() {
               {product.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-1">
                   {product.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary">
+                    <Link
+                      key={tag}
+                      to={`/products?tag=${encodeURIComponent(tag)}`}
+                      className={`${badgeVariants({ variant: "secondary" })} hover:bg-secondary/80`}
+                    >
                       {tag}
-                    </Badge>
+                    </Link>
                   ))}
                 </div>
               )}

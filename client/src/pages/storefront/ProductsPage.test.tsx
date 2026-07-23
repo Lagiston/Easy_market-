@@ -38,10 +38,17 @@ const categories = [
   { id: "c2", name: { en: "Beverages" } },
 ];
 
-function mockApi(overrides?: { products?: StorefrontProduct[]; total?: number }) {
+function mockApi(overrides?: {
+  products?: StorefrontProduct[];
+  total?: number;
+  tags?: string[];
+}) {
   mockedAxios.get.mockImplementation((url: string) => {
     if (url === "/api/storefront/categories") {
       return Promise.resolve({ data: { categories } });
+    }
+    if (url === "/api/storefront/tags") {
+      return Promise.resolve({ data: { tags: overrides?.tags ?? ["organic"] } });
     }
     return Promise.resolve({
       data: {
@@ -52,9 +59,9 @@ function mockApi(overrides?: { products?: StorefrontProduct[]; total?: number })
   });
 }
 
-function renderPage() {
+function renderPage(initialEntry = "/products") {
   renderWithQuery(
-    <MemoryRouter initialEntries={["/products"]}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <ProductsPage />
     </MemoryRouter>,
   );
@@ -156,6 +163,69 @@ describe("storefront ProductsPage", () => {
     });
     // Still on the products page — the tag badge isn't the product link.
     expect(screen.getByText("Rice 5kg")).toBeInTheDocument();
+  });
+
+  it("populates the tag filter dropdown from /api/storefront/tags", async () => {
+    const user = userEvent.setup();
+    mockApi({ tags: ["bulk", "organic"] });
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByLabelText("Tag"));
+
+    expect(await screen.findByRole("option", { name: "bulk" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "organic" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "All tags" })).toBeInTheDocument();
+  });
+
+  it("filters by tag via the tag dropdown", async () => {
+    const user = userEvent.setup();
+    mockApi({ tags: ["bulk", "organic"] });
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByLabelText("Tag"));
+    await user.click(await screen.findByRole("option", { name: "bulk" }));
+
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({ tag: "bulk", sort: "newest", page: 1 });
+    });
+  });
+
+  it("combines search and tag filters", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: "organic" }));
+    await user.type(screen.getByLabelText("Search", { exact: true }), "rice");
+
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({
+        search: "rice",
+        tag: "organic",
+        sort: "newest",
+        page: 1,
+      });
+    });
+  });
+
+  it("shows an empty state when a tag filter has no matches", async () => {
+    mockApi({ products: [], total: 0 });
+    renderPage("/products?tag=nonexistent");
+
+    expect(await screen.findByText("No products found.")).toBeInTheDocument();
+  });
+
+  it("pre-fills the tag filter from an incoming ?tag= query param", async () => {
+    mockApi({ tags: ["organic"], products: [products[0]!], total: 1 });
+    renderPage("/products?tag=organic");
+    await screen.findByText("Rice 5kg");
+
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({ tag: "organic", sort: "newest", page: 1 });
+    });
   });
 
   it("filters by category", async () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -58,10 +58,15 @@ export default function ProductsPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
 
+  // Read-once, not two-way synced: lets a link (e.g. a tag chip on the product
+  // detail page) land here pre-filtered, without making every filter change
+  // round-trip through the URL.
+  const [searchParams] = useSearchParams();
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryId, setCategoryId] = useState(ALL_CATEGORIES);
-  const [tag, setTag] = useState(ALL_TAGS);
+  const [tag, setTag] = useState(() => searchParams.get("tag") ?? ALL_TAGS);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [debouncedPrices, setDebouncedPrices] = useState({ minPrice: "", maxPrice: "" });
