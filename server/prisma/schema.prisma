@@ -404,3 +404,15 @@ model ProductStockSnapshot {
 
   @@map("product_stock_snapshot")
 }
+
+// Singleton row guarding against two "reclassify all" batches running
+// concurrently — see acquireReclassifyLock in product-reclassify-lock.ts.
+// TTL-based (expiresAt), not completion-triggered, so it self-heals if a
+// batch crashes without a clean release.
+model ProductReclassifyBatch {
+  id        String   @id @default("singleton")
+  startedAt DateTime
+  expiresAt DateTime
+
+  @@map("product_reclassify_batch")
+}

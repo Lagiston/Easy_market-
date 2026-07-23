@@ -131,6 +131,14 @@ export default function ProductsPage() {
             Reclassifying products… {reclassifyStatus?.completed ?? 0}/{batch.total}
           </p>
         )}
+        {reclassifyMutation.isError && (
+          <p className="mb-4 text-sm text-destructive">
+            {axios.isAxiosError(reclassifyMutation.error) &&
+            reclassifyMutation.error.response?.data?.error
+              ? String(reclassifyMutation.error.response.data.error)
+              : "Could not start reclassification. Please try again."}
+          </p>
+        )}
         {error ? (
           <p className="py-8 text-center text-sm text-destructive">
             Could not load products. Please try again.

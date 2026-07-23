@@ -44,6 +44,7 @@ describe("ProductsPage", () => {
   beforeEach(() => {
     mockedAxios.get.mockReset();
     mockedAxios.put.mockReset();
+    mockedAxios.post.mockReset();
     mockedAxios.delete.mockReset();
     mockedAxios.isAxiosError.mockReset();
   });
@@ -281,5 +282,101 @@ describe("ProductsPage", () => {
     await user.click(screen.getByRole("button", { name: "Delete" }));
 
     await waitFor(() => expect(mockedAxios.delete).toHaveBeenCalledWith("/api/products/1"));
+  });
+});
+
+describe("ProductsPage reclassify all", () => {
+  beforeEach(() => {
+    mockedAxios.get.mockReset();
+    mockedAxios.post.mockReset();
+    mockedAxios.isAxiosError.mockReset();
+  });
+
+  function mockProductsList(completed = 0) {
+    mockedAxios.get.mockImplementation((url: string) =>
+      url === "/api/products/reclassify-status"
+        ? Promise.resolve({ data: { completed } })
+        : Promise.resolve({ data: { products, total: products.length } }),
+    );
+  }
+
+  it("starts a batch, posts to reclassify-all, and disables the button", async () => {
+    mockProductsList();
+    mockedAxios.post.mockResolvedValue({
+      data: { total: 2, since: "2026-07-23T00:00:00.000Z" },
+    });
+    const user = userEvent.setup();
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: /reclassify all/i }));
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/products/reclassify-all"),
+    );
+    expect(await screen.findByText("Reclassifying products… 0/2")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /reclassify all/i })).toBeDisabled();
+  });
+
+  it("clears the progress line and re-enables the button once the batch completes", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let completed = 0;
+    mockedAxios.get.mockImplementation((url: string) =>
+      url === "/api/products/reclassify-status"
+        ? Promise.resolve({ data: { completed } })
+        : Promise.resolve({ data: { products, total: products.length } }),
+    );
+    mockedAxios.post.mockResolvedValue({
+      data: { total: 2, since: "2026-07-23T00:00:00.000Z" },
+    });
+    const user = userEvent.setup({ delay: null });
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: /reclassify all/i }));
+    expect(await screen.findByText("Reclassifying products… 0/2")).toBeInTheDocument();
+
+    completed = 2;
+    await vi.advanceTimersByTimeAsync(2000);
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Reclassifying products/)).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole("button", { name: /reclassify all/i })).toBeEnabled();
+    vi.useRealTimers();
+  });
+
+  it("shows an inline error and does not start a batch when one is already running", async () => {
+    mockProductsList();
+    mockedAxios.isAxiosError.mockImplementation(
+      (error) => (error as { isAxiosError?: boolean })?.isAxiosError === true,
+    );
+    mockedAxios.post.mockRejectedValue({
+      isAxiosError: true,
+      response: { data: { error: "A reclassify batch is already running" } },
+    });
+    const user = userEvent.setup();
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: /reclassify all/i }));
+
+    expect(
+      await screen.findByText("A reclassify batch is already running"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Reclassifying products/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /reclassify all/i })).toBeEnabled();
   });
 });

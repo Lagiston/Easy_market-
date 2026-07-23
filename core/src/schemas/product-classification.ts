@@ -32,3 +32,13 @@ export const productClassificationAcceptSchema = z.object({
 });
 
 export type ProductClassificationAcceptInput = z.infer<typeof productClassificationAcceptSchema>;
+
+// Optimistic-concurrency token for dismissing a bulk-reclassify suggestion —
+// the client sends back the aiSuggestedAt it last saw, so a suggestion
+// recomputed by a concurrent bulk run in the meantime isn't silently
+// discarded (see dismiss-suggestion's guarded updateMany in products.ts).
+export const dismissProductSuggestionSchema = z.object({
+  aiSuggestedAt: z.string().datetime(),
+});
+
+export type DismissProductSuggestionInput = z.infer<typeof dismissProductSuggestionSchema>;

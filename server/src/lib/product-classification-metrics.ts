@@ -21,19 +21,35 @@ export async function recordSuggestion(categorySuggested: boolean, tagsSuggested
   });
 }
 
+// Guarded raw UPDATE: increments the accepted counter only if it's still
+// below its corresponding suggested counter, and only for an existing row.
+// Comparing two columns of the same row can't be expressed through Prisma's
+// `updateMany` filters (which only compare a column to a literal/parameter),
+// so this is raw SQL — same class of "can't express in the DSL" case as
+// kb-search.ts's tsvector queries. A single atomic UPDATE is race-safe,
+// unlike a $transaction read-then-conditional-write, which has a TOCTOU race
+// window between the read and the write under concurrent accept calls. This
+// keeps an accepted counter from ever exceeding its suggested counter (which
+// would push the dashboard's acceptance-rate stat past 100%) even if this
+// endpoint is called more times than a real suggestion was ever shown — a
+// deliberately lightweight clamp, not a full suggestion-correlation-token
+// system, since this is a low-stakes internal admin-only vanity metric, not
+// a security boundary. A row that doesn't exist yet (accept called before
+// any recordSuggestion ever ran) matches zero rows and is a no-op.
 export async function recordAcceptance(field: ProductClassificationField) {
-  await prisma.productClassificationMetric.upsert({
-    where: { id: METRIC_ID },
-    create: {
-      id: METRIC_ID,
-      categoryAccepted: field === "category" ? 1 : 0,
-      tagsAccepted: field === "tag" ? 1 : 0,
-    },
-    update: {
-      categoryAccepted: field === "category" ? { increment: 1 } : undefined,
-      tagsAccepted: field === "tag" ? { increment: 1 } : undefined,
-    },
-  });
+  if (field === "category") {
+    await prisma.$executeRaw`
+      UPDATE "product_classification_metric"
+      SET "categoryAccepted" = "categoryAccepted" + 1
+      WHERE "id" = ${METRIC_ID} AND "categoryAccepted" < "categorySuggested"
+    `;
+  } else {
+    await prisma.$executeRaw`
+      UPDATE "product_classification_metric"
+      SET "tagsAccepted" = "tagsAccepted" + 1
+      WHERE "id" = ${METRIC_ID} AND "tagsAccepted" < "tagsSuggested"
+    `;
+  }
 }
 
 // Rates as rounded percentages; null (not 0) when nothing's been suggested

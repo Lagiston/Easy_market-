@@ -117,10 +117,12 @@ export {
   productClassificationSchema,
   PRODUCT_CLASSIFICATION_FIELDS,
   productClassificationAcceptSchema,
+  dismissProductSuggestionSchema,
   type ProductClassificationRequest,
   type ProductClassification,
   type ProductClassificationField,
   type ProductClassificationAcceptInput,
+  type DismissProductSuggestionInput,
 } from "./schemas/product-classification";
 export {
   kbArticleBodySchema,

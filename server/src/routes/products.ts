@@ -8,11 +8,13 @@ import { prisma } from "../lib/prisma";
 import { productImagesDir } from "../lib/uploads";
 import { requireAuth, requireRole } from "../middleware/require-auth";
 import { boss, CLASSIFY_PRODUCT_QUEUE } from "../lib/queue";
+import { acquireReclassifyLock } from "../lib/product-reclassify-lock";
 import {
   createProductSchema,
   updateProductSchema,
   productListQuerySchema,
   reclassifyStatusQuerySchema,
+  dismissProductSuggestionSchema,
   PRODUCTS_PAGE_SIZE,
   type ProductSortField,
 } from "@es-market/core";
@@ -172,6 +174,15 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
 // matches routes in registration order, and "/products/:id" would otherwise
 // swallow "/products/reclassify-status" (treating it as an id).
 productsRouter.post("/products/reclassify-all", requireAuth, requireRole(Role.ADMIN), async (_req, res) => {
+  // Guard against a second batch starting while one is still in flight —
+  // this also keeps reclassify-status's "since" approximation (below) from
+  // double-counting, since overlapping batches can no longer happen.
+  const acquired = await acquireReclassifyLock();
+  if (!acquired) {
+    res.status(409).json({ error: "A reclassify batch is already running" });
+    return;
+  }
+
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
     select: { id: true },
@@ -272,6 +283,11 @@ productsRouter.post<{ id: string }>(
   requireAuth,
   requireRole(Role.ADMIN),
   async (req, res) => {
+    const parsed = dismissProductSuggestionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]!.message });
+      return;
+    }
     const productId = req.params.id;
 
     const target = await prisma.product.findUnique({ where: { id: productId } });
@@ -280,9 +296,20 @@ productsRouter.post<{ id: string }>(
       return;
     }
 
-    const product = await prisma.product.update({
-      where: { id: productId },
+    // Guarded on aiSuggestedAt still matching what the client last saw, so a
+    // suggestion recomputed by a concurrent bulk-reclassify run in between
+    // isn't silently discarded by a stale Dismiss click.
+    const { count } = await prisma.product.updateMany({
+      where: { id: productId, aiSuggestedAt: new Date(parsed.data.aiSuggestedAt) },
       data: { aiSuggestedCategoryId: null, aiSuggestedTags: [], aiSuggestedAt: null },
+    });
+    if (count === 0) {
+      res.status(409).json({ error: "Suggestion changed, please refresh" });
+      return;
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
       include: productInclude,
     });
     res.json({ product });

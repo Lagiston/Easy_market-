@@ -95,8 +95,16 @@ function SuggestionBadge({ product }: { product: ProductRow }) {
   });
 
   const dismissMutation = useMutation({
-    mutationFn: () => axios.post(`/api/products/${product.id}/dismiss-suggestion`),
+    mutationFn: () =>
+      axios.post(`/api/products/${product.id}/dismiss-suggestion`, {
+        aiSuggestedAt: product.aiSuggestedAt,
+      }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+    // A 409 means the suggestion changed underneath this stale click (e.g. a
+    // concurrent bulk-reclassify run) — refetch so the badge reflects
+    // whatever's actually current instead of leaving a stale suggestion
+    // stuck on screen.
+    onError: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
   });
 
   if (!product.aiSuggestedAt) return null;

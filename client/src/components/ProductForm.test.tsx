@@ -265,6 +265,180 @@ describe("ProductForm (create mode)", () => {
   });
 });
 
+describe("ProductForm AI suggestions", () => {
+  beforeEach(() => {
+    mockGet();
+    mockedAxios.post.mockReset();
+    mockedAxios.isAxiosError.mockReset();
+  });
+
+  function mockClassify(
+    result:
+      | { categoryId: string | null; tags: string[]; confidence: number }
+      | Promise<never>,
+  ) {
+    mockedAxios.post.mockImplementation((url: string) => {
+      if (url === "/api/ai/classify-product") {
+        return result instanceof Promise ? result : Promise.resolve({ data: result });
+      }
+      if (url === "/api/ai/classify-product/accept") {
+        return Promise.resolve({});
+      }
+      return Promise.reject(new Error(`Unexpected POST to ${url}`));
+    });
+  }
+
+  it("disables Suggest with AI until a name is entered", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    expect(screen.getByRole("button", { name: "Suggest with AI" })).toBeDisabled();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+
+    expect(screen.getByRole("button", { name: "Suggest with AI" })).toBeEnabled();
+  });
+
+  it("requests a suggestion with the current name and description", async () => {
+    mockClassify({ categoryId: null, tags: [], confidence: 0.9 });
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Description"), "Long grain rice");
+    await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/ai/classify-product", {
+        name: "Rice 5kg",
+        description: "Long grain rice",
+      }),
+    );
+  });
+
+  it("shows a pending state while the suggestion request is in flight", async () => {
+    let resolveRequest!: (value: { data: unknown }) => void;
+    mockClassify(new Promise((resolve) => (resolveRequest = resolve)));
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
+
+    expect(await screen.findByRole("button", { name: "Suggesting…" })).toBeDisabled();
+
+    resolveRequest({ data: { categoryId: null, tags: [], confidence: 0.5 } });
+  });
+
+  it("shows a category suggestion and applies it", async () => {
+    mockClassify({ categoryId: "c1", tags: [], confidence: 0.9 });
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
+
+    expect(await screen.findByText("Groceries")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+
+    expect(screen.getByLabelText("Category")).toHaveTextContent("Groceries");
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/ai/classify-product/accept", {
+        field: "category",
+      }),
+    );
+  });
+
+  it("shows 'No confident match' when no category is suggested", async () => {
+    mockClassify({ categoryId: null, tags: [], confidence: 0.2 });
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
+
+    expect(await screen.findByText("No confident match")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Apply" })).not.toBeInTheDocument();
+  });
+
+  it("shows tag suggestions, applies one, and disables already-added tags", async () => {
+    mockClassify({ categoryId: null, tags: ["organic", "bulk"], confidence: 0.7 });
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
+
+    const organicButton = await screen.findByRole("button", { name: "+ organic" });
+    expect(screen.getByRole("button", { name: "+ bulk" })).toBeInTheDocument();
+
+    await user.click(organicButton);
+
+    expect(screen.getByRole("button", { name: "Remove organic" })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/ai/classify-product/accept", {
+        field: "tag",
+      }),
+    );
+    expect(screen.getByRole("button", { name: "organic" })).toBeDisabled();
+  });
+
+  it("shows the server error when the suggestion request fails", async () => {
+    mockedAxios.isAxiosError.mockImplementation(
+      (error) => (error as { isAxiosError?: boolean })?.isAxiosError === true,
+    );
+    mockedAxios.post.mockImplementation((url: string) =>
+      url === "/api/ai/classify-product"
+        ? Promise.reject({
+            isAxiosError: true,
+            response: { data: { error: "AI service unavailable" } },
+          })
+        : Promise.resolve({}),
+    );
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
+
+    expect(await screen.findByText("AI service unavailable")).toBeInTheDocument();
+  });
+
+  it("shows a generic error message for a non-axios failure", async () => {
+    mockedAxios.isAxiosError.mockReturnValue(false);
+    mockedAxios.post.mockImplementation((url: string) =>
+      url === "/api/ai/classify-product"
+        ? Promise.reject(new Error("boom"))
+        : Promise.resolve({}),
+    );
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
+
+    expect(
+      await screen.findByText("Could not get AI suggestions. Please try again."),
+    ).toBeInTheDocument();
+  });
+
+  it("dismisses a suggestion back to the pre-suggestion view", async () => {
+    mockClassify({ categoryId: "c1", tags: ["organic"], confidence: 0.9 });
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
+
+    expect(await screen.findByText("Groceries")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    expect(screen.queryByText("Groceries")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Dismiss" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Suggest with AI" })).toBeInTheDocument();
+  });
+});
+
 describe("ProductForm (edit mode)", () => {
   const existingProduct: ProductRow = {
     id: "42",

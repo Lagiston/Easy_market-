@@ -275,15 +275,27 @@ export default function ProductForm({
       <div className="grid gap-2 rounded-md border p-3">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium">AI suggestions</p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!nameEn?.trim() || classifyMutation.isPending}
-            onClick={() => classifyMutation.mutate()}
-          >
-            {classifyMutation.isPending ? "Suggesting…" : "Suggest with AI"}
-          </Button>
+          <div className="flex gap-2">
+            {classifyMutation.isSuccess && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => classifyMutation.reset()}
+              >
+                Dismiss
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!nameEn?.trim() || classifyMutation.isPending}
+              onClick={() => classifyMutation.mutate()}
+            >
+              {classifyMutation.isPending ? "Suggesting…" : "Suggest with AI"}
+            </Button>
+          </div>
         </div>
         {classifyMutation.isError && (
           <p className="text-sm text-destructive">
