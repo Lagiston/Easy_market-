@@ -3,6 +3,11 @@ import { DraftStatus, InquiryStatus, MessageSender, Role } from "../generated/pr
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/require-auth";
 import { getProductClassificationAcceptance } from "../lib/product-classification-metrics";
+import {
+  getAvgFirstResponseMinutes,
+  getDraftLittleEditRate,
+  getOrdersThisWeek,
+} from "../lib/dashboard-metrics";
 
 // Admin dashboard overview counts; mounted at /api in index.ts.
 export const dashboardRouter = Router();
@@ -20,6 +25,9 @@ dashboardRouter.get(
       escalatedInquiries,
       draftStatusCounts,
       productClassificationAcceptance,
+      avgFirstResponseMinutes,
+      draftLittleEditRate,
+      ordersThisWeek,
     ] = await Promise.all([
         prisma.product.count({ where: { deletedAt: null } }),
         prisma.order.count(),
@@ -41,6 +49,9 @@ dashboardRouter.get(
           _count: true,
         }),
         getProductClassificationAcceptance(),
+        getAvgFirstResponseMinutes(),
+        getDraftLittleEditRate(),
+        getOrdersThisWeek(),
       ]);
 
     // Success rate = share of reviewed drafts (sent as-is or with edits) that
@@ -65,6 +76,9 @@ dashboardRouter.get(
         draftSuccessRate,
         categorySuggestionAcceptanceRate: productClassificationAcceptance.category,
         tagSuggestionAcceptanceRate: productClassificationAcceptance.tags,
+        avgFirstResponseMinutes,
+        draftLittleEditRate,
+        ordersThisWeek,
       },
     });
   },

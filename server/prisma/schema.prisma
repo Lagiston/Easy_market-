@@ -356,6 +356,15 @@ model Message {
   // SENT_UNEDITED/SENT_EDITED (a new STAFF message is minted, this row stays
   // immutable history) or DISCARDED (no reply sent). Null for CUSTOMER/STAFF.
   draftStatus  DraftStatus?
+  // Set only on the STAFF message minted by approving an AI_DRAFT (see the
+  // approve route) — links back to the original draft so metrics can compare
+  // the sent text against what the model proposed (e.g. edit-amount rate).
+  // SetNull rather than Cascade/Restrict: this is informational metadata, not
+  // integrity-critical, and shouldn't block or ripple from the draft row's
+  // own lifecycle.
+  sourceDraftMessageId String?
+  sourceDraftMessage   Message?  @relation("MessageDraftSource", fields: [sourceDraftMessageId], references: [id], onDelete: SetNull)
+  draftApprovals       Message[] @relation("MessageDraftSource")
   createdAt    DateTime      @default(now())
 
   @@index([inquiryId])

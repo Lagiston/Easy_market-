@@ -378,6 +378,7 @@ inquiriesRouter.post<{ id: string; messageId: string }>(
         sender: MessageSender.STAFF,
         authorUserId: req.user.id,
         body: parsed.data.message,
+        sourceDraftMessageId: draft.id,
       },
     });
     await prisma.inquiry.update({ where: { id }, data: { updatedAt: new Date() } });
