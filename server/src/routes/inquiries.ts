@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Router, type Response } from "express";
+import * as Sentry from "@sentry/node";
 import { InquiryChannel, InquiryStatus, MessageSender, DraftStatus, Role } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth } from "../middleware/require-auth";
@@ -39,6 +40,7 @@ inquiriesRouter.post("/storefront/inquiries", async (req, res) => {
 
   void classifyInquiry(inquiry.id, message, language).catch((error) => {
     console.error("Unhandled inquiry classification error:", error);
+    Sentry.captureException(error, { extra: { inquiryId: inquiry.id } });
   });
 
   res.status(201).json({ inquiry: { id: inquiry.id } });

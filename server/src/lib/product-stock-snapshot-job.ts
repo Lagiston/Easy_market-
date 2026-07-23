@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { prisma } from "./prisma";
 import { boss, PRODUCT_STOCK_SNAPSHOT_QUEUE } from "./queue";
 
@@ -26,6 +27,7 @@ export async function registerProductStockSnapshotWorker() {
       // itself has no way to distinguish "job failed" from "job hasn't run
       // yet" (both render as the null/no-data state).
       console.error("Product stock snapshot job failed:", error);
+      Sentry.captureException(error);
       throw error;
     }
   });

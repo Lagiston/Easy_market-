@@ -1,6 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject, APICallError, NoObjectGeneratedError, RetryError } from "ai";
 import type { ZodType } from "zod";
+import * as Sentry from "@sentry/node";
 import { requiredEnv } from "./env";
 
 // Model id for "GPT-5.6 Luna" — confirm this exact string against OpenAI's
@@ -42,6 +43,7 @@ export async function generateStructuredOutput<T>(
     // Full detail logged server-side only; never forward raw SDK/API
     // internals (can include request/response bodies) to an HTTP response.
     console.error("AI structured-output call failed:", error);
+    Sentry.captureException(error);
 
     if (NoObjectGeneratedError.isInstance(error)) {
       throw new AiIntegrationError(

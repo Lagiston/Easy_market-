@@ -1,3 +1,6 @@
+import "./instrument";
+
+import * as Sentry from "@sentry/node";
 import express from "express";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
@@ -72,6 +75,8 @@ app.use("/api", settingsRouter);
 app.use("/api", dashboardRouter);
 app.use("/api", kbArticlesRouter);
 app.use("/api", aiRouter);
+
+Sentry.setupExpressErrorHandler(app);
 
 // Note (dev-only): Bun's --hot reload re-runs this module on every save, so
 // repeated hot reloads can register duplicate pg-boss workers in the same

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { prisma } from "./prisma";
 import { generateStructuredOutput, AiIntegrationError } from "./ai";
 import { draftInquiryReply } from "./inquiry-draft";
@@ -90,8 +91,10 @@ export async function classifyInquiry(
     // customer or crash anything — log and leave the inquiry unclassified.
     if (error instanceof AiIntegrationError) {
       console.error("Inquiry classification failed:", inquiryId, error.message);
+      Sentry.captureException(error, { extra: { inquiryId } });
       return;
     }
     console.error("Inquiry classification failed unexpectedly:", inquiryId, error);
+    Sentry.captureException(error, { extra: { inquiryId } });
   }
 }

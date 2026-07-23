@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import * as Sentry from "@sentry/node";
 import { prisma } from "./prisma";
 import { searchKbArticles } from "./kb-search";
 import { generateStructuredOutput, AiIntegrationError } from "./ai";
@@ -51,8 +52,10 @@ export async function draftInquiryReply(
     // block anything — staff just reply manually, as they always could.
     if (error instanceof AiIntegrationError) {
       console.error("Inquiry draft generation failed:", inquiryId, error.message);
+      Sentry.captureException(error, { extra: { inquiryId } });
       return;
     }
     console.error("Inquiry draft generation failed unexpectedly:", inquiryId, error);
+    Sentry.captureException(error, { extra: { inquiryId } });
   }
 }
