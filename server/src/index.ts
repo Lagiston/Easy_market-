@@ -25,6 +25,7 @@ import { kbArticlesRouter } from "./routes/kb-articles";
 import { aiRouter } from "./routes/ai";
 import { startQueue } from "./lib/queue";
 import { registerProductClassificationWorker } from "./lib/product-classification-job";
+import { registerProductStockSnapshotWorker } from "./lib/product-stock-snapshot-job";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -74,10 +75,15 @@ app.use("/api", aiRouter);
 
 // Note (dev-only): Bun's --hot reload re-runs this module on every save, so
 // repeated hot reloads can register duplicate pg-boss workers in the same
-// process. Not solved here — flagged, same as other accepted v1 gaps in this
-// codebase; restarting the dev server clears it.
+// process (now covering both registerProductClassificationWorker and
+// registerProductStockSnapshotWorker) — each duplicate re-processes the same
+// jobs redundantly. boss.schedule() itself is unaffected (it upserts by
+// queue name, so repeated calls don't create duplicate schedules). Not
+// solved here — flagged, same as other accepted v1 gaps in this codebase;
+// restarting the dev server clears it.
 await startQueue();
 await registerProductClassificationWorker();
+await registerProductStockSnapshotWorker();
 
 app.listen(port, () => {
   console.log(`ES-Market server listening on http://localhost:${port}`);

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +8,8 @@ import { authClient } from "@/lib/auth-client";
 import type { OrderRow } from "@/components/OrdersTable";
 import type { InquiryRow } from "@/components/InquiriesTable";
 import { getStockStatus, type ProductRow } from "@/components/ProductsTable";
+import SoldOutChart, { type SoldOutPoint } from "@/components/SoldOutChart";
+import SoldOutProductsDialog from "./SoldOutProductsDialog";
 import OrderStatusBadge from "@/components/OrderStatusBadge";
 import InquiryStatusBadge from "@/components/InquiryStatusBadge";
 import { Badge } from "@/components/ui/badge";
@@ -106,6 +108,7 @@ function InquiryRowLink({ inquiry }: { inquiry: InquiryRow }) {
 export default function HomePage() {
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user.role === Role.ADMIN;
+  const [soldOutDialogDate, setSoldOutDialogDate] = useState<string | null>(null);
 
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats"],
@@ -113,6 +116,17 @@ export default function HomePage() {
       axios
         .get<{ stats: DashboardStats }>("/api/dashboard/stats")
         .then((res) => res.data.stats),
+    enabled: isAdmin,
+  });
+
+  const { data: soldOutHistory } = useQuery({
+    queryKey: ["dashboard-sold-out-history"],
+    queryFn: () =>
+      axios
+        .get<{ series: SoldOutPoint[]; trackingStartDate: string | null }>(
+          "/api/dashboard/sold-out-history",
+        )
+        .then((res) => res.data),
     enabled: isAdmin,
   });
 
@@ -195,6 +209,27 @@ export default function HomePage() {
           />
         </div>
       )}
+
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Sold-out products</CardTitle>
+            <CardDescription>Products with zero stock, per day — last 30 days.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SoldOutChart
+              series={soldOutHistory?.series ?? null}
+              trackingStartDate={soldOutHistory?.trackingStartDate ?? null}
+              onDayClick={setSoldOutDialogDate}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      <SoldOutProductsDialog
+        date={soldOutDialogDate}
+        onOpenChange={(open) => !open && setSoldOutDialogDate(null)}
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>

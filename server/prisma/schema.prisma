@@ -395,3 +395,12 @@ model ProductClassificationMetric {
 
   @@map("product_classification_metric")
 }
+
+model ProductStockSnapshot {
+  id                String   @id @default(cuid())
+  date              DateTime @unique @db.Date
+  soldOutCount      Int
+  soldOutProductIds String[] @default([])
+
+  @@map("product_stock_snapshot")
+}
