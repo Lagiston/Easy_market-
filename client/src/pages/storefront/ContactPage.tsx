@@ -9,6 +9,7 @@ import {
   type CreateInquiryFormInput,
   type Language,
 } from "@es-market/core";
+import { translateFieldError } from "@/lib/zod-error-i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -98,7 +99,9 @@ export default function ContactPage() {
                 {...register("customerName")}
               />
               {errors.customerName && (
-                <p className="text-sm text-destructive">{errors.customerName.message}</p>
+                <p className="text-sm text-destructive">
+                  {translateFieldError(errors.customerName.message, t)}
+                </p>
               )}
             </div>
             <div className="grid gap-1.5">
@@ -111,7 +114,9 @@ export default function ContactPage() {
                 {...register("customerEmail")}
               />
               {errors.customerEmail && (
-                <p className="text-sm text-destructive">{errors.customerEmail.message}</p>
+                <p className="text-sm text-destructive">
+                  {translateFieldError(errors.customerEmail.message, t)}
+                </p>
               )}
             </div>
             <div className="grid gap-1.5">
@@ -124,7 +129,9 @@ export default function ContactPage() {
                 {...register("customerPhone")}
               />
               {errors.customerPhone && (
-                <p className="text-sm text-destructive">{errors.customerPhone.message}</p>
+                <p className="text-sm text-destructive">
+                  {translateFieldError(errors.customerPhone.message, t)}
+                </p>
               )}
             </div>
             <div className="grid gap-1.5">
@@ -136,7 +143,9 @@ export default function ContactPage() {
                 {...register("message")}
               />
               {errors.message && (
-                <p className="text-sm text-destructive">{errors.message.message}</p>
+                <p className="text-sm text-destructive">
+                  {translateFieldError(errors.message.message, t)}
+                </p>
               )}
             </div>
             {serverError && <p className="text-sm text-destructive">{serverError}</p>}

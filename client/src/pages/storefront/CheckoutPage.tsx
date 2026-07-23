@@ -13,6 +13,7 @@ import {
   type StoreSettings,
 } from "@es-market/core";
 import { localize } from "@/lib/localize";
+import { translateFieldError } from "@/lib/zod-error-i18n";
 import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -122,7 +123,9 @@ export default function CheckoutPage() {
               {...register("customerName")}
             />
             {errors.customerName && (
-              <p className="text-sm text-destructive">{errors.customerName.message}</p>
+              <p className="text-sm text-destructive">
+                {translateFieldError(errors.customerName.message, t)}
+              </p>
             )}
           </div>
           <div className="grid gap-1.5">
@@ -135,7 +138,9 @@ export default function CheckoutPage() {
               {...register("customerPhone")}
             />
             {errors.customerPhone && (
-              <p className="text-sm text-destructive">{errors.customerPhone.message}</p>
+              <p className="text-sm text-destructive">
+                {translateFieldError(errors.customerPhone.message, t)}
+              </p>
             )}
           </div>
           <div className="grid gap-1.5">
@@ -177,7 +182,9 @@ export default function CheckoutPage() {
               />
               <p className="text-sm text-muted-foreground">{t("checkout.cityOnly")}</p>
               {errors.address && (
-                <p className="text-sm text-destructive">{errors.address.message}</p>
+                <p className="text-sm text-destructive">
+                  {translateFieldError(errors.address.message, t)}
+                </p>
               )}
             </div>
           )}

@@ -66,8 +66,8 @@ export const cancelOrderSchema = z.object({
 
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;
 
-const LOOKUP_CODE_ERROR = "Order code is required";
-const LOOKUP_PHONE_ERROR = "Phone number is required";
+export const LOOKUP_CODE_ERROR = "Order code is required";
+export const LOOKUP_PHONE_ERROR = "Phone number is required";
 
 // Customer status lookup: order code + the phone the order was placed with
 // (non-enumerable — both must match).
@@ -97,12 +97,12 @@ export const linkGuestOrdersSchema = z.object({
 
 export type LinkGuestOrdersInput = z.infer<typeof linkGuestOrdersSchema>;
 
-const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
-const PHONE_ERROR = "A valid phone number is required";
-const ADDRESS_ERROR = "Address is required for delivery";
-const FULFILLMENT_ERROR = "Choose delivery or pickup";
-const ITEMS_ERROR = "Order must contain at least one item";
-const QUANTITY_ERROR = "Quantity must be a positive whole number";
+export const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
+export const PHONE_ERROR = "A valid phone number is required";
+export const ADDRESS_ERROR = "Address is required for delivery";
+export const FULFILLMENT_ERROR = "Choose delivery or pickup";
+export const ITEMS_ERROR = "Order must contain at least one item";
+export const QUANTITY_ERROR = "Quantity must be a positive whole number";
 
 const checkoutFieldsSchema = z.object({
   customerName: z

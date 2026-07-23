@@ -4,6 +4,7 @@ import { Link, Navigate, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { customerSignInSchema, type CustomerSignInInput } from "@es-market/core";
 import { customerAuthClient } from "@/lib/customer-auth-client";
+import { translateFieldError } from "@/lib/zod-error-i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,12 +53,14 @@ export default function AccountLoginPage() {
                 id="login-email"
                 type="email"
                 autoComplete="email"
-                placeholder="you@example.com"
+                placeholder={t("account.login.emailPlaceholder")}
                 aria-invalid={!!errors.email}
                 {...register("email")}
               />
               {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
+                <p className="text-sm text-destructive">
+                  {translateFieldError(errors.email.message, t)}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
@@ -66,12 +69,14 @@ export default function AccountLoginPage() {
                 id="login-password"
                 type="password"
                 autoComplete="current-password"
-                placeholder="••••••••"
+                placeholder={t("account.login.passwordPlaceholder")}
                 aria-invalid={!!errors.password}
                 {...register("password")}
               />
               {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
+                <p className="text-sm text-destructive">
+                  {translateFieldError(errors.password.message, t)}
+                </p>
               )}
             </div>
             {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}

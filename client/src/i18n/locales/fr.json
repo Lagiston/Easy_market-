@@ -130,6 +130,23 @@
   "footer": {
     "copyright": "© {{year}} ES-Market"
   },
+  "validation": {
+    "orderLookupCode": "Le code de commande est requis",
+    "orderLookupPhone": "Le numéro de téléphone est requis",
+    "customerName": "Le nom doit contenir au moins 2 caractères",
+    "phone": "Un numéro de téléphone valide est requis",
+    "address": "L'adresse est requise pour la livraison",
+    "fulfillment": "Choisissez la livraison ou le retrait",
+    "items": "La commande doit contenir au moins un article",
+    "quantity": "La quantité doit être un nombre entier positif",
+    "email": "Une adresse e-mail valide est requise",
+    "message": "Le message doit contenir au moins 10 caractères",
+    "messageMax": "Le message ne doit pas dépasser 2000 caractères",
+    "accountName": "Le nom doit contenir au moins 3 caractères",
+    "password": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordMax": "Le mot de passe ne doit pas dépasser 128 caractères",
+    "passwordRequired": "Le mot de passe est requis"
+  },
   "chat": {
     "open": "Ouvrir le chat",
     "close": "Fermer le chat",
@@ -153,6 +170,8 @@
     "signOut": "Se déconnecter",
     "login": {
       "title": "Se connecter",
+      "emailPlaceholder": "vous@exemple.com",
+      "passwordPlaceholder": "••••••••",
       "submit": "Se connecter",
       "submitting": "Connexion…",
       "error": "E-mail ou mot de passe invalide",
@@ -161,6 +180,8 @@
     },
     "signUp": {
       "title": "Créer un compte",
+      "emailPlaceholder": "vous@exemple.com",
+      "passwordPlaceholder": "••••••••",
       "submit": "S'inscrire",
       "submitting": "Création du compte…",
       "error": "Impossible de créer votre compte. Veuillez réessayer.",

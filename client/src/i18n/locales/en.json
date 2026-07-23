@@ -130,6 +130,23 @@
   "footer": {
     "copyright": "© {{year}} ES-Market"
   },
+  "validation": {
+    "orderLookupCode": "Order code is required",
+    "orderLookupPhone": "Phone number is required",
+    "customerName": "Name must be at least 2 characters",
+    "phone": "A valid phone number is required",
+    "address": "Address is required for delivery",
+    "fulfillment": "Choose delivery or pickup",
+    "items": "Order must contain at least one item",
+    "quantity": "Quantity must be a positive whole number",
+    "email": "A valid email is required",
+    "message": "Message must be at least 10 characters",
+    "messageMax": "Message must be 2000 characters or fewer",
+    "accountName": "Name must be at least 3 characters",
+    "password": "Password must be at least 8 characters",
+    "passwordMax": "Password must be 128 characters or fewer",
+    "passwordRequired": "Password is required"
+  },
   "chat": {
     "open": "Open chat",
     "close": "Close chat",
@@ -153,6 +170,8 @@
     "signOut": "Sign out",
     "login": {
       "title": "Sign in",
+      "emailPlaceholder": "you@example.com",
+      "passwordPlaceholder": "••••••••",
       "submit": "Sign in",
       "submitting": "Signing in…",
       "error": "Invalid email or password",
@@ -161,6 +180,8 @@
     },
     "signUp": {
       "title": "Create an account",
+      "emailPlaceholder": "you@example.com",
+      "passwordPlaceholder": "••••••••",
       "submit": "Sign up",
       "submitting": "Creating account…",
       "error": "Could not create your account. Please try again.",

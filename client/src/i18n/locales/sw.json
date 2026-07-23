@@ -130,6 +130,23 @@
   "footer": {
     "copyright": "© {{year}} ES-Market"
   },
+  "validation": {
+    "orderLookupCode": "Msimbo wa oda unahitajika",
+    "orderLookupPhone": "Nambari ya simu inahitajika",
+    "customerName": "Jina lazima liwe na herufi 2 au zaidi",
+    "phone": "Nambari sahihi ya simu inahitajika",
+    "address": "Anwani inahitajika kwa uwasilishaji",
+    "fulfillment": "Chagua uwasilishaji au kuchukua",
+    "items": "Oda lazima iwe na angalau bidhaa moja",
+    "quantity": "Idadi lazima iwe nambari nzima chanya",
+    "email": "Barua pepe sahihi inahitajika",
+    "message": "Ujumbe lazima uwe na herufi 10 au zaidi",
+    "messageMax": "Ujumbe usizidi herufi 2000",
+    "accountName": "Jina lazima liwe na herufi 3 au zaidi",
+    "password": "Nenosiri lazima liwe na herufi 8 au zaidi",
+    "passwordMax": "Nenosiri lisizidi herufi 128",
+    "passwordRequired": "Nenosiri linahitajika"
+  },
   "chat": {
     "open": "Fungua mazungumzo",
     "close": "Funga mazungumzo",
@@ -153,6 +170,8 @@
     "signOut": "Toka",
     "login": {
       "title": "Ingia",
+      "emailPlaceholder": "wewe@mfano.com",
+      "passwordPlaceholder": "••••••••",
       "submit": "Ingia",
       "submitting": "Inaingia…",
       "error": "Barua pepe au nenosiri sio sahihi",
@@ -161,6 +180,8 @@
     },
     "signUp": {
       "title": "Fungua akaunti",
+      "emailPlaceholder": "wewe@mfano.com",
+      "passwordPlaceholder": "••••••••",
       "submit": "Jisajili",
       "submitting": "Inafungua akaunti…",
       "error": "Imeshindwa kufungua akaunti yako. Tafadhali jaribu tena.",

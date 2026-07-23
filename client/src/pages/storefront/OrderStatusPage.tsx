@@ -9,6 +9,7 @@ import {
   type OrderLookupFormInput,
 } from "@es-market/core";
 import { localize } from "@/lib/localize";
+import { translateFieldError } from "@/lib/zod-error-i18n";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -74,7 +75,9 @@ export default function OrderStatusPage() {
             {...register("code")}
           />
           {errors.code && (
-            <p className="text-sm text-destructive">{errors.code.message}</p>
+            <p className="text-sm text-destructive">
+              {translateFieldError(errors.code.message, t)}
+            </p>
           )}
         </div>
         <div className="grid gap-1.5">
@@ -87,7 +90,9 @@ export default function OrderStatusPage() {
             {...register("phone")}
           />
           {errors.phone && (
-            <p className="text-sm text-destructive">{errors.phone.message}</p>
+            <p className="text-sm text-destructive">
+              {translateFieldError(errors.phone.message, t)}
+            </p>
           )}
         </div>
         {notFound ? (

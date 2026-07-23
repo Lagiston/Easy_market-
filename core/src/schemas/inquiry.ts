@@ -66,11 +66,11 @@ export const DRAFT_STATUSES = [
   DraftStatus.AUTO_RESOLVED,
 ] as const;
 
-const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
-const EMAIL_ERROR = "A valid email is required";
-const PHONE_ERROR = "A valid phone number is required";
-const MESSAGE_ERROR = "Message must be at least 10 characters";
-const MESSAGE_MAX_ERROR = "Message must be 2000 characters or fewer";
+export const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
+export const EMAIL_ERROR = "A valid email is required";
+export const PHONE_ERROR = "A valid phone number is required";
+export const MESSAGE_ERROR = "Message must be at least 10 characters";
+export const MESSAGE_MAX_ERROR = "Message must be 2000 characters or fewer";
 
 // Contact/support form on the storefront → creates an Inquiry plus its first
 // (CUSTOMER-sent) Message. Channel isn't a form field — the route always
