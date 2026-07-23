@@ -19,7 +19,7 @@ const publicProductSelect = {
   description: true,
   price: true,
   stock: true,
-  imageUrl: true,
+  images: true,
   tags: true,
   category: { select: { id: true, name: true } },
 } as const;

@@ -21,7 +21,7 @@ const product = {
   price: 1500,
   stock: 20,
   lowStockThreshold: 10,
-  imageUrl: null,
+  images: [],
   category: { id: "c1", name: { en: "Groceries" } },
   createdAt: "2026-07-01T10:00:00.000Z",
   updatedAt: "2026-07-02T10:00:00.000Z",

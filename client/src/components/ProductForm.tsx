@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { X } from "lucide-react";
+import { ImageOff, X } from "lucide-react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createProductSchema,
   updateProductSchema,
+  MAX_PRODUCT_IMAGES,
   Role,
   type LocalizedName,
   type ProductClassification,
@@ -41,7 +42,7 @@ export default function ProductForm({
   onSuccess?: (product: ProductRow) => void;
 }) {
   const queryClient = useQueryClient();
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const pendingProductRef = useRef<ProductRow | null>(null);
   const { data: categories } = useQuery({
@@ -127,9 +128,9 @@ export default function ProductForm({
       const created = pendingProductRef.current!;
 
       const formData = new FormData();
-      formData.append("image", imageFile!);
+      for (const file of imageFiles) formData.append("images", file);
       return axios
-        .post(`/api/products/${created.id}/image`, formData)
+        .post(`/api/products/${created.id}/images`, formData)
         .then((res) => res.data.product as ProductRow);
     },
     onSuccess: (product) => {
@@ -152,8 +153,8 @@ export default function ProductForm({
     <form
       noValidate
       onSubmit={handleSubmit((input) => {
-        if (!product && !imageFile) {
-          setImageError("An image is required");
+        if (!product && imageFiles.length === 0) {
+          setImageError("At least one image is required");
           return;
         }
         mutation.mutate(input);
@@ -482,18 +483,47 @@ export default function ProductForm({
       </div>
       {!product && (
         <div className="grid gap-1.5">
-          <Label htmlFor="product-form-image">Image</Label>
+          <Label htmlFor="product-form-images">Images</Label>
+          {imageFiles.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5">
+              {imageFiles.map((file, index) => (
+                <li
+                  key={`${file.name}-${index}`}
+                  className="flex items-center gap-1.5 rounded-md border bg-muted px-2 py-1 text-xs"
+                >
+                  <ImageOff className="size-3 text-muted-foreground" aria-hidden="true" />
+                  <span className="max-w-40 truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${file.name}`}
+                    onClick={() => setImageFiles((files) => files.filter((_, i) => i !== index))}
+                  >
+                    <X className="size-3" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           <Input
-            id="product-form-image"
+            id="product-form-images"
             type="file"
+            multiple
             accept="image/jpeg,image/png,image/webp"
+            disabled={imageFiles.length >= MAX_PRODUCT_IMAGES}
             aria-invalid={!!imageError}
             onChange={(event) => {
-              const file = event.target.files?.[0] ?? null;
-              setImageFile(file);
-              if (file) setImageError(null);
+              const selected = Array.from(event.target.files ?? []);
+              event.target.value = "";
+              if (selected.length === 0) return;
+              setImageFiles((files) =>
+                [...files, ...selected].slice(0, MAX_PRODUCT_IMAGES),
+              );
+              setImageError(null);
             }}
           />
+          <p className="text-xs text-muted-foreground">
+            The first image is the product's primary photo. Up to {MAX_PRODUCT_IMAGES} images.
+          </p>
           {imageError && <p className="text-sm text-destructive">{imageError}</p>}
         </div>
       )}

@@ -16,7 +16,7 @@ const product: ProductRow = {
   price: 1500,
   stock: 20,
   lowStockThreshold: 10,
-  imageUrl: null,
+  images: [],
   tags: [],
   aiSuggestedCategoryId: null,
   aiSuggestedTags: [],

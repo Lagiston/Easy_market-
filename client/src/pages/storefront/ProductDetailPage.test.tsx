@@ -24,7 +24,7 @@ const product: StorefrontProduct = {
   description: { en: "Long grain rice", ar: "أرز طويل الحبة" },
   price: 1500,
   stock: 20,
-  imageUrl: null,
+  images: [],
   tags: [],
   category: { id: "c1", name: { en: "Groceries" } },
 };

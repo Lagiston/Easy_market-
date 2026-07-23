@@ -64,7 +64,7 @@ describe("ProductForm (create mode)", () => {
     expect(screen.getByLabelText("Price")).toBeInTheDocument();
     expect(screen.getByLabelText("Stock")).toBeInTheDocument();
     expect(screen.getByLabelText("Category")).toBeInTheDocument();
-    expect(screen.getByLabelText("Image")).toBeInTheDocument();
+    expect(screen.getByLabelText("Images")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create product" })).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe("ProductForm (create mode)", () => {
       name: { en: "Rice 5kg" },
       description: undefined,
       stock: 10,
-      imageUrl: null,
+      images: [],
       category: categories[0],
       assignedAgent: users[0],
     };
@@ -94,7 +94,7 @@ describe("ProductForm (create mode)", () => {
       url === "/api/products"
         ? Promise.resolve({ data: { product: createdProduct } })
         : Promise.resolve({
-            data: { product: { ...createdProduct, imageUrl: "/api/uploads/products/3.jpg" } },
+            data: { product: { ...createdProduct, images: ["/api/uploads/products/3.jpg"] } },
           }),
     );
     const user = userEvent.setup();
@@ -106,7 +106,7 @@ describe("ProductForm (create mode)", () => {
     await selectCategory(user, "Groceries");
     await selectAgent(user, "Alice Agent");
     const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
-    await user.upload(screen.getByLabelText("Image"), file);
+    await user.upload(screen.getByLabelText("Images"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     await waitFor(() =>
@@ -134,7 +134,7 @@ describe("ProductForm (create mode)", () => {
     await selectCategory(user, "Groceries");
     await selectAgent(user, "Alice Agent");
     const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
-    await user.upload(screen.getByLabelText("Image"), file);
+    await user.upload(screen.getByLabelText("Images"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     expect(await screen.findByText("Agent not found")).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe("ProductForm (create mode)", () => {
     await selectCategory(user, "Groceries");
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
-    expect(await screen.findByText("An image is required")).toBeInTheDocument();
+    expect(await screen.findByText("At least one image is required")).toBeInTheDocument();
     expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
@@ -183,7 +183,7 @@ describe("ProductForm (create mode)", () => {
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
     const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
-    await user.upload(screen.getByLabelText("Image"), file);
+    await user.upload(screen.getByLabelText("Images"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     expect(
@@ -198,7 +198,7 @@ describe("ProductForm (create mode)", () => {
       name: { en: "Rice 5kg" },
       description: { en: "Long grain rice" },
       stock: 10,
-      imageUrl: null,
+      images: [],
       category: categories[0],
       assignedAgent: null,
     };
@@ -206,7 +206,7 @@ describe("ProductForm (create mode)", () => {
       url === "/api/products"
         ? Promise.resolve({ data: { product: createdProduct } })
         : Promise.resolve({
-            data: { product: { ...createdProduct, imageUrl: "/api/uploads/products/3.jpg" } },
+            data: { product: { ...createdProduct, images: ["/api/uploads/products/3.jpg"] } },
           }),
     );
     const user = userEvent.setup();
@@ -218,7 +218,7 @@ describe("ProductForm (create mode)", () => {
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
     const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
-    await user.upload(screen.getByLabelText("Image"), file);
+    await user.upload(screen.getByLabelText("Images"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     await waitFor(() =>
@@ -234,7 +234,7 @@ describe("ProductForm (create mode)", () => {
     );
     await waitFor(() =>
       expect(mockedAxios.post).toHaveBeenCalledWith(
-        "/api/products/3/image",
+        "/api/products/3/images",
         expect.any(FormData),
       ),
     );
@@ -257,7 +257,7 @@ describe("ProductForm (create mode)", () => {
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
     const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
-    await user.upload(screen.getByLabelText("Image"), file);
+    await user.upload(screen.getByLabelText("Images"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     expect(await screen.findByText("Category not found")).toBeInTheDocument();
@@ -447,7 +447,7 @@ describe("ProductForm (edit mode)", () => {
     price: 1500,
     stock: 20,
     lowStockThreshold: 10,
-    imageUrl: null,
+    images: [],
     tags: [],
     aiSuggestedCategoryId: null,
     aiSuggestedTags: [],

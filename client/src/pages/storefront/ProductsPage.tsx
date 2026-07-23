@@ -38,7 +38,7 @@ export type StorefrontProduct = {
   description: LocalizedDescription | null;
   price: number;
   stock: number;
-  imageUrl: string | null;
+  images: string[];
   tags: string[];
   category: { id: string; name: LocalizedName };
 };
@@ -271,9 +271,9 @@ export default function ProductsPage() {
                 className="h-full overflow-hidden py-0 transition-colors hover:border-primary"
               >
                 <Link to={`/products/${product.id}`} className="block">
-                  {product.imageUrl ? (
+                  {product.images[0] ? (
                     <img
-                      src={product.imageUrl}
+                      src={product.images[0]}
                       alt={localize(product.name, language)}
                       className="aspect-square w-full object-cover"
                     />

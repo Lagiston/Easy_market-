@@ -88,6 +88,11 @@ export type SortOrder = (typeof SORT_ORDERS)[number];
 
 export const PRODUCTS_PAGE_SIZE = 10;
 
+// Images are uploaded via a separate multipart endpoint (not this JSON
+// schema), but both the client (to disable "add more" once full) and the
+// server (to actually enforce it) need the same bound.
+export const MAX_PRODUCT_IMAGES = 8;
+
 export const productListQuerySchema = z.object({
   sortBy: z.enum(PRODUCT_SORT_FIELDS).default("createdAt"),
   sortOrder: z.enum(SORT_ORDERS).default("desc"),

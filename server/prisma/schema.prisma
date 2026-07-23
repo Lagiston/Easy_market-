@@ -171,7 +171,11 @@ model Product {
   price             Int
   stock             Int
   lowStockThreshold Int       @default(10)
-  imageUrl          String?
+  // Ordered list of "/api/uploads/products/<file>" URLs — first is the
+  // primary/thumbnail image. Plain array rather than a relation table,
+  // matching tags/aiSuggestedTags below (fine at this catalog's scale,
+  // capped at MAX_PRODUCT_IMAGES in core/src/schemas/product.ts).
+  images            String[]  @default([])
   tags              String[]  @default([])
   // Populated by the bulk "reclassify all products" pg-boss job — a pending
   // suggestion for staff to accept/dismiss, never auto-applied. Unrelated to

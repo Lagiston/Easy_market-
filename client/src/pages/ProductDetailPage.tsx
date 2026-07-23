@@ -72,12 +72,17 @@ export default function ProductDetailPage() {
             <CardDescription>{product.category.name.en}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name.en}
-                className="size-40 rounded-md border object-cover"
-              />
+            {product.images.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {product.images.map((imageUrl) => (
+                  <img
+                    key={imageUrl}
+                    src={imageUrl}
+                    alt={product.name.en}
+                    className="size-40 rounded-md border object-cover"
+                  />
+                ))}
+              </div>
             ) : (
               <div
                 aria-label="No image"

@@ -18,7 +18,7 @@ const createdProduct = {
   name: { en: "Rice 5kg" },
   description: null,
   stock: 10,
-  imageUrl: null,
+  images: [],
   category: categories[0],
 };
 
@@ -54,7 +54,7 @@ describe("CreateProductDialog", () => {
     expect(screen.getByLabelText("Description")).toBeInTheDocument();
     expect(screen.getByLabelText("Stock")).toBeInTheDocument();
     expect(screen.getByLabelText("Category")).toBeInTheDocument();
-    expect(screen.getByLabelText("Image")).toBeInTheDocument();
+    expect(screen.getByLabelText("Images")).toBeInTheDocument();
   });
 
   it("shows validation errors and does not submit invalid input", async () => {
@@ -77,7 +77,7 @@ describe("CreateProductDialog", () => {
     await selectCategory(user, "Groceries");
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
-    expect(await screen.findByText("An image is required")).toBeInTheDocument();
+    expect(await screen.findByText("At least one image is required")).toBeInTheDocument();
     expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
@@ -86,7 +86,7 @@ describe("CreateProductDialog", () => {
       url === "/api/products"
         ? Promise.resolve({ data: { product: createdProduct } })
         : Promise.resolve({
-            data: { product: { ...createdProduct, imageUrl: "/api/uploads/products/3.jpg" } },
+            data: { product: { ...createdProduct, images: ["/api/uploads/products/3.jpg"] } },
           }),
     );
 
@@ -96,7 +96,7 @@ describe("CreateProductDialog", () => {
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
     const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
-    await user.upload(screen.getByLabelText("Image"), file);
+    await user.upload(screen.getByLabelText("Images"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     await waitFor(() =>
@@ -112,7 +112,7 @@ describe("CreateProductDialog", () => {
     );
     await waitFor(() =>
       expect(mockedAxios.post).toHaveBeenCalledWith(
-        "/api/products/3/image",
+        "/api/products/3/images",
         expect.any(FormData),
       ),
     );
@@ -136,7 +136,7 @@ describe("CreateProductDialog", () => {
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
     const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
-    await user.upload(screen.getByLabelText("Image"), file);
+    await user.upload(screen.getByLabelText("Images"), file);
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     expect(await screen.findByText("Category not found")).toBeInTheDocument();

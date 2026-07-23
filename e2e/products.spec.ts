@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { Client } from "pg";
@@ -12,6 +13,7 @@ import {
 import { loginAs } from "./helpers";
 
 const SAMPLE_JPEG = path.join(import.meta.dirname, "fixtures/sample-product.jpg");
+const SAMPLE_PNG = path.join(import.meta.dirname, "fixtures/sample-product-2.png");
 
 // Hard-deletes a throwaway product by name so repeated local/CI runs against
 // the shared test DB don't accumulate rows.
@@ -81,7 +83,7 @@ async function createProduct(
   await dialog.getByLabel("Stock", { exact: true }).fill(stock);
   await dialog.getByLabel("Category").click();
   await page.getByRole("option", { name: category }).click();
-  await dialog.getByLabel("Image").setInputFiles(imagePath);
+  await dialog.getByLabel("Images").setInputFiles(imagePath);
   await dialog.getByRole("button", { name: "Create product" }).click();
 
   await expect(dialog).not.toBeVisible();
@@ -119,7 +121,7 @@ test.describe("Create product (ADMIN)", () => {
       await dialog.getByLabel("Stock", { exact: true }).fill("42");
       await dialog.getByLabel("Category").click();
       await page.getByRole("option", { name: "Beverages" }).click();
-      await dialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
+      await dialog.getByLabel("Images").setInputFiles(SAMPLE_JPEG);
 
       await dialog.getByRole("button", { name: "Create product" }).click();
       await expect(dialog).not.toBeVisible();
@@ -262,10 +264,61 @@ test.describe("Product image upload (ADMIN)", () => {
       // Bypasses the file input's `accept` filtering, which only applies to
       // the OS file picker, not programmatic setInputFiles — exercises the
       // server's fileFilter rejection.
-      await dialog.getByLabel("Image").setInputFiles({
+      await dialog.getByLabel("Images").setInputFiles({
         name: "not-an-image.txt",
         mimeType: "text/plain",
         buffer: Buffer.from("this is not an image"),
+      });
+
+      await dialog.getByRole("button", { name: "Create product" }).click();
+
+      await expect(
+        dialog.getByText("Image must be a JPEG, PNG, or WebP file"),
+      ).toBeVisible();
+      await expect(dialog).toBeVisible();
+
+      // The client already POSTed the product itself before the image upload
+      // failed, so the row exists server-side without an image. The product
+      // list is invalidated as soon as the product is created (independent of
+      // whether the image upload succeeds), so it shows up in the table right
+      // away — no reload needed — once the dialog is closed and the table is
+      // no longer hidden behind the modal.
+      await page.keyboard.press("Escape");
+      await expect(dialog).not.toBeVisible();
+
+      const row = page.getByRole("row").filter({ hasText: name });
+      await expect(row).toBeVisible();
+      await expect(row.getByLabel("No image")).toBeVisible();
+    } finally {
+      await hardDeleteProduct(name);
+    }
+  });
+
+  test("uploading a file with a spoofed image mimetype (not real image content) shows an error and doesn't attach an image", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    await page.goto("/admin/products");
+
+    const name = `Photo Spoofed Type ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      await page.getByRole("button", { name: "Create product" }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("Name").fill(name);
+      await dialog.getByLabel("Stock", { exact: true }).fill("2");
+      await dialog.getByLabel("Category").click();
+      await page.getByRole("option", { name: "Groceries" }).click();
+
+      // Declares a valid image mimetype and a .jpg filename (an attacker
+      // spoofing the multipart Content-Type field), but the buffer's actual
+      // bytes are plain text, not a real JPEG — exercises the server's
+      // magic-byte (file-type) content validation, not just its mimetype
+      // fileFilter.
+      await dialog.getByLabel("Images").setInputFiles({
+        name: "spoofed.jpg",
+        mimeType: "image/jpeg",
+        buffer: Buffer.from("this is not actually a jpeg, just spoofing the mimetype"),
       });
 
       await dialog.getByRole("button", { name: "Create product" }).click();
@@ -311,7 +364,7 @@ test.describe("Product image upload (ADMIN)", () => {
       // A >5MB buffer with a valid image mimeType so the size limit — not the
       // file-type filter — is what triggers the rejection.
       const oversizedBuffer = Buffer.alloc(6 * 1024 * 1024, 0);
-      await dialog.getByLabel("Image").setInputFiles({
+      await dialog.getByLabel("Images").setInputFiles({
         name: "too-big.jpg",
         mimeType: "image/jpeg",
         buffer: oversizedBuffer,
@@ -319,7 +372,7 @@ test.describe("Product image upload (ADMIN)", () => {
 
       await dialog.getByRole("button", { name: "Create product" }).click();
 
-      await expect(dialog.getByText("Image must be 5MB or smaller")).toBeVisible();
+      await expect(dialog.getByText("Each image must be 5MB or smaller")).toBeVisible();
       await expect(dialog).toBeVisible();
 
       // Row is created server-side despite the failed upload and shows up as
@@ -330,6 +383,173 @@ test.describe("Product image upload (ADMIN)", () => {
       const row = page.getByRole("row").filter({ hasText: name });
       await expect(row).toBeVisible();
       await expect(row.getByLabel("No image")).toBeVisible();
+    } finally {
+      await hardDeleteProduct(name);
+    }
+  });
+
+  test("selecting multiple files at once on the create form persists all of them", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    await page.goto("/admin/products");
+
+    const name = `Multi Image Create ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      await page.getByRole("button", { name: "Create product" }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("Name").fill(name);
+      await dialog.getByLabel("Stock", { exact: true }).fill("4");
+      await dialog.getByLabel("Category").click();
+      await page.getByRole("option", { name: "Groceries" }).click();
+
+      // Two files selected in a single setInputFiles call, exercising the
+      // "multiple" file input rather than one file per selection.
+      await dialog.getByLabel("Images").setInputFiles([SAMPLE_JPEG, SAMPLE_PNG]);
+      await expect(dialog.getByRole("button", { name: "Remove sample-product.jpg" })).toBeVisible();
+      await expect(
+        dialog.getByRole("button", { name: "Remove sample-product-2.png" }),
+      ).toBeVisible();
+
+      await dialog.getByRole("button", { name: "Create product" }).click();
+      await expect(dialog).not.toBeVisible();
+
+      const row = page.getByRole("row").filter({ hasText: name });
+      await expect(row).toBeVisible();
+      await expect(row.getByLabel("No image")).not.toBeVisible();
+      await expect(row.locator("img")).toHaveAttribute("src", /\/api\/uploads\/products\//);
+
+      // Confirm both images actually persisted server-side (not just
+      // client-side selection state) by opening the edit dialog and counting
+      // the resulting gallery thumbnails' remove buttons.
+      await row.getByRole("button", { name: `Edit ${name}` }).click();
+      const editDialog = page.getByRole("dialog");
+      await expect(editDialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
+      await expect(editDialog.getByRole("button", { name: "Remove image" })).toHaveCount(2);
+    } finally {
+      await hardDeleteProduct(name);
+    }
+  });
+
+  test("adding and removing images via the edit dialog persists across reopening the dialog", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    await page.goto("/admin/products");
+
+    const name = `Edit Gallery Product ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      await createProduct(page, { name, stock: "5", category: "Groceries" });
+
+      const row = page.getByRole("row").filter({ hasText: name });
+      await expect(row).toBeVisible();
+      // Wait for the table's own row data to reflect the uploaded image
+      // (a second, slightly-delayed list refetch after the image upload)
+      // before opening Edit, so the dialog isn't seeded from a stale
+      // pre-image snapshot of the product.
+      await expect(row.locator("img")).toHaveAttribute("src", /\/api\/uploads\/products\//);
+      await row.getByRole("button", { name: `Edit ${name}` }).click();
+
+      let dialog = page.getByRole("dialog");
+      await expect(dialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
+      await expect(dialog.getByRole("button", { name: "Remove image" })).toHaveCount(1);
+
+      // Add another image via the gallery's "Add images" control. The dialog
+      // shows the product snapshot as of when it was opened, so — same as
+      // the rest of this table's edit flow — reopen it afterward to see the
+      // change reflected, rather than expecting it live in the same dialog.
+      const uploadResponse = page.waitForResponse(
+        (res) => res.url().includes("/images") && res.request().method() === "POST",
+      );
+      await dialog.getByLabel("Product images").setInputFiles(SAMPLE_JPEG);
+      await uploadResponse;
+      await page.keyboard.press("Escape");
+      await expect(dialog).not.toBeVisible();
+
+      const rowAfterAdd = page.getByRole("row").filter({ hasText: name });
+      await rowAfterAdd.getByRole("button", { name: `Edit ${name}` }).click();
+      dialog = page.getByRole("dialog");
+      await expect(dialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
+      await expect(dialog.getByRole("button", { name: "Remove image" })).toHaveCount(2);
+
+      // Remove one image via the gallery.
+      const deleteResponse = page.waitForResponse(
+        (res) => res.url().includes("/images/") && res.request().method() === "DELETE",
+      );
+      await dialog.getByRole("button", { name: "Remove image" }).first().click();
+      await deleteResponse;
+      await page.keyboard.press("Escape");
+      await expect(dialog).not.toBeVisible();
+
+      // Close and reopen the dialog (and reload the page) to confirm the
+      // removal actually persisted server-side (real DB write + disk unlink,
+      // not just optimistic client state).
+      await page.reload();
+      const rowAfterReload = page.getByRole("row").filter({ hasText: name });
+      await expect(rowAfterReload).toBeVisible();
+      await rowAfterReload.getByRole("button", { name: `Edit ${name}` }).click();
+
+      dialog = page.getByRole("dialog");
+      await expect(dialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
+      await expect(dialog.getByRole("button", { name: "Remove image" })).toHaveCount(1);
+    } finally {
+      await hardDeleteProduct(name);
+    }
+  });
+
+  test("uploading images beyond the 8-image cap is rejected server-side", async ({ page }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    await page.goto("/admin/products");
+
+    const name = `Image Cap Product ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      // Create with the client-side max of 8 images already attached.
+      await page.getByRole("button", { name: "Create product" }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("Name").fill(name);
+      await dialog.getByLabel("Stock", { exact: true }).fill("2");
+      await dialog.getByLabel("Category").click();
+      await page.getByRole("option", { name: "Groceries" }).click();
+      await dialog.getByLabel("Images").setInputFiles(Array(8).fill(SAMPLE_JPEG));
+      await dialog.getByRole("button", { name: "Create product" }).click();
+      await expect(dialog).not.toBeVisible();
+
+      const row = page.getByRole("row").filter({ hasText: name });
+      await expect(row).toBeVisible();
+      await expect(row.locator("img")).toHaveAttribute("src", /\/api\/uploads\/products\//);
+      await row.getByRole("button", { name: `Edit ${name}` }).click();
+
+      const editDialog = page.getByRole("dialog");
+      await expect(editDialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
+      await expect(editDialog.getByRole("button", { name: "Remove image" })).toHaveCount(8);
+      // The gallery's own "Add images" control is disabled once at the cap.
+      await expect(
+        editDialog.getByRole("button", { name: "Maximum 8 images" }),
+      ).toBeDisabled();
+
+      // Exercise the server's own enforcement directly via the API, since
+      // the client control above is disabled and can't be used to attempt it.
+      const productsResponse = await page.request.get("/api/products");
+      const { products } = await productsResponse.json();
+      const product = products.find((p: { name: { en: string } }) => p.name.en === name);
+      expect(product).toBeTruthy();
+
+      const response = await page.request.post(`/api/products/${product.id}/images`, {
+        multipart: {
+          images: {
+            name: "one-more.jpg",
+            mimeType: "image/jpeg",
+            buffer: readFileSync(SAMPLE_JPEG),
+          },
+        },
+      });
+
+      expect(response.status()).toBe(400);
+      const body = await response.json();
+      expect(body.error).toBe("A product can have at most 8 images");
     } finally {
       await hardDeleteProduct(name);
     }
@@ -354,7 +574,7 @@ test.describe("Assign agent (ADMIN)", () => {
       await page.getByRole("option", { name: "Groceries" }).click();
       await createDialog.getByLabel("Assigned agent").click();
       await page.getByRole("option", { name: TEST_AGENT_NAME }).click();
-      await createDialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
+      await createDialog.getByLabel("Images").setInputFiles(SAMPLE_JPEG);
       await createDialog.getByRole("button", { name: "Create product" }).click();
       await expect(createDialog).not.toBeVisible();
 
@@ -458,7 +678,7 @@ test.describe("Assign agent (ADMIN)", () => {
       await page.getByRole("option", { name: "Groceries" }).click();
       await createDialog.getByLabel("Assigned agent").click();
       await page.getByRole("option", { name: agentName }).click();
-      await createDialog.getByLabel("Image").setInputFiles(SAMPLE_JPEG);
+      await createDialog.getByLabel("Images").setInputFiles(SAMPLE_JPEG);
       await createDialog.getByRole("button", { name: "Create product" }).click();
       await expect(createDialog).not.toBeVisible();
 

@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { unlink } from "node:fs/promises";
+import { unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer, { MulterError } from "multer";
+import { fileTypeFromBuffer } from "file-type";
 import { Role, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { productImagesDir } from "../lib/uploads";
@@ -16,6 +17,7 @@ import {
   reclassifyStatusQuerySchema,
   dismissProductSuggestionSchema,
   PRODUCTS_PAGE_SIZE,
+  MAX_PRODUCT_IMAGES,
   type ProductSortField,
 } from "@es-market/core";
 
@@ -33,28 +35,38 @@ const IMAGE_EXTENSIONS: Record<string, string> = {
   "image/webp": ".webp",
 };
 
+// Buffered in memory (not written to disk by multer directly) because the
+// declared mimetype/extension can't be trusted until the actual file bytes
+// are inspected below — an attacker can label any payload "image/jpeg" in
+// the multipart Content-Type field. fileFilter here is just a cheap early
+// rejection on the obviously-wrong declared type; the real gate is the
+// magic-byte check in writeValidatedProductImages.
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: productImagesDir,
-    filename: (_req, file, cb) => cb(null, `${randomUUID()}${IMAGE_EXTENSIONS[file.mimetype]}`),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (!IMAGE_EXTENSIONS[file.mimetype]) {
-      cb(new MulterError("LIMIT_UNEXPECTED_FILE", "image"));
+      // Distinct field name from "images" so the error handler below can
+      // tell this apart from multer's own "too many files" rejection, which
+      // reuses the real field name ("images") on its LIMIT_UNEXPECTED_FILE.
+      cb(new MulterError("LIMIT_UNEXPECTED_FILE", "invalidImageType"));
       return;
     }
     cb(null, true);
   },
 });
 
-function uploadImage(req: Request, res: Response, next: NextFunction) {
-  upload.single("image")(req, res, (err: unknown) => {
+const INVALID_IMAGE_MESSAGE = "Image must be a JPEG, PNG, or WebP file";
+
+function uploadImages(req: Request, res: Response, next: NextFunction) {
+  upload.array("images", MAX_PRODUCT_IMAGES)(req, res, (err: unknown) => {
     if (err instanceof MulterError) {
       const message =
         err.code === "LIMIT_FILE_SIZE"
-          ? "Image must be 5MB or smaller"
-          : "Image must be a JPEG, PNG, or WebP file";
+          ? "Each image must be 5MB or smaller"
+          : err.code === "LIMIT_UNEXPECTED_FILE" && err.field === "images"
+            ? `A product can have at most ${MAX_PRODUCT_IMAGES} images`
+            : INVALID_IMAGE_MESSAGE;
       res.status(400).json({ error: message });
       return;
     }
@@ -64,6 +76,37 @@ function uploadImage(req: Request, res: Response, next: NextFunction) {
     }
     next();
   });
+}
+
+// Detects each file's real type from its magic bytes (never trusting the
+// client-declared mimetype/extension) and, only if every file in the batch
+// is genuinely an allowed image type, writes them all to disk under
+// server-generated filenames + extensions derived from the detected types.
+// All-or-nothing: rejects (and writes nothing) if any single file in the
+// batch isn't actually an image, rather than silently dropping bad ones.
+// Returns null (having already sent the 400 response) on rejection.
+async function writeValidatedProductImages(
+  files: Express.Multer.File[],
+  res: Response,
+): Promise<string[] | null> {
+  const extensions: string[] = [];
+  for (const file of files) {
+    const detected = await fileTypeFromBuffer(file.buffer);
+    const extension = detected ? IMAGE_EXTENSIONS[detected.mime] : undefined;
+    if (!extension) {
+      res.status(400).json({ error: INVALID_IMAGE_MESSAGE });
+      return null;
+    }
+    extensions.push(extension);
+  }
+
+  return Promise.all(
+    files.map(async (file, index) => {
+      const filename = `${randomUUID()}${extensions[index]}`;
+      await writeFile(path.join(productImagesDir, filename), file.buffer);
+      return filename;
+    }),
+  );
 }
 
 // `name` (and `category.name`) are stored as localized JSON, which Postgres/Prisma
@@ -331,10 +374,10 @@ productsRouter.delete<{ id: string }>("/products/:id", requireAuth, requireRole(
 });
 
 productsRouter.post<{ id: string }>(
-  "/products/:id/image",
+  "/products/:id/images",
   requireAuth,
   requireRole(Role.ADMIN),
-  uploadImage,
+  uploadImages,
   async (req, res) => {
     const productId = req.params.id;
 
@@ -343,20 +386,55 @@ productsRouter.post<{ id: string }>(
       res.status(404).json({ error: "Product not found" });
       return;
     }
-    if (!req.file) {
-      res.status(400).json({ error: "An image file is required" });
+    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+    if (files.length === 0) {
+      res.status(400).json({ error: "At least one image file is required" });
+      return;
+    }
+    if (target.images.length + files.length > MAX_PRODUCT_IMAGES) {
+      res.status(400).json({ error: `A product can have at most ${MAX_PRODUCT_IMAGES} images` });
       return;
     }
 
-    if (target.imageUrl) {
-      await unlink(path.join(productImagesDir, path.basename(target.imageUrl))).catch(() => {});
+    const filenames = await writeValidatedProductImages(files, res);
+    if (!filenames) return;
+
+    const product = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        images: [...target.images, ...filenames.map((f) => `/api/uploads/products/${f}`)],
+      },
+      include: productInclude,
+    });
+    res.json({ product });
+  },
+);
+
+productsRouter.delete<{ id: string; filename: string }>(
+  "/products/:id/images/:filename",
+  requireAuth,
+  requireRole(Role.ADMIN),
+  async (req, res) => {
+    const productId = req.params.id;
+
+    const target = await prisma.product.findUnique({ where: { id: productId } });
+    if (!target || target.deletedAt) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+
+    const url = `/api/uploads/products/${req.params.filename}`;
+    if (!target.images.includes(url)) {
+      res.status(404).json({ error: "Image not found on this product" });
+      return;
     }
 
     const product = await prisma.product.update({
       where: { id: productId },
-      data: { imageUrl: `/api/uploads/products/${req.file.filename}` },
+      data: { images: target.images.filter((image) => image !== url) },
       include: productInclude,
     });
+    await unlink(path.join(productImagesDir, req.params.filename)).catch(() => {});
     res.json({ product });
   },
 );

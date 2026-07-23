@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +16,7 @@ export default function ProductDetailPage() {
   const language = i18n.resolvedLanguage ?? "en";
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
+  const [activeImage, setActiveImage] = useState(0);
 
   const { data: product, isPending, error } = useQuery({
     queryKey: ["storefront", "product", id],
@@ -54,20 +56,40 @@ export default function ProductDetailPage() {
         <p className="py-12 text-center text-sm text-destructive">{t("products.error")}</p>
       ) : (
         <div className="grid gap-8 sm:grid-cols-2">
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={localize(product.name, language)}
-              className="aspect-square w-full rounded-md border object-cover"
-            />
-          ) : (
-            <div
-              aria-label={t("products.noImage")}
-              className="flex aspect-square w-full items-center justify-center rounded-md border bg-muted"
-            >
-              <ImageOff className="size-10 text-muted-foreground" />
-            </div>
-          )}
+          <div className="space-y-2">
+            {product.images[activeImage] ? (
+              <img
+                src={product.images[activeImage]}
+                alt={localize(product.name, language)}
+                className="aspect-square w-full rounded-md border object-cover"
+              />
+            ) : (
+              <div
+                aria-label={t("products.noImage")}
+                className="flex aspect-square w-full items-center justify-center rounded-md border bg-muted"
+              >
+                <ImageOff className="size-10 text-muted-foreground" />
+              </div>
+            )}
+            {product.images.length > 1 && (
+              <div className="flex flex-wrap gap-2">
+                {product.images.map((imageUrl, index) => (
+                  <button
+                    key={imageUrl}
+                    type="button"
+                    onClick={() => setActiveImage(index)}
+                    aria-label={`${localize(product.name, language)} ${index + 1}`}
+                    aria-current={index === activeImage}
+                    className={`size-16 shrink-0 overflow-hidden rounded-md border ${
+                      index === activeImage ? "border-primary ring-1 ring-primary" : ""
+                    }`}
+                  >
+                    <img src={imageUrl} alt="" className="size-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="space-y-4">
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold">{localize(product.name, language)}</h1>
@@ -106,7 +128,7 @@ export default function ProductDetailPage() {
                   productId: product.id,
                   name: product.name,
                   price: product.price,
-                  imageUrl: product.imageUrl,
+                  imageUrl: product.images[0] ?? null,
                   stock: product.stock,
                 })
               }

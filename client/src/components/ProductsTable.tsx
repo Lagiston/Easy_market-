@@ -46,7 +46,7 @@ export type ProductRow = {
   price: number;
   stock: number;
   lowStockThreshold: number;
-  imageUrl: string | null;
+  images: string[];
   tags: string[];
   category: { id: string; name: LocalizedName };
   assignedAgent: { id: string; name: string } | null;
@@ -195,7 +195,7 @@ export default function ProductsTable({
         enableSorting: false,
         cell: ({ row }) => (
           <Avatar>
-            {row.original.imageUrl && <AvatarImage src={row.original.imageUrl} alt="" />}
+            {row.original.images[0] && <AvatarImage src={row.original.images[0]} alt="" />}
             <AvatarFallback aria-label="No image">
               <ImageOff className="size-4" />
             </AvatarFallback>
