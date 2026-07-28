@@ -28,6 +28,7 @@ export const publicProductSelect = {
   description: true,
   price: true,
   stock: true,
+  lowStockThreshold: true,
   images: true,
   tags: true,
   size: true,

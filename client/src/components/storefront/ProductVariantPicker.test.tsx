@@ -11,6 +11,7 @@ const base: StorefrontProduct = {
   description: null,
   price: 1000,
   stock: 10,
+  lowStockThreshold: 10,
   images: [],
   tags: [],
   size: null,

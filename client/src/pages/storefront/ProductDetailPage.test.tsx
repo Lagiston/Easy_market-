@@ -38,6 +38,7 @@ const product: StorefrontProduct = {
   description: { en: "Long grain rice", ar: "أرز طويل الحبة" },
   price: 1500,
   stock: 20,
+  lowStockThreshold: 10,
   images: [],
   tags: [],
   size: null,
@@ -155,6 +156,25 @@ describe("storefront ProductDetailPage", () => {
     renderPage();
 
     expect(await screen.findByText("Out of stock")).toBeInTheDocument();
+    expect(screen.queryByText(/left!/)).not.toBeInTheDocument();
+  });
+
+  it("shows a low-stock urgency badge when stock is below the threshold", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: { product: { ...product, stock: 3, lowStockThreshold: 10 } },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Only 3 left!")).toBeInTheDocument();
+    expect(screen.queryByText("Out of stock")).not.toBeInTheDocument();
+  });
+
+  it("shows no urgency badge when stock is at or above the threshold", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    await screen.findByText("Rice 5kg");
+    expect(screen.queryByText(/left!/)).not.toBeInTheDocument();
   });
 
   it("renders localized content with English fallback for the current language", async () => {
@@ -347,6 +367,7 @@ describe("storefront ProductDetailPage", () => {
       description: null,
       price: 2800,
       stock: 0,
+      lowStockThreshold: 10,
       images: [],
       tags: [],
       size: null,

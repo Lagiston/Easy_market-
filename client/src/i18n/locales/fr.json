@@ -68,6 +68,8 @@
     "notFound": "Produit introuvable.",
     "backToList": "Retour aux produits",
     "outOfStock": "Rupture de stock",
+    "lowStock_one": "Plus qu'{{count}} en stock !",
+    "lowStock_other": "Plus que {{count}} en stock !",
     "buyNow": "Acheter maintenant",
     "noImage": "Pas d'image",
     "pagination": "Page {{page}} sur {{totalPages}}",

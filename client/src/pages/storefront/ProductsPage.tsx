@@ -39,6 +39,12 @@ export type StorefrontProduct = {
   description: LocalizedDescription | null;
   price: number;
   stock: number;
+  // Same low-stock bound as the admin catalog's getStockStatus
+  // (client/src/components/ProductsTable.tsx) and the dashboard's low-stock
+  // count — stock > 0 && stock < lowStockThreshold. Duplicated rather than
+  // shared since that's the existing precedent for this exact check (see
+  // CLAUDE.md's dashboard bullet); keep all three in sync if it changes.
+  lowStockThreshold: number;
   images: string[];
   tags: string[];
   // Variant-distinguishing labels (e.g. "M", "Red") — null when not set.

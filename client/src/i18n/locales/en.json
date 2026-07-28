@@ -68,6 +68,8 @@
     "notFound": "Product not found.",
     "backToList": "Back to products",
     "outOfStock": "Out of stock",
+    "lowStock_one": "Only {{count}} left!",
+    "lowStock_other": "Only {{count}} left!",
     "buyNow": "Buy now",
     "noImage": "No image",
     "pagination": "Page {{page}} of {{totalPages}}",

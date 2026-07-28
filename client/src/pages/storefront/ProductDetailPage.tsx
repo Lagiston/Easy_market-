@@ -149,8 +149,14 @@ export default function ProductDetailPage() {
             </div>
             <div className="flex items-center gap-3">
               <p className="text-xl font-semibold">{product.price}</p>
-              {product.stock === 0 && (
+              {product.stock === 0 ? (
                 <Badge variant="destructive">{t("products.outOfStock")}</Badge>
+              ) : (
+                product.stock < product.lowStockThreshold && (
+                  <Badge variant="secondary" className="text-primary">
+                    {t("products.lowStock", { count: product.stock })}
+                  </Badge>
+                )
               )}
             </div>
             {product.wishlistCount > 0 && (

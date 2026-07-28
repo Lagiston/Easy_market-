@@ -68,6 +68,8 @@
     "notFound": "Bidhaa haikupatikana.",
     "backToList": "Rudi kwenye bidhaa",
     "outOfStock": "Imeisha",
+    "lowStock_one": "Kimebaki {{count}} tu!",
+    "lowStock_other": "Vimebaki {{count}} tu!",
     "buyNow": "Nunua sasa",
     "noImage": "Hakuna picha",
     "pagination": "Ukurasa {{page}} kati ya {{totalPages}}",
