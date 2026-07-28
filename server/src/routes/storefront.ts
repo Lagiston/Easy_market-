@@ -374,3 +374,16 @@ storefrontRouter.get("/storefront/tags", async (_req, res) => {
   const tags = [...new Set(products.flatMap((product) => product.tags))].sort();
   res.json({ tags });
 });
+
+// Active promo blocks for the storefront homepage, ordered for display.
+// Inactive/deleted ones are never sent — isActive is a visibility toggle
+// distinct from deletedAt, but both are excluded here since neither should
+// reach a customer.
+storefrontRouter.get("/storefront/promo-blocks", async (_req, res) => {
+  const promoBlocks = await prisma.promoBlock.findMany({
+    where: { deletedAt: null, isActive: true },
+    select: { id: true, headline: true, copy: true, ctaLabel: true, ctaUrl: true },
+    orderBy: { sortOrder: "asc" },
+  });
+  res.json({ promoBlocks });
+});

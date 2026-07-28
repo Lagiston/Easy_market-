@@ -413,6 +413,28 @@ model KbArticle {
   @@map("kb_article")
 }
 
+// Short promotional content block (headline, optional copy, optional CTA
+// button) shown on the storefront homepage. isActive hides a block from the
+// storefront without deleting it — a separate concern from deletedAt, same
+// precedent as Inquiry.escalatedAt being orthogonal to status. sortOrder is a
+// plain admin-set integer (ascending) rather than drag-and-drop, since no
+// such UI/lib exists elsewhere in this codebase.
+model PromoBlock {
+  id        String    @id
+  headline  Json
+  copy      Json?
+  ctaLabel  String?
+  ctaUrl    String?
+  isActive  Boolean   @default(true)
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([isActive, sortOrder])
+  @@map("promo_block")
+}
+
 // Customer product review, submitted from the storefront product detail page.
 // Guest-first like Order: authorName is a point-in-time free-text field, and
 // customerId is soft-attached (nullable) only when a customer-session cookie

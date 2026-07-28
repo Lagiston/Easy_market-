@@ -1,11 +1,22 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, beforeEach } from "vitest";
+import { screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import axios from "axios";
 import { MemoryRouter } from "react-router";
 import i18n from "@/i18n";
+import { renderWithQuery } from "@/test/render-with-query";
 import HomePage from "./HomePage";
 
+vi.mock("axios", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("axios")>();
+  return {
+    ...actual,
+    default: { ...actual.default, get: vi.fn() },
+  };
+});
+const mockedGet = vi.mocked(axios.get);
+
 function renderPage() {
-  render(
+  renderWithQuery(
     <MemoryRouter>
       <HomePage />
     </MemoryRouter>,
@@ -15,10 +26,12 @@ function renderPage() {
 describe("storefront HomePage", () => {
   beforeEach(async () => {
     window.localStorage.clear();
+    mockedGet.mockReset();
+    mockedGet.mockResolvedValue({ data: { promoBlocks: [] } });
     await i18n.changeLanguage("en");
   });
 
-  it("renders the hero with a CTA linking to the product list", () => {
+  it("renders the hero with a CTA linking to the product list", async () => {
     renderPage();
 
     expect(
@@ -30,7 +43,7 @@ describe("storefront HomePage", () => {
     );
   });
 
-  it("renders the three feature highlights", () => {
+  it("renders the three feature highlights", async () => {
     renderPage();
 
     expect(screen.getByText("Pay on delivery")).toBeInTheDocument();
@@ -46,5 +59,74 @@ describe("storefront HomePage", () => {
       screen.getByRole("heading", { name: "مرحبًا بكم في إي إس ماركت" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "تصفح المنتجات" })).toBeInTheDocument();
+  });
+
+  it("renders no promo section when there are no active promo blocks", async () => {
+    mockedGet.mockResolvedValue({ data: { promoBlocks: [] } });
+    renderPage();
+
+    await screen.findByRole("heading", { name: "Welcome to ES-Market" });
+    expect(mockedGet).toHaveBeenCalledWith("/api/storefront/promo-blocks");
+    expect(screen.queryByRole("link", { name: /shop now/i })).not.toBeInTheDocument();
+  });
+
+  it("renders active promo blocks with a headline, copy, and internal CTA link", async () => {
+    mockedGet.mockResolvedValue({
+      data: {
+        promoBlocks: [
+          {
+            id: "promo1",
+            headline: { en: "Summer Sale" },
+            copy: { en: "20% off all beverages" },
+            ctaLabel: "Shop now",
+            ctaUrl: "/products?tag=sale",
+          },
+        ],
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Summer Sale")).toBeInTheDocument();
+    expect(screen.getByText("20% off all beverages")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Shop now" })).toHaveAttribute(
+      "href",
+      "/products?tag=sale",
+    );
+  });
+
+  it("renders an external CTA as a new-tab anchor", async () => {
+    mockedGet.mockResolvedValue({
+      data: {
+        promoBlocks: [
+          {
+            id: "promo1",
+            headline: { en: "Partner offer" },
+            copy: null,
+            ctaLabel: "Learn more",
+            ctaUrl: "https://example.com/offer",
+          },
+        ],
+      },
+    });
+    renderPage();
+
+    const link = await screen.findByRole("link", { name: "Learn more" });
+    expect(link).toHaveAttribute("href", "https://example.com/offer");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("renders a promo block with no CTA", async () => {
+    mockedGet.mockResolvedValue({
+      data: {
+        promoBlocks: [
+          { id: "promo1", headline: { en: "Announcement" }, copy: null, ctaLabel: null, ctaUrl: null },
+        ],
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Announcement")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /learn more|shop now/i })).not.toBeInTheDocument();
   });
 });

@@ -90,6 +90,14 @@ export default function Layout({ user }: { user: SessionUser }) {
         )}
         {user.role === Role.ADMIN && (
           <Link
+            to="/admin/promo-blocks"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Promo blocks
+          </Link>
+        )}
+        {user.role === Role.ADMIN && (
+          <Link
             to="/admin/reviews"
             className="text-sm text-muted-foreground hover:text-foreground"
           >

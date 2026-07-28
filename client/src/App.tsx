@@ -28,6 +28,7 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import KbArticlesPage from "./pages/KbArticlesPage";
+import PromoBlocksPage from "./pages/PromoBlocksPage";
 import ReviewsPage from "./pages/ReviewsPage";
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="kb-articles" element={<KbArticlesPage />} />
+        <Route path="promo-blocks" element={<PromoBlocksPage />} />
         <Route path="reviews" element={<ReviewsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>

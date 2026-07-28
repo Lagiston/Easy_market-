@@ -180,3 +180,11 @@ export {
   type UpdateKbArticleFormInput,
   type KbSearchQuery,
 } from "./schemas/kb-article";
+export {
+  createPromoBlockSchema,
+  updatePromoBlockSchema,
+  type CreatePromoBlockInput,
+  type CreatePromoBlockFormInput,
+  type UpdatePromoBlockInput,
+  type UpdatePromoBlockFormInput,
+} from "./schemas/promo-block";

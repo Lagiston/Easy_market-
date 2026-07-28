@@ -27,6 +27,7 @@ import { inquiriesRouter } from "./routes/inquiries";
 import { settingsRouter } from "./routes/settings";
 import { dashboardRouter } from "./routes/dashboard";
 import { kbArticlesRouter } from "./routes/kb-articles";
+import { promoBlocksRouter } from "./routes/promo-blocks";
 import { reviewsRouter } from "./routes/reviews";
 import { aiRouter } from "./routes/ai";
 import { startQueue } from "./lib/queue";
@@ -93,6 +94,7 @@ app.use("/api", inquiriesRouter);
 app.use("/api", settingsRouter);
 app.use("/api", dashboardRouter);
 app.use("/api", kbArticlesRouter);
+app.use("/api", promoBlocksRouter);
 app.use("/api", reviewsRouter);
 app.use("/api", aiRouter);
 
