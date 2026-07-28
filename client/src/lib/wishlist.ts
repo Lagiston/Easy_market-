@@ -5,6 +5,20 @@ import type { StorefrontProduct } from "@/pages/storefront/ProductsPage";
 
 const WISHLIST_KEY = ["customer", "wishlist"] as const;
 
+// `backInStock`/`priceDropped` are computed server-side from
+// WishlistItem.wasOutOfStockAtSave/priceAtSave (snapshots taken once at save
+// time) vs the product's current stock/price — the entire "notify me"
+// feature, since this store has no email/push infrastructure to actually
+// notify anyone with. Both are read-time signals, not stored alerts: neither
+// tracks re-transitions or whether the customer has already seen them.
+// `priceAtSave` itself is included (not just the boolean) so the UI can show
+// "was X, now Y", not just "the price changed".
+export type WishlistedProduct = StorefrontProduct & {
+  backInStock: boolean;
+  priceDropped: boolean;
+  priceAtSave: number | null;
+};
+
 // Server-state access point for the wishlist (TanStack Query, not the cart's
 // localStorage/context mechanics — wishlist has no guest tier, so there's
 // nothing to persist client-side when signed out). Enabled only with a
@@ -17,7 +31,7 @@ export function useWishlist() {
     queryKey: WISHLIST_KEY,
     queryFn: () =>
       axios
-        .get<{ products: StorefrontProduct[] }>("/api/customer/wishlist")
+        .get<{ products: WishlistedProduct[] }>("/api/customer/wishlist")
         .then((res) => res.data.products),
     enabled: !!session,
   });

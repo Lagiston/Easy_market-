@@ -71,6 +71,8 @@
     "noImage": "Hakuna picha",
     "pagination": "Ukurasa {{page}} kati ya {{totalPages}}",
     "relatedTitle": "Bidhaa zinazohusiana",
+    "wishlistCount_one": "Mtu {{count}} ana bidhaa hii kwenye orodha yake ya matakwa",
+    "wishlistCount_other": "Watu {{count}} wana bidhaa hii kwenye orodha zao za matakwa",
     "variants": {
       "size": "Ukubwa",
       "color": "Rangi",
@@ -258,7 +260,13 @@
       "title": "Orodha yangu ya matakwa",
       "empty": "Bado hujaweka bidhaa yoyote kwenye orodha ya matakwa.",
       "error": "Imeshindwa kupakia orodha yako ya matakwa. Tafadhali jaribu tena.",
-      "remove": "Ondoa {{name}} kwenye orodha ya matakwa"
+      "remove": "Ondoa {{name}} kwenye orodha ya matakwa",
+      "backInStock": "Imepatikana tena",
+      "backInStockBanner_one": "Bidhaa {{count}} kwenye orodha yako ya matakwa imepatikana tena stoo!",
+      "backInStockBanner_other": "Bidhaa {{count}} kwenye orodha yako ya matakwa zimepatikana tena stoo!",
+      "priceDrop": "Bei imepungua",
+      "priceDropBanner_one": "Bei ya bidhaa {{count}} kwenye orodha yako ya matakwa imepungua!",
+      "priceDropBanner_other": "Bei za bidhaa {{count}} kwenye orodha yako ya matakwa zimepungua!"
     }
   },
   "wishlist": {

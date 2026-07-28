@@ -35,34 +35,57 @@ export const publicProductSelect = {
   category: { select: { id: true, name: true } },
 } as const;
 
-// Per-product review summary for product cards — one grouped aggregate scoped
-// to the ids on the current page, rather than denormalized counters on Product
-// (which would need bookkeeping on both review creation and admin deletion).
-// averageRating is null (not 0) for an unreviewed product, the usual
-// null-vs-zero convention.
-type RatingSummary = { averageRating: number | null; reviewCount: number };
+// Per-product review + wishlist summary for product cards — two grouped
+// aggregates scoped to the ids on the current page, rather than denormalized
+// counters on Product (which would need bookkeeping on every review/wishlist
+// create-or-delete). averageRating is null (not 0) for an unreviewed
+// product, the usual null-vs-zero convention; wishlistCount has no
+// unknown/unset state to distinguish (like reviewCount), so it's always a
+// plain number. wishlistCount is social proof only — how many *other*
+// customers have this saved — never the viewer's own wishlist membership
+// (that's WishlistButton's isWishlisted, a separate signed-in-only signal).
+type ProductSummary = { averageRating: number | null; reviewCount: number; wishlistCount: number };
 
-async function attachRatingSummaries<T extends { id: string }>(
+// Exported for reuse by the customer wishlist route in customer.ts, which
+// returns the same StorefrontProduct-shaped objects and needs the same
+// review/wishlist summary fields — see that route for details.
+export async function attachProductSummaries<T extends { id: string }>(
   products: T[],
-): Promise<(T & RatingSummary)[]> {
-  const summaries = new Map<string, RatingSummary>();
+): Promise<(T & ProductSummary)[]> {
+  const summaries = new Map<string, ProductSummary>();
   if (products.length > 0) {
-    const groups = await prisma.review.groupBy({
-      by: ["productId"],
-      where: { productId: { in: products.map((product) => product.id) } },
-      _avg: { rating: true },
-      _count: true,
-    });
-    for (const group of groups) {
+    const productIds = products.map((product) => product.id);
+    const [reviewGroups, wishlistGroups] = await Promise.all([
+      prisma.review.groupBy({
+        by: ["productId"],
+        where: { productId: { in: productIds } },
+        _avg: { rating: true },
+        _count: true,
+      }),
+      prisma.wishlistItem.groupBy({
+        by: ["productId"],
+        where: { productId: { in: productIds } },
+        _count: true,
+      }),
+    ]);
+    for (const group of reviewGroups) {
       summaries.set(group.productId, {
         averageRating: group._avg.rating,
         reviewCount: group._count,
+        wishlistCount: summaries.get(group.productId)?.wishlistCount ?? 0,
+      });
+    }
+    for (const group of wishlistGroups) {
+      summaries.set(group.productId, {
+        averageRating: summaries.get(group.productId)?.averageRating ?? null,
+        reviewCount: summaries.get(group.productId)?.reviewCount ?? 0,
+        wishlistCount: group._count,
       });
     }
   }
   return products.map((product) => ({
     ...product,
-    ...(summaries.get(product.id) ?? { averageRating: null, reviewCount: 0 }),
+    ...(summaries.get(product.id) ?? { averageRating: null, reviewCount: 0, wishlistCount: 0 }),
   }));
 }
 
@@ -144,7 +167,7 @@ storefrontRouter.get("/storefront/products", async (req, res) => {
   ]);
 
   res.json({
-    products: await attachRatingSummaries(products),
+    products: await attachProductSummaries(products),
     total,
     page,
     pageSize: STOREFRONT_PAGE_SIZE,
@@ -173,7 +196,7 @@ storefrontRouter.get<{ id: string }>("/storefront/products/:id", async (req, res
     : [];
   // One combined summary lookup so the main product and its siblings share the
   // same shape (and query) — split back apart by position below.
-  const [withSummary, ...relatedWithSummaries] = await attachRatingSummaries([
+  const [withSummary, ...relatedWithSummaries] = await attachProductSummaries([
     publicProduct,
     ...relatedProducts,
   ]);

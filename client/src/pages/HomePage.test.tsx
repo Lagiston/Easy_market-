@@ -62,6 +62,9 @@ function mockGet(overrides: Record<string, unknown> = {}) {
       if (url === "/api/reviews") {
         return Promise.resolve({ data: { reviews: overrides.reviews ?? [] } });
       }
+      if (url === "/api/dashboard/most-wishlisted") {
+        return Promise.resolve({ data: { products: overrides.mostWishlisted ?? [] } });
+      }
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
     },
   );
@@ -273,6 +276,56 @@ describe("HomePage", () => {
     );
 
     expect(await screen.findByText("Nothing needs a reply.")).toBeInTheDocument();
+  });
+
+  it("shows the most wishlisted products for an admin, ranked as returned by the server", async () => {
+    mockedUseSession.mockReturnValue(adminSession());
+    mockGet({
+      mostWishlisted: [
+        { id: "p1", name: "Popular Rice", wishlistCount: 8 },
+        { id: "p2", name: "Trendy Juice", wishlistCount: 3 },
+      ],
+    });
+
+    renderWithQuery(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
+
+    const popularRow = (await screen.findByText("Popular Rice")).closest("a")!;
+    expect(within(popularRow).getByText("8")).toBeInTheDocument();
+    const trendyRow = screen.getByText("Trendy Juice").closest("a")!;
+    expect(within(trendyRow).getByText("3")).toBeInTheDocument();
+    expect(mockedAxios.get).toHaveBeenCalledWith("/api/dashboard/most-wishlisted");
+  });
+
+  it("shows the empty state when nothing has been wishlisted yet", async () => {
+    mockedUseSession.mockReturnValue(adminSession());
+    mockGet();
+
+    renderWithQuery(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Nothing wishlisted yet.")).toBeInTheDocument();
+  });
+
+  it("hides the most-wishlisted card for an agent", async () => {
+    mockedUseSession.mockReturnValue(agentSession());
+    mockGet();
+
+    renderWithQuery(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
+
+    await screen.findByText("My queue");
+    expect(screen.queryByText("Most wishlisted products")).not.toBeInTheDocument();
+    expect(mockedAxios.get).not.toHaveBeenCalledWith("/api/dashboard/most-wishlisted");
   });
 
   it("hides the low-stock card for an agent", async () => {

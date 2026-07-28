@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Star, TriangleAlert } from "lucide-react";
+import { Heart, Star, TriangleAlert } from "lucide-react";
 import { CALL_ATTEMPTS_BEFORE_CANCEL, InquiryStatus, OrderStatus, Role } from "@es-market/core";
 import { authClient } from "@/lib/auth-client";
 import type { OrderRow } from "@/components/OrdersTable";
@@ -22,6 +22,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
+type MostWishlistedProduct = { id: string; name: string; wishlistCount: number };
 
 type DashboardStats = {
   products: number;
@@ -134,6 +136,15 @@ export default function HomePage() {
           "/api/dashboard/sold-out-history",
         )
         .then((res) => res.data),
+    enabled: isAdmin,
+  });
+
+  const { data: mostWishlisted } = useQuery({
+    queryKey: ["dashboard-most-wishlisted"],
+    queryFn: () =>
+      axios
+        .get<{ products: MostWishlistedProduct[] }>("/api/dashboard/most-wishlisted")
+        .then((res) => res.data.products),
     enabled: isAdmin,
   });
 
@@ -394,6 +405,34 @@ export default function HomePage() {
                     <span className="inline-flex items-center gap-1 text-muted-foreground">
                       <Star aria-hidden className="size-3.5 fill-primary text-primary" />
                       {review.rating}
+                    </span>
+                  </Link>
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Most wishlisted products</CardTitle>
+              <CardDescription>All-time, by customer saves.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AttentionList
+                items={mostWishlisted ?? null}
+                emptyLabel="Nothing wishlisted yet."
+                renderItem={(product) => (
+                  <Link
+                    key={product.id}
+                    to={`/admin/products/${product.id}`}
+                    className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted"
+                  >
+                    <p className="font-medium">{product.name}</p>
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">
+                      <Heart aria-hidden className="size-3.5 fill-primary text-primary" />
+                      {product.wishlistCount}
                     </span>
                   </Link>
                 )}

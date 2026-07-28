@@ -3,6 +3,33 @@ import { useTranslation } from "react-i18next";
 import { buttonVariants } from "@/components/ui/button";
 import type { StorefrontProduct } from "@/pages/storefront/ProductsPage";
 
+// Letter sizes in their conventional order — anything not on this list (a
+// typo, a brand-specific label) falls back to alphabetical rather than
+// disappearing or crashing, so admin-entered free text never breaks the
+// picker even if it doesn't fit the common S/M/L convention.
+const LETTER_SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+
+// Sorts sizes the way a shopper expects (S, M, L — or 38, 40, 42) instead of
+// whatever order the linked products happen to have been created in. Numeric
+// sizes (shoe/pants sizing) compare numerically; recognized letter sizes use
+// LETTER_SIZE_ORDER; anything else falls back to alphabetical, sorted after
+// every recognized value. Colors are left in their natural order — there's
+// no equivalent universal convention to sort them by.
+export function compareSizes(a: string, b: string): number {
+  const numA = Number(a);
+  const numB = Number(b);
+  const aIsNumeric = a.trim() !== "" && !Number.isNaN(numA);
+  const bIsNumeric = b.trim() !== "" && !Number.isNaN(numB);
+  if (aIsNumeric && bIsNumeric) return numA - numB;
+
+  const indexA = LETTER_SIZE_ORDER.indexOf(a.toUpperCase());
+  const indexB = LETTER_SIZE_ORDER.indexOf(b.toUpperCase());
+  if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+  if (indexA !== -1) return -1;
+  if (indexB !== -1) return 1;
+  return a.localeCompare(b);
+}
+
 // Renders a "Choose options" size/color picker for a storefront product's
 // variant group, reusing the existing variantGroupId linking mechanism —
 // each option is a genuinely separate Product row, not a per-SKU attribute
@@ -17,7 +44,9 @@ export default function ProductVariantPicker({
   const { t } = useTranslation();
   const group = [product, ...relatedProducts];
 
-  const sizes = Array.from(new Set(group.map((p) => p.size).filter((v): v is string => !!v)));
+  const sizes = Array.from(
+    new Set(group.map((p) => p.size).filter((v): v is string => !!v)),
+  ).sort(compareSizes);
   const colors = Array.from(new Set(group.map((p) => p.color).filter((v): v is string => !!v)));
 
   if (sizes.length === 0 && colors.length === 0) {

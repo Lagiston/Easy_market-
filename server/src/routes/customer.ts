@@ -5,7 +5,7 @@ import { prisma } from "../lib/prisma";
 import { requireCustomerAuth } from "../middleware/require-customer-auth";
 import { linkOrdersLimiter } from "../middleware/rate-limit";
 import { orderWithItems, serializePublicOrder, normalizePhone } from "./orders";
-import { publicReviewSelect, publicProductSelect } from "./storefront";
+import { publicReviewSelect, publicProductSelect, attachProductSummaries } from "./storefront";
 
 // Customer-account-only endpoints (signed-in customers, not staff); mounted
 // at /api in index.ts. Signup/sign-in/sign-out themselves are handled by the
@@ -111,19 +111,47 @@ customerRouter.delete<{ id: string }>(
 // Signed-in customer's saved-for-later products — account-only (no guest
 // tier), newest first. Excludes soft-deleted products: a wishlisted product
 // can be deleted later, and it should silently drop off the list rather than
-// leak a null join.
+// leak a null join. Each product carries computed `backInStock`/`priceDropped`
+// flags (see WishlistItem.wasOutOfStockAtSave/priceAtSave's doc comments) —
+// this store has no email/push infrastructure, so this is the entire
+// "notification": a visible signal read at request time, not a stored/pushed
+// alert. Also runs the products through attachProductSummaries — the same
+// review/wishlist-count summary the storefront list/detail routes attach —
+// so this endpoint's response is genuinely StorefrontProduct-shaped (it
+// wasn't before: averageRating/reviewCount/wishlistCount were previously
+// just missing at runtime despite the client type already declaring them).
 customerRouter.get("/customer/wishlist", requireCustomerAuth, async (req, res) => {
   const items = await prisma.wishlistItem.findMany({
     where: { customerId: req.customer.id, product: { deletedAt: null } },
-    select: { product: { select: publicProductSelect } },
+    select: {
+      wasOutOfStockAtSave: true,
+      priceAtSave: true,
+      product: { select: publicProductSelect },
+    },
     orderBy: { createdAt: "desc" },
   });
-  res.json({ products: items.map((item) => item.product) });
+  // attachProductSummaries preserves input order, so index-correlating back
+  // to `items` for the wishlist-specific fields below is safe.
+  const productsWithSummaries = await attachProductSummaries(items.map((item) => item.product));
+  res.json({
+    products: productsWithSummaries.map((product, index) => {
+      const item = items[index]!;
+      return {
+        ...product,
+        backInStock: item.wasOutOfStockAtSave && product.stock > 0,
+        priceDropped: item.priceAtSave !== null && product.price < item.priceAtSave,
+        priceAtSave: item.priceAtSave,
+      };
+    }),
+  });
 });
 
 // Idempotent add — upsert on the (customerId, productId) unique constraint so
 // a double-clicked heart icon (or a retried request) is always safe, same
 // spirit as the variant-link route's "already linked" no-op branch.
+// wasOutOfStockAtSave/priceAtSave are only meaningful to set on first save —
+// the `update` branch stays a no-op (re-adding an already-wishlisted product
+// shouldn't silently reset either snapshot).
 customerRouter.post<{ productId: string }>(
   "/customer/wishlist/:productId",
   requireCustomerAuth,
@@ -131,7 +159,7 @@ customerRouter.post<{ productId: string }>(
     const { productId } = req.params;
     const product = await prisma.product.findFirst({
       where: { id: productId, deletedAt: null },
-      select: { id: true },
+      select: { id: true, stock: true, price: true },
     });
     if (!product) {
       res.status(404).json({ error: "Product not found" });
@@ -139,7 +167,13 @@ customerRouter.post<{ productId: string }>(
     }
     await prisma.wishlistItem.upsert({
       where: { customerId_productId: { customerId: req.customer.id, productId } },
-      create: { id: randomUUID(), customerId: req.customer.id, productId },
+      create: {
+        id: randomUUID(),
+        customerId: req.customer.id,
+        productId,
+        wasOutOfStockAtSave: product.stock === 0,
+        priceAtSave: product.price,
+      },
       update: {},
     });
     res.status(204).end();

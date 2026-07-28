@@ -71,6 +71,8 @@
     "noImage": "Pas d'image",
     "pagination": "Page {{page}} sur {{totalPages}}",
     "relatedTitle": "Produits associés",
+    "wishlistCount_one": "{{count}} personne a ajouté ce produit à sa liste de souhaits",
+    "wishlistCount_other": "{{count}} personnes ont ajouté ce produit à leur liste de souhaits",
     "variants": {
       "size": "Taille",
       "color": "Couleur",
@@ -258,7 +260,13 @@
       "title": "Ma liste de souhaits",
       "empty": "Vous n'avez encore ajouté aucun produit à votre liste de souhaits.",
       "error": "Impossible de charger votre liste de souhaits. Veuillez réessayer.",
-      "remove": "Retirer {{name}} de la liste de souhaits"
+      "remove": "Retirer {{name}} de la liste de souhaits",
+      "backInStock": "De nouveau en stock",
+      "backInStockBanner_one": "{{count}} article de votre liste de souhaits est de nouveau en stock !",
+      "backInStockBanner_other": "{{count}} articles de votre liste de souhaits sont de nouveau en stock !",
+      "priceDrop": "Baisse de prix",
+      "priceDropBanner_one": "{{count}} article de votre liste de souhaits a baissé de prix !",
+      "priceDropBanner_other": "{{count}} articles de votre liste de souhaits ont baissé de prix !"
     }
   },
   "wishlist": {

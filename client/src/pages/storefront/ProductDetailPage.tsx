@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ImageOff, ShoppingCart, Star } from "lucide-react";
+import { ArrowLeft, Heart, ImageOff, ShoppingCart, Star } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
 import ProductReviews from "@/components/storefront/ProductReviews";
@@ -144,6 +144,12 @@ export default function ProductDetailPage() {
                 <Badge variant="destructive">{t("products.outOfStock")}</Badge>
               )}
             </div>
+            {product.wishlistCount > 0 && (
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Heart aria-hidden className="size-3.5 fill-primary text-primary" />
+                {t("products.wishlistCount", { count: product.wishlistCount })}
+              </p>
+            )}
             {product.description && (
               <p className="text-sm whitespace-pre-wrap">
                 {localize(product.description, language)}

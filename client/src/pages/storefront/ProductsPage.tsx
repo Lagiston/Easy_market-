@@ -12,6 +12,7 @@ import {
   type StorefrontProductSort,
 } from "@es-market/core";
 import { localize } from "@/lib/localize";
+import WishlistButton from "@/components/storefront/WishlistButton";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,11 @@ export type StorefrontProduct = {
   // null (not 0) when unreviewed — the card omits the rating line entirely.
   averageRating: number | null;
   reviewCount: number;
+  // Social proof — how many *other* customers have this saved. Always a
+  // plain number (no unknown/unset state to distinguish, unlike
+  // averageRating). Never the viewer's own wishlist membership — that's a
+  // separate, signed-in-only signal (see WishlistButton's isWishlisted).
+  wishlistCount: number;
 };
 
 type StorefrontCategory = { id: string; name: LocalizedName };
@@ -276,8 +282,12 @@ export default function ProductsPage() {
             {data.products.map((product) => (
               <Card
                 key={product.id}
-                className="h-full overflow-hidden py-0 transition-colors hover:border-primary"
+                className="relative h-full overflow-hidden py-0 transition-colors hover:border-primary"
               >
+                <WishlistButton
+                  productId={product.id}
+                  className="absolute end-2 top-2 z-10 size-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+                />
                 <Link to={`/products/${product.id}`} className="block">
                   {product.images[0] ? (
                     <img

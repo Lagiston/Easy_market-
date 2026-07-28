@@ -6,6 +6,7 @@ import { getProductClassificationAcceptance } from "../lib/product-classificatio
 import {
   getAvgFirstResponseMinutes,
   getDraftLittleEditRate,
+  getMostWishlistedProducts,
   getOrdersThisWeek,
 } from "../lib/dashboard-metrics";
 
@@ -121,6 +122,16 @@ dashboardRouter.get(
       series,
       trackingStartDate: earliestSnapshot ? earliestSnapshot.date.toISOString().slice(0, 10) : null,
     });
+  },
+);
+
+dashboardRouter.get(
+  "/dashboard/most-wishlisted",
+  requireAuth,
+  requireRole(Role.ADMIN),
+  async (_req, res) => {
+    const products = await getMostWishlistedProducts();
+    res.json({ products });
   },
 );
 

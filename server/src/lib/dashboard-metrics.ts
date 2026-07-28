@@ -108,3 +108,41 @@ export async function getAvgFirstResponseMinutes(): Promise<number | null> {
 export async function getOrdersThisWeek(): Promise<number> {
   return prisma.order.count({ where: { createdAt: { gte: windowStart(7) } } });
 }
+
+const MOST_WISHLISTED_LIMIT = 5;
+
+// Top products by all-time wishlist save count — a demand signal for staff,
+// not windowed like the metrics above: wishlist saves accumulate slowly at
+// this store's scale, so a 30-day window would mostly show noise. Products
+// with zero saves are omitted entirely rather than padded in with a 0 —
+// there's nothing to rank, not a null-vs-zero case like the other metrics.
+export async function getMostWishlistedProducts(): Promise<
+  { id: string; name: string; wishlistCount: number }[]
+> {
+  const grouped = await prisma.wishlistItem.groupBy({
+    by: ["productId"],
+    _count: true,
+    orderBy: { _count: { productId: "desc" } },
+    take: MOST_WISHLISTED_LIMIT,
+  });
+  if (grouped.length === 0) return [];
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: grouped.map((g) => g.productId) }, deletedAt: null },
+    select: { id: true, name: true },
+  });
+  const nameById = new Map(products.map((p) => [p.id, (p.name as { en: string }).en]));
+
+  // Preserves the count-ranked order from groupBy; a product that's since
+  // been soft-deleted is dropped rather than shown with a placeholder name —
+  // unlike the sold-out-history dialog (a historical record of a specific
+  // past day), this is a live demand signal, so a deleted product just isn't
+  // relevant to rank anymore.
+  return grouped
+    .filter((g) => nameById.has(g.productId))
+    .map((g) => ({
+      id: g.productId,
+      name: nameById.get(g.productId)!,
+      wishlistCount: g._count,
+    }));
+}

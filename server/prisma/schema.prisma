@@ -462,6 +462,23 @@ model WishlistItem {
   productId  String
   product    Product  @relation(fields: [productId], references: [id])
   createdAt  DateTime @default(now())
+  // Snapshot taken once at save time (like OrderItem.unitPrice) — never
+  // recomputed on subsequent stock changes. Powers an in-app "back in stock"
+  // signal: `wasOutOfStockAtSave && product.stock > 0` at read time. This
+  // store has no email/push infrastructure anywhere (see the "No email
+  // flows" note), so "notify me" here means a visible badge on
+  // /account/wishlist and the header, not an actual notification — a
+  // deliberately scoped-down interpretation of the feature, not a stand-in
+  // for one. Doesn't track re-transitions (out of stock again, then back
+  // again) or a "seen/dismissed" state — a known v1 simplification.
+  wasOutOfStockAtSave Boolean @default(false)
+  // Same snapshot-at-save-time idea, applied to price instead of stock —
+  // powers a "price dropped" signal (`priceAtSave !== null && product.price
+  // < priceAtSave` at read time). Nullable (not defaulted like
+  // wasOutOfStockAtSave) rather than backfilled: a row from before this
+  // column existed simply has nothing to compare against, so it's "not
+  // tracked" rather than a confusing 0/free-price sentinel.
+  priceAtSave Int?
 
   // Mirrors Review's @@unique([customerId, productId]) — prevents duplicate
   // wishlisting and lets the add route be a simple upsert.

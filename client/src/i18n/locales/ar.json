@@ -71,6 +71,12 @@
     "noImage": "بدون صورة",
     "pagination": "صفحة {{page}} من {{totalPages}}",
     "relatedTitle": "منتجات ذات صلة",
+    "wishlistCount_zero": "لا أحد أضاف هذا المنتج إلى قائمة أمنياته",
+    "wishlistCount_one": "شخص واحد أضاف هذا المنتج إلى قائمة أمنياته",
+    "wishlistCount_two": "شخصان أضافا هذا المنتج إلى قائمتي أمنياتهما",
+    "wishlistCount_few": "{{count}} أشخاص أضافوا هذا المنتج إلى قوائم أمنياتهم",
+    "wishlistCount_many": "{{count}} شخصًا أضافوا هذا المنتج إلى قوائم أمنياتهم",
+    "wishlistCount_other": "{{count}} شخص أضافوا هذا المنتج إلى قوائم أمنياتهم",
     "variants": {
       "size": "المقاس",
       "color": "اللون",
@@ -270,7 +276,21 @@
       "title": "قائمة أمنياتي",
       "empty": "لم تُضِف أي منتجات إلى قائمة أمنياتك بعد.",
       "error": "تعذر تحميل قائمة أمنياتك. حاول مرة أخرى.",
-      "remove": "إزالة {{name}} من قائمة الأمنيات"
+      "remove": "إزالة {{name}} من قائمة الأمنيات",
+      "backInStock": "متوفر الآن",
+      "backInStockBanner_zero": "لا توجد عناصر متوفرة الآن من قائمة أمنياتك.",
+      "backInStockBanner_one": "أصبح عنصر واحد من قائمة أمنياتك متوفرًا الآن!",
+      "backInStockBanner_two": "أصبح عنصران من قائمة أمنياتك متوفرين الآن!",
+      "backInStockBanner_few": "أصبحت {{count}} عناصر من قائمة أمنياتك متوفرة الآن!",
+      "backInStockBanner_many": "أصبح {{count}} عنصرًا من قائمة أمنياتك متوفرًا الآن!",
+      "backInStockBanner_other": "أصبح {{count}} عنصر من قائمة أمنياتك متوفرًا الآن!",
+      "priceDrop": "انخفاض السعر",
+      "priceDropBanner_zero": "لم ينخفض سعر أي عنصر من قائمة أمنياتك.",
+      "priceDropBanner_one": "انخفض سعر عنصر واحد من قائمة أمنياتك!",
+      "priceDropBanner_two": "انخفض سعر عنصرين من قائمة أمنياتك!",
+      "priceDropBanner_few": "انخفض سعر {{count}} عناصر من قائمة أمنياتك!",
+      "priceDropBanner_many": "انخفض سعر {{count}} عنصرًا من قائمة أمنياتك!",
+      "priceDropBanner_other": "انخفض سعر {{count}} عنصر من قائمة أمنياتك!"
     }
   },
   "wishlist": {

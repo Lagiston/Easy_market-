@@ -10,6 +10,14 @@ import ProductsPage, { type StorefrontProduct } from "./ProductsPage";
 vi.mock("axios");
 const mockedAxios = vi.mocked(axios, { deep: true });
 
+// Product cards render WishlistButton, which reads the customer session —
+// kept as a guest throughout so this file's tests stay deterministic without
+// needing wishlist add/remove mocks too.
+vi.mock("@/lib/customer-auth-client", () => ({
+  customerAuthClient: { useSession: vi.fn() },
+}));
+import { customerAuthClient } from "@/lib/customer-auth-client";
+
 const products: StorefrontProduct[] = [
   {
     id: "p1",
@@ -24,6 +32,7 @@ const products: StorefrontProduct[] = [
     category: { id: "c1", name: { en: "Groceries" } },
     averageRating: 4.5,
     reviewCount: 12,
+    wishlistCount: 0,
   },
   {
     id: "p2",
@@ -38,6 +47,7 @@ const products: StorefrontProduct[] = [
     category: { id: "c2", name: { en: "Beverages" } },
     averageRating: null,
     reviewCount: 0,
+    wishlistCount: 0,
   },
 ];
 
@@ -87,6 +97,12 @@ describe("storefront ProductsPage", () => {
     mockedAxios.get.mockReset();
     window.localStorage.clear();
     await i18n.changeLanguage("en");
+    // Default back to a guest session every test — the one signed-in test
+    // below overrides this and must not leak into the tests that follow it.
+    vi.mocked(customerAuthClient.useSession).mockReturnValue({
+      data: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof customerAuthClient.useSession>);
   });
 
   it("renders product cards with name, category, price, and an out-of-stock badge", async () => {
@@ -122,6 +138,40 @@ describe("storefront ProductsPage", () => {
     expect(await screen.findByRole("link", { name: /Rice 5kg/ })).toHaveAttribute(
       "href",
       "/products/p1",
+    );
+  });
+
+  it("shows a wishlist sign-in link on each card for a guest", async () => {
+    mockApi();
+    renderPage();
+
+    await screen.findByText("Rice 5kg");
+    const wishlistLinks = screen.getAllByRole("link", { name: "Add to wishlist" });
+    expect(wishlistLinks).toHaveLength(2);
+    expect(wishlistLinks[0]).toHaveAttribute("href", "/account/login");
+  });
+
+  it("toggles a card's wishlist heart for a signed-in customer", async () => {
+    vi.mocked(customerAuthClient.useSession).mockReturnValue({
+      data: { user: { id: "c1", name: "Jane" } },
+      isPending: false,
+    } as unknown as ReturnType<typeof customerAuthClient.useSession>);
+    mockedAxios.get.mockImplementation((url: string) => {
+      if (url === "/api/storefront/categories") return Promise.resolve({ data: { categories } });
+      if (url === "/api/storefront/tags") return Promise.resolve({ data: { tags: [] } });
+      if (url === "/api/customer/wishlist") return Promise.resolve({ data: { products: [] } });
+      return Promise.resolve({ data: { products, total: products.length } });
+    });
+    mockedAxios.post.mockResolvedValueOnce({});
+    renderPage();
+
+    const heartButtons = await screen.findAllByRole("button", { name: "Add to wishlist" });
+    expect(heartButtons).toHaveLength(2);
+
+    await userEvent.click(heartButtons[0]!);
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/customer/wishlist/p1"),
     );
   });
 

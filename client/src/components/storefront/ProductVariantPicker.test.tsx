@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router";
 import i18n from "@/i18n";
-import ProductVariantPicker from "./ProductVariantPicker";
+import ProductVariantPicker, { compareSizes } from "./ProductVariantPicker";
 import type { StorefrontProduct } from "@/pages/storefront/ProductsPage";
 
 const base: StorefrontProduct = {
@@ -18,6 +18,7 @@ const base: StorefrontProduct = {
   category: { id: "c1", name: { en: "Clothing" } },
   averageRating: null,
   reviewCount: 0,
+  wishlistCount: 0,
 };
 
 function renderPicker(product: StorefrontProduct, relatedProducts: StorefrontProduct[]) {
@@ -27,6 +28,29 @@ function renderPicker(product: StorefrontProduct, relatedProducts: StorefrontPro
     </MemoryRouter>,
   );
 }
+
+describe("compareSizes", () => {
+  it("sorts recognized letter sizes in conventional order", () => {
+    expect(["L", "XS", "M", "S"].sort(compareSizes)).toEqual(["XS", "S", "M", "L"]);
+  });
+
+  it("is case-insensitive for letter sizes", () => {
+    expect(["l", "s", "m"].sort(compareSizes)).toEqual(["s", "m", "l"]);
+  });
+
+  it("sorts purely numeric sizes numerically, not lexicographically", () => {
+    expect(["40", "9", "38"].sort(compareSizes)).toEqual(["9", "38", "40"]);
+  });
+
+  it("sorts unrecognized labels alphabetically, after every recognized size", () => {
+    expect(["M", "Custom", "S", "Alpha"].sort(compareSizes)).toEqual([
+      "S",
+      "M",
+      "Alpha",
+      "Custom",
+    ]);
+  });
+});
 
 describe("ProductVariantPicker", () => {
   beforeEach(async () => {
@@ -82,6 +106,38 @@ describe("ProductVariantPicker", () => {
 
     expect(screen.queryByRole("link", { name: "Select size L" })).not.toBeInTheDocument();
     expect(screen.getByText("L")).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("renders letter sizes in canonical order regardless of group insertion order", () => {
+    const current = { ...base, size: "L", color: null };
+    const relatedProducts = [
+      { ...base, id: "p2", size: "XS", color: null },
+      { ...base, id: "p3", size: "M", color: null },
+      { ...base, id: "p4", size: "S", color: null },
+    ];
+    renderPicker(current, relatedProducts);
+
+    const sizeRow = screen.getByText("Size").parentElement!;
+    const labels = within(sizeRow)
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    expect(labels).toEqual(["XS", "S", "M", "L"]);
+  });
+
+  it("renders numeric sizes in numeric order", () => {
+    const current = { ...base, size: "40", color: null };
+    const relatedProducts = [
+      { ...base, id: "p2", size: "38", color: null },
+      { ...base, id: "p3", size: "9", color: null },
+    ];
+    renderPicker(current, relatedProducts);
+
+    const sizeRow = screen.getByText("Size").parentElement!;
+    const labels = within(sizeRow)
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    // Numeric comparison, not string comparison — "9" sorts before "38".
+    expect(labels).toEqual(["9", "38", "40"]);
   });
 
   it("only renders the size row when no group member has a color, and vice versa", () => {

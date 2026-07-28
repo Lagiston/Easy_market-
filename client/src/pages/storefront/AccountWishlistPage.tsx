@@ -1,7 +1,8 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ImageOff, Trash2 } from "lucide-react";
+import { ImageOff, ShoppingCart, Trash2 } from "lucide-react";
 import { localize } from "@/lib/localize";
+import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,10 +13,25 @@ export default function AccountWishlistPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
   const { products, isPending, isError, removeMutation } = useWishlist();
+  const { addItem } = useCart();
+
+  const backInStockCount = products.filter((product) => product.backInStock).length;
+  const priceDroppedCount = products.filter((product) => product.priceDropped).length;
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <h1 className="text-2xl font-semibold">{t("account.wishlist.title")}</h1>
+
+      {backInStockCount > 0 && (
+        <p className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm text-primary">
+          {t("account.wishlist.backInStockBanner", { count: backInStockCount })}
+        </p>
+      )}
+      {priceDroppedCount > 0 && (
+        <p className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm text-primary">
+          {t("account.wishlist.priceDropBanner", { count: priceDroppedCount })}
+        </p>
+      )}
 
       {isError ? (
         <p className="py-12 text-center text-sm text-destructive">{t("account.wishlist.error")}</p>
@@ -57,13 +73,58 @@ export default function AccountWishlistPage() {
                     >
                       {name}
                     </Link>
+                    {(product.size || product.color) && (
+                      <p className="text-xs text-muted-foreground">
+                        {[product.size, product.color].filter(Boolean).join(" / ")}
+                      </p>
+                    )}
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">{product.price}</p>
-                      {product.stock === 0 && (
+                      {product.priceDropped ? (
+                        <p className="text-sm">
+                          <span className="text-muted-foreground line-through">
+                            {product.priceAtSave}
+                          </span>{" "}
+                          <span className="font-medium text-primary">{product.price}</span>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">{product.price}</p>
+                      )}
+                      {product.stock === 0 ? (
                         <Badge variant="destructive">{t("products.outOfStock")}</Badge>
+                      ) : (
+                        product.backInStock && (
+                          <Badge variant="secondary" className="text-primary">
+                            {t("account.wishlist.backInStock")}
+                          </Badge>
+                        )
+                      )}
+                      {product.priceDropped && (
+                        <Badge variant="secondary" className="text-primary">
+                          {t("account.wishlist.priceDrop")}
+                        </Badge>
                       )}
                     </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    disabled={product.stock === 0}
+                    aria-label={t("cart.addToCart")}
+                    onClick={() =>
+                      addItem({
+                        productId: product.id,
+                        name: product.name,
+                        price: product.price,
+                        imageUrl: product.images[0] ?? null,
+                        stock: product.stock,
+                        size: product.size,
+                        color: product.color,
+                      })
+                    }
+                  >
+                    <ShoppingCart />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

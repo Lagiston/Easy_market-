@@ -71,6 +71,8 @@
     "noImage": "No image",
     "pagination": "Page {{page}} of {{totalPages}}",
     "relatedTitle": "Related products",
+    "wishlistCount_one": "{{count}} person has this in their wishlist",
+    "wishlistCount_other": "{{count}} people have this in their wishlist",
     "variants": {
       "size": "Size",
       "color": "Color",
@@ -258,7 +260,13 @@
       "title": "My wishlist",
       "empty": "You haven't wishlisted any products yet.",
       "error": "Could not load your wishlist. Please try again.",
-      "remove": "Remove {{name}} from wishlist"
+      "remove": "Remove {{name}} from wishlist",
+      "backInStock": "Back in stock",
+      "backInStockBanner_one": "{{count}} of your wishlisted items is back in stock!",
+      "backInStockBanner_other": "{{count}} of your wishlisted items are back in stock!",
+      "priceDrop": "Price drop",
+      "priceDropBanner_one": "{{count}} of your wishlisted items dropped in price!",
+      "priceDropBanner_other": "{{count}} of your wishlisted items dropped in price!"
     }
   },
   "wishlist": {

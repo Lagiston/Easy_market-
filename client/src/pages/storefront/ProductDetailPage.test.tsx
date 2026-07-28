@@ -43,6 +43,7 @@ const product: StorefrontProduct = {
   category: { id: "c1", name: { en: "Groceries" } },
   averageRating: null,
   reviewCount: 0,
+  wishlistCount: 0,
 };
 
 function renderPage() {
@@ -107,6 +108,36 @@ describe("storefront ProductDetailPage", () => {
     expect(
       screen.getByLabelText("Average rating: 4.5 out of 5 · 12 reviews"),
     ).toBeInTheDocument();
+  });
+
+  it("shows a wishlist-count social-proof line when others have wishlisted it", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: { product: { ...product, wishlistCount: 12 } },
+    });
+    renderPage();
+
+    expect(
+      await screen.findByText("12 people have this in their wishlist"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the singular wishlist-count line for exactly one save", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: { product: { ...product, wishlistCount: 1 } },
+    });
+    renderPage();
+
+    expect(
+      await screen.findByText("1 person has this in their wishlist"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows no wishlist-count line when nobody has wishlisted it", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    await screen.findByText("Rice 5kg");
+    expect(screen.queryByText(/in their wishlist/)).not.toBeInTheDocument();
   });
 
   it("shows an out-of-stock badge when stock is zero", async () => {
@@ -225,6 +256,7 @@ describe("storefront ProductDetailPage", () => {
       category: { id: "c1", name: { en: "Groceries" } },
       averageRating: 3.5,
       reviewCount: 2,
+      wishlistCount: 0,
     };
     mockedGet.mockResolvedValueOnce({ data: { product, relatedProducts: [sibling] } });
     renderPage();

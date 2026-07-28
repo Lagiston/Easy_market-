@@ -188,4 +188,41 @@ describe("ProductVariantLinks", () => {
     ).toBeInTheDocument();
     vi.useRealTimers();
   });
+
+  it("shows the server error when linking would duplicate a size/color already in the group", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockedAxios.get.mockImplementation((url: string) => {
+      if (url === "/api/products/1") {
+        return Promise.resolve({ data: { product: { id: "1" }, variants: [redShirt] } });
+      }
+      return Promise.resolve({
+        data: { products: [{ ...redShirt, id: "3", name: { en: "Shirt - Red 2" } }] },
+      });
+    });
+    mockedAxios.isAxiosError.mockImplementation(
+      (error) => (error as { isAxiosError?: boolean })?.isAxiosError === true,
+    );
+    mockedAxios.post.mockRejectedValue({
+      isAxiosError: true,
+      response: {
+        data: { error: "A variant with that size and color is already in this group" },
+      },
+    });
+    const user = userEvent.setup({ delay: null });
+    renderWithQuery(<ProductVariantLinks productId="1" />);
+    await screen.findByText("Shirt - Red");
+
+    await user.type(
+      screen.getByLabelText("Search products to link as a variant"),
+      "red",
+    );
+    await vi.advanceTimersByTimeAsync(300);
+    await screen.findByText("Shirt - Red 2");
+    await user.click(screen.getByText("Shirt - Red 2"));
+
+    expect(
+      await screen.findByText("A variant with that size and color is already in this group"),
+    ).toBeInTheDocument();
+    vi.useRealTimers();
+  });
 });

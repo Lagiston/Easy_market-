@@ -326,6 +326,27 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     }
   }
 
+  // Same duplicate-label guard as the variant-link route — editing a
+  // grouped product's size/color to match a sibling's would be another way
+  // to create two indistinguishable picker options, not just linking one in.
+  const newSize = size ?? null;
+  const newColor = color ?? null;
+  if (target.variantGroupId && (newSize !== null || newColor !== null)) {
+    const siblings = await prisma.product.findMany({
+      where: { variantGroupId: target.variantGroupId, deletedAt: null, id: { not: productId } },
+      select: { size: true, color: true },
+    });
+    const isDuplicate = siblings.some(
+      (sibling) => sibling.size === newSize && sibling.color === newColor,
+    );
+    if (isDuplicate) {
+      res.status(409).json({
+        error: "A variant with that size and color is already in this group",
+      });
+      return;
+    }
+  }
+
   const product = await prisma.product.update({
     where: { id: productId },
     data: {
@@ -337,8 +358,8 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
       categoryId,
       assignedAgentId: assignedAgentId ?? null,
       tags,
-      size: size ?? null,
-      color: color ?? null,
+      size: newSize,
+      color: newColor,
       // Any manual edit supersedes a stale pending bulk-reclassify suggestion.
       aiSuggestedCategoryId: null,
       aiSuggestedTags: [],
@@ -516,6 +537,31 @@ productsRouter.post<{ id: string }>(
         error: "That product already belongs to a different variant group — remove it from that group first",
       });
       return;
+    }
+
+    // Blocks two variants in the same group from carrying identical
+    // size/color labels — a silent duplicate would give the storefront
+    // picker two buttons for the same option, and clicking either would
+    // navigate unpredictably to whichever this query happens to return
+    // first. Only enforced when `other` actually carries a label — two
+    // unlabeled variants aren't picker-relevant duplicates, since the picker
+    // doesn't render at all without labels.
+    if (other.size !== null || other.color !== null) {
+      const existingMembers = target.variantGroupId
+        ? await prisma.product.findMany({
+            where: { variantGroupId: target.variantGroupId, deletedAt: null },
+            select: { size: true, color: true },
+          })
+        : [{ size: target.size, color: target.color }];
+      const isDuplicate = existingMembers.some(
+        (member) => member.size === other.size && member.color === other.color,
+      );
+      if (isDuplicate) {
+        res.status(409).json({
+          error: "A variant with that size and color is already in this group",
+        });
+        return;
+      }
     }
 
     const groupId = target.variantGroupId ?? randomUUID();
