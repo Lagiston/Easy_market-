@@ -265,6 +265,69 @@ describe("ProductsPage", () => {
     expect(await screen.findByText("Page 2 of 2")).toBeInTheDocument();
   });
 
+  it("switches to the card view and back, keeping edit/delete actions working", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
+    const user = userEvent.setup();
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText("Rice 5kg");
+    expect(screen.getByRole("table")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Card view" }));
+
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByText("Rice 5kg")).toBeInTheDocument();
+    expect(screen.getByText("Groceries")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit Rice 5kg" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete Rice 5kg" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Table view" }));
+    expect(screen.getByRole("table")).toBeInTheDocument();
+  });
+
+  it("sorts from the card view's sort select, refetching with the new params", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
+    const user = userEvent.setup();
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText("Rice 5kg");
+    await user.click(screen.getByRole("tab", { name: "Card view" }));
+
+    await user.click(screen.getByLabelText("Sort by"));
+    await user.click(await screen.findByRole("option", { name: "Price (high to low)" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
+        params: { sortBy: "price", sortOrder: "desc", page: 1 },
+      }),
+    );
+  });
+
+  it("opens the delete confirmation from the card view", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
+    mockedAxios.delete.mockResolvedValue({});
+    const user = userEvent.setup();
+    renderWithQuery(
+      <MemoryRouter>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText("Rice 5kg");
+    await user.click(screen.getByRole("tab", { name: "Card view" }));
+
+    await user.click(screen.getByRole("button", { name: "Delete Rice 5kg" }));
+    expect(await screen.findByText("Delete Rice 5kg?")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => expect(mockedAxios.delete).toHaveBeenCalledWith("/api/products/1"));
+  });
+
   it("opens the delete confirmation and removes the product on confirm", async () => {
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
     mockedAxios.delete.mockResolvedValue({});

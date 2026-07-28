@@ -63,7 +63,7 @@ type Category = { id: string; name: LocalizedName };
 // merges it into the product (via the existing PUT route, which also clears
 // the suggestion fields), Dismiss just clears them without changing the
 // product. Self-contained so it doesn't need to touch ProductForm.tsx.
-function SuggestionBadge({ product }: { product: ProductRow }) {
+export function SuggestionBadge({ product }: { product: ProductRow }) {
   const queryClient = useQueryClient();
   const { data: categories } = useQuery({
     queryKey: ["categories"],

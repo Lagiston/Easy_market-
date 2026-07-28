@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SortingState } from "@tanstack/react-table";
-import { Sparkles } from "lucide-react";
+import { LayoutGrid, List, Sparkles } from "lucide-react";
 import CreateProductDialog from "./CreateProductDialog";
 import EditProductDialog from "./EditProductDialog";
 import DeleteProductDialog from "./DeleteProductDialog";
+import ProductsCardGrid from "@/components/ProductsCardGrid";
 import ProductsTable, { type ProductRow } from "@/components/ProductsTable";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,15 +24,44 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PRODUCTS_PAGE_SIZE } from "@es-market/core";
 
 type ReclassifyBatch = { total: number; since: string };
+
+// The card grid has no clickable column headers to sort by (unlike the
+// table), so it gets an explicit Select instead — offering the same
+// sortable columns the table headers already expose (name/category/price/
+// stock), nothing more.
+const CARD_SORT_OPTIONS = [
+  { id: "name", desc: false, label: "Name (A–Z)" },
+  { id: "name", desc: true, label: "Name (Z–A)" },
+  { id: "category", desc: false, label: "Category (A–Z)" },
+  { id: "category", desc: true, label: "Category (Z–A)" },
+  { id: "price", desc: false, label: "Price (low to high)" },
+  { id: "price", desc: true, label: "Price (high to low)" },
+  { id: "stock", desc: false, label: "Stock (low to high)" },
+  { id: "stock", desc: true, label: "Stock (high to low)" },
+] as const;
+
+function cardSortValue(sort: { id: string; desc: boolean }) {
+  const match = CARD_SORT_OPTIONS.find((o) => o.id === sort.id && o.desc === sort.desc);
+  return match ? `${match.id}-${match.desc}` : undefined;
+}
 
 export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [editingProduct, setEditingProduct] = useState<ProductRow | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductRow | null>(null);
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
+  const [view, setView] = useState<"table" | "card">("table");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -119,13 +149,53 @@ export default function ProductsPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <Input
-          placeholder="Search by name, category, or tag…"
-          aria-label="Search products"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="mb-4 sm:max-w-xs"
-        />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <Input
+            placeholder="Search by name, category, or tag…"
+            aria-label="Search products"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="sm:max-w-xs"
+          />
+          <div className="flex items-center gap-2">
+            {view === "card" && (
+              <Select
+                value={cardSortValue(sort)}
+                onValueChange={(value) => {
+                  if (!value) return;
+                  const [id, desc] = value.split("-");
+                  setSorting([{ id: id!, desc: desc === "true" }]);
+                }}
+              >
+                <SelectTrigger aria-label="Sort by" className="w-44">
+                  <SelectValue placeholder="Sort by…">
+                    {(value: string) =>
+                      CARD_SORT_OPTIONS.find((o) => `${o.id}-${o.desc}` === value)?.label ??
+                      "Sort by…"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {CARD_SORT_OPTIONS.map((option) => (
+                    <SelectItem key={`${option.id}-${option.desc}`} value={`${option.id}-${option.desc}`}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Tabs value={view} onValueChange={(value) => setView(value as "table" | "card")}>
+              <TabsList>
+                <TabsTrigger value="table" aria-label="Table view">
+                  <List />
+                </TabsTrigger>
+                <TabsTrigger value="card" aria-label="Card view">
+                  <LayoutGrid />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
         {batch && (
           <p className="mb-4 text-sm text-muted-foreground">
             Reclassifying products… {reclassifyStatus?.completed ?? 0}/{batch.total}
@@ -145,13 +215,21 @@ export default function ProductsPage() {
           </p>
         ) : (
           <>
-            <ProductsTable
-              products={products}
-              sorting={sorting}
-              onSortingChange={setSorting}
-              onEdit={setEditingProduct}
-              onDelete={setDeletingProduct}
-            />
+            {view === "table" ? (
+              <ProductsTable
+                products={products}
+                sorting={sorting}
+                onSortingChange={setSorting}
+                onEdit={setEditingProduct}
+                onDelete={setDeletingProduct}
+              />
+            ) : (
+              <ProductsCardGrid
+                products={products}
+                onEdit={setEditingProduct}
+                onDelete={setDeletingProduct}
+              />
+            )}
             <Pagination className="mt-4">
               <PaginationContent>
                 <PaginationItem>
