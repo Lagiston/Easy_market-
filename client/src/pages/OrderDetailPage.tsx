@@ -159,7 +159,7 @@ export default function OrderDetailPage() {
               <DetailRow label="Updated" value={new Date(order.updatedAt).toLocaleString()} />
             </dl>
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold">Items</h2>
+              <h3 className="text-sm font-semibold">Items</h3>
               <Table>
                 <TableHeader>
                   <TableRow>

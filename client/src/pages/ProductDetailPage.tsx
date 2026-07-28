@@ -100,11 +100,11 @@ export default function ProductDetailPage() {
               <DetailRow label="Updated" value={new Date(product.updatedAt).toLocaleString()} />
             </dl>
             <div className="space-y-3">
-              <h2 className="text-sm font-semibold">Translations</h2>
+              <h3 className="text-sm font-semibold">Translations</h3>
               {LANGUAGES.filter((lang) => product.name[lang] || product.description?.[lang]).map(
                 (lang) => (
                   <div key={lang} className="space-y-1">
-                    <h3 className="text-sm text-muted-foreground">{LANGUAGE_LABELS[lang]}</h3>
+                    <h4 className="text-sm text-muted-foreground">{LANGUAGE_LABELS[lang]}</h4>
                     {product.name[lang] && (
                       <p className="text-sm font-medium">{product.name[lang]}</p>
                     )}
