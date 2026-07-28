@@ -24,10 +24,10 @@ promoBlocksRouter.post("/promo-blocks", requireAuth, requireRole(Role.ADMIN), as
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { headline, copy, ctaLabel, ctaUrl, isActive, sortOrder } = parsed.data;
+  const { headline, copy, ctaLabel, ctaUrl, isActive, startsAt, endsAt, sortOrder } = parsed.data;
 
   const promoBlock = await prisma.promoBlock.create({
-    data: { id: randomUUID(), headline, copy, ctaLabel, ctaUrl, isActive, sortOrder },
+    data: { id: randomUUID(), headline, copy, ctaLabel, ctaUrl, isActive, startsAt, endsAt, sortOrder },
   });
   res.status(201).json({ promoBlock });
 });
@@ -42,7 +42,7 @@ promoBlocksRouter.put<{ id: string }>(
       res.status(400).json({ error: parsed.error.issues[0]!.message });
       return;
     }
-    const { headline, copy, ctaLabel, ctaUrl, isActive, sortOrder } = parsed.data;
+    const { headline, copy, ctaLabel, ctaUrl, isActive, startsAt, endsAt, sortOrder } = parsed.data;
     const promoBlockId = req.params.id;
 
     const target = await prisma.promoBlock.findUnique({ where: { id: promoBlockId } });
@@ -62,6 +62,8 @@ promoBlocksRouter.put<{ id: string }>(
         ctaLabel: ctaLabel ?? null,
         ctaUrl: ctaUrl ?? null,
         isActive,
+        startsAt: startsAt ?? null,
+        endsAt: endsAt ?? null,
         sortOrder,
       },
     });

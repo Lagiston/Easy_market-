@@ -17,6 +17,12 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PromoBlockRow } from "@/components/PromoBlocksTable";
 
+// Native <input type="date"> wants "YYYY-MM-DD"; the API gives back an ISO
+// timestamp string (or null for unbounded).
+function toDateInputValue(iso: string | null): string {
+  return iso ? iso.slice(0, 10) : "";
+}
+
 export default function PromoBlockForm({
   promoBlock,
   onSuccess,
@@ -40,6 +46,8 @@ export default function PromoBlockForm({
           ctaLabel: promoBlock.ctaLabel ?? "",
           ctaUrl: promoBlock.ctaUrl ?? "",
           isActive: promoBlock.isActive,
+          startsAt: toDateInputValue(promoBlock.startsAt),
+          endsAt: toDateInputValue(promoBlock.endsAt),
           sortOrder: promoBlock.sortOrder,
         }
       : {
@@ -48,6 +56,8 @@ export default function PromoBlockForm({
           ctaLabel: "",
           ctaUrl: "",
           isActive: true,
+          startsAt: "",
+          endsAt: "",
           sortOrder: 0,
         },
   });
@@ -176,6 +186,32 @@ export default function PromoBlockForm({
             {...register("ctaUrl")}
           />
           {errors.ctaUrl && <p className="text-sm text-destructive">{errors.ctaUrl.message}</p>}
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <Label htmlFor="promo-block-form-starts-at">Start date</Label>
+          <Input
+            id="promo-block-form-starts-at"
+            type="date"
+            aria-invalid={!!errors.startsAt}
+            {...register("startsAt")}
+          />
+          <p className="text-sm text-muted-foreground">Leave blank to show right away.</p>
+          {errors.startsAt && (
+            <p className="text-sm text-destructive">{errors.startsAt.message}</p>
+          )}
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="promo-block-form-ends-at">End date</Label>
+          <Input
+            id="promo-block-form-ends-at"
+            type="date"
+            aria-invalid={!!errors.endsAt}
+            {...register("endsAt")}
+          />
+          <p className="text-sm text-muted-foreground">Leave blank to never expire.</p>
+          {errors.endsAt && <p className="text-sm text-destructive">{errors.endsAt.message}</p>}
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

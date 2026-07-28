@@ -381,8 +381,18 @@ storefrontRouter.get("/storefront/tags", async (_req, res) => {
 // distinct from deletedAt, but both are excluded here since neither should
 // reach a customer.
 storefrontRouter.get("/storefront/promo-blocks", async (_req, res) => {
+  const now = new Date();
   const promoBlocks = await prisma.promoBlock.findMany({
-    where: { deletedAt: null, isActive: true },
+    where: {
+      deletedAt: null,
+      isActive: true,
+      // A third, independent visibility gate on top of isActive — unset
+      // startsAt/endsAt mean "no bound on that side", not "never/always show".
+      AND: [
+        { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+        { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+      ],
+    },
     select: { id: true, headline: true, copy: true, ctaLabel: true, ctaUrl: true },
     orderBy: { sortOrder: "asc" },
   });

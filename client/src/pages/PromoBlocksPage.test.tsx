@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
@@ -16,6 +16,8 @@ const promoBlocks = [
     ctaLabel: "Shop now",
     ctaUrl: "/products?tag=sale",
     isActive: true,
+    startsAt: "2026-08-01T00:00:00.000Z",
+    endsAt: "2026-08-05T23:59:59.999Z",
     sortOrder: 0,
   },
   {
@@ -25,6 +27,8 @@ const promoBlocks = [
     ctaLabel: null,
     ctaUrl: null,
     isActive: false,
+    startsAt: null,
+    endsAt: null,
     sortOrder: 1,
   },
 ];
@@ -59,6 +63,7 @@ describe("PromoBlocksPage", () => {
     expect(screen.getByText("New arrivals")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(screen.getByText(/2026.*–.*2026/)).toBeInTheDocument();
     expect(await screen.findByText("2 blocks")).toBeInTheDocument();
   });
 
@@ -112,6 +117,77 @@ describe("PromoBlocksPage", () => {
       ),
     );
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
+  });
+
+  it("creates a promo block with a start and end date", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { promoBlocks: [] } });
+    mockedAxios.post.mockResolvedValue({
+      data: { promoBlock: { ...promoBlocks[0], id: "p3", headline: { en: "Scheduled Promo" } } },
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Storefront homepage promotions");
+
+    await user.click(screen.getByRole("button", { name: "Create promo block" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Headline"), "Scheduled Promo");
+    // jsdom doesn't support simulating keyboard segment entry into a native
+    // date input, so set the value directly (same fireEvent.change escape
+    // hatch this repo already uses for inputs userEvent can't drive reliably).
+    fireEvent.change(within(dialog).getByLabelText("Start date"), {
+      target: { value: "2026-08-01" },
+    });
+    fireEvent.change(within(dialog).getByLabelText("End date"), {
+      target: { value: "2026-08-05" },
+    });
+    await user.click(within(dialog).getByRole("button", { name: "Create promo block" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        "/api/promo-blocks",
+        expect.objectContaining({
+          startsAt: new Date("2026-08-01T00:00:00.000Z"),
+          // Inclusive of the whole end day, per promoBlockSchema's transform.
+          endsAt: new Date("2026-08-05T23:59:59.999Z"),
+        }),
+      ),
+    );
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+  });
+
+  it("rejects an end date before the start date", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { promoBlocks: [] } });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Storefront homepage promotions");
+
+    await user.click(screen.getByRole("button", { name: "Create promo block" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Headline"), "Backwards Promo");
+    fireEvent.change(within(dialog).getByLabelText("Start date"), {
+      target: { value: "2026-08-05" },
+    });
+    fireEvent.change(within(dialog).getByLabelText("End date"), {
+      target: { value: "2026-08-01" },
+    });
+    await user.click(within(dialog).getByRole("button", { name: "Create promo block" }));
+
+    expect(
+      await screen.findByText("End date must be on or after the start date"),
+    ).toBeInTheDocument();
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
+  it("pre-fills the start and end date when editing a scheduled promo block", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { promoBlocks } });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Summer Sale");
+
+    await user.click(screen.getByRole("button", { name: "Edit Summer Sale" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByLabelText("Start date")).toHaveValue("2026-08-01");
+    expect(within(dialog).getByLabelText("End date")).toHaveValue("2026-08-05");
   });
 
   it("rejects a CTA label with no CTA link", async () => {
