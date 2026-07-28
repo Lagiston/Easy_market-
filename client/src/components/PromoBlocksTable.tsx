@@ -26,6 +26,38 @@ export type PromoBlockRow = {
   sortOrder: number;
 };
 
+export type EffectivePromoBlockStatus = "inactive" | "scheduled" | "expired" | "live";
+
+const STATUS_LABEL: Record<EffectivePromoBlockStatus, string> = {
+  inactive: "Inactive",
+  scheduled: "Scheduled",
+  expired: "Expired",
+  live: "Live",
+};
+
+const STATUS_VARIANT: Record<EffectivePromoBlockStatus, "default" | "secondary" | "outline"> = {
+  inactive: "outline",
+  scheduled: "secondary",
+  expired: "outline",
+  live: "default",
+};
+
+// The isActive toggle alone doesn't tell staff whether a block is actually
+// showing on the storefront right now — it can be active but not yet started
+// or already past its end date. This combines both gates into the single
+// status a viewer of the table actually wants to know, at the cost of the
+// column no longer being a 1:1 reflection of the raw isActive field (still
+// editable as-is via the form).
+export function getEffectiveStatus(
+  promoBlock: Pick<PromoBlockRow, "isActive" | "startsAt" | "endsAt">,
+  now: Date = new Date(),
+): EffectivePromoBlockStatus {
+  if (!promoBlock.isActive) return "inactive";
+  if (promoBlock.startsAt && new Date(promoBlock.startsAt) > now) return "scheduled";
+  if (promoBlock.endsAt && new Date(promoBlock.endsAt) < now) return "expired";
+  return "live";
+}
+
 function formatSchedule(promoBlock: Pick<PromoBlockRow, "startsAt" | "endsAt">) {
   const { startsAt, endsAt } = promoBlock;
   if (!startsAt && !endsAt) return "—";
@@ -98,9 +130,12 @@ export default function PromoBlocksTable({
                   {promoBlock.ctaLabel ?? "—"}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={promoBlock.isActive ? "secondary" : "outline"}>
-                    {promoBlock.isActive ? "Active" : "Inactive"}
-                  </Badge>
+                  {(() => {
+                    const status = getEffectiveStatus(promoBlock);
+                    return (
+                      <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatSchedule(promoBlock)}

@@ -54,17 +54,65 @@ describe("PromoBlocksPage", () => {
     expect(screen.queryByText("Summer Sale")).not.toBeInTheDocument();
   });
 
-  it("renders promo blocks once loaded, with active/inactive status", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { promoBlocks } });
+  it("renders promo blocks once loaded, with effective live/inactive status", async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        // p1 unscheduled here (rather than the module fixture's fixed Aug
+        // 1-5 window) so this assertion is Live regardless of the real
+        // current date the test happens to run on.
+        promoBlocks: [{ ...promoBlocks[0], startsAt: null, endsAt: null }, promoBlocks[1]],
+      },
+    });
     renderPage();
 
     expect(await screen.findByText("Summer Sale")).toBeInTheDocument();
     expect(screen.getByText("Shop now")).toBeInTheDocument();
     expect(screen.getByText("New arrivals")).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    // p1: isActive, no schedule set → Live regardless of the current date.
+    expect(screen.getByText("Live")).toBeInTheDocument();
+    // p2: isActive false, no schedule → Inactive regardless of date.
     expect(screen.getByText("Inactive")).toBeInTheDocument();
-    expect(screen.getByText(/2026.*–.*2026/)).toBeInTheDocument();
     expect(await screen.findByText("2 blocks")).toBeInTheDocument();
+  });
+
+  it("shows the date range in the Schedule column for a scheduled promo block", async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        promoBlocks: [
+          { ...promoBlocks[0], startsAt: "2026-08-01T00:00:00.000Z", endsAt: "2026-08-05T23:59:59.999Z" },
+        ],
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Summer Sale")).toBeInTheDocument();
+    expect(screen.getByText(/2026.*–.*2026/)).toBeInTheDocument();
+  });
+
+  it("shows Scheduled for an active promo block whose start date hasn't arrived yet", async () => {
+    // A start date far enough in the future to never be "reached" during a
+    // real test run, so this doesn't depend on (or need to fake) the clock.
+    mockedAxios.get.mockResolvedValue({
+      data: { promoBlocks: [{ ...promoBlocks[0], startsAt: "2099-01-01T00:00:00.000Z" }] },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Summer Sale")).toBeInTheDocument();
+    expect(screen.getByText("Scheduled")).toBeInTheDocument();
+  });
+
+  it("shows Expired for an active promo block whose end date has passed", async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        promoBlocks: [
+          { ...promoBlocks[0], startsAt: null, endsAt: "2000-01-01T00:00:00.000Z" },
+        ],
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Summer Sale")).toBeInTheDocument();
+    expect(screen.getByText("Expired")).toBeInTheDocument();
   });
 
   it("shows an error message when the request fails", async () => {
