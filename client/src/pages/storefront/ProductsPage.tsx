@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ImageOff, Search, X } from "lucide-react";
+import { ImageOff, Search, Star, X } from "lucide-react";
 import {
   STOREFRONT_PAGE_SIZE,
   STOREFRONT_PRODUCT_SORTS,
@@ -41,6 +41,9 @@ export type StorefrontProduct = {
   images: string[];
   tags: string[];
   category: { id: string; name: LocalizedName };
+  // null (not 0) when unreviewed — the card omits the rating line entirely.
+  averageRating: number | null;
+  reviewCount: number;
 };
 
 type StorefrontCategory = { id: string; name: LocalizedName };
@@ -295,6 +298,19 @@ export default function ProductsPage() {
                     <p className="text-sm text-muted-foreground">
                       {localize(product.category.name, language)}
                     </p>
+                    {product.averageRating !== null && (
+                      <p
+                        aria-label={`${t("reviews.averageLabel", {
+                          average: product.averageRating.toFixed(1),
+                        })} · ${t("reviews.count", { count: product.reviewCount })}`}
+                        className="flex items-center gap-1 text-sm text-muted-foreground"
+                      >
+                        <Star aria-hidden className="size-3.5 fill-primary text-primary" />
+                        <span aria-hidden>
+                          {product.averageRating.toFixed(1)} ({product.reviewCount})
+                        </span>
+                      </p>
+                    )}
                   </CardContent>
                 </Link>
                 <CardContent className="space-y-1 p-4 pt-1">

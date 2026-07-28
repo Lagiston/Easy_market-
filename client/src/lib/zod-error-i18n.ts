@@ -18,6 +18,10 @@ import {
   CUSTOMER_PASSWORD_ERROR,
   CUSTOMER_PASSWORD_MAX_ERROR,
   CUSTOMER_PASSWORD_REQUIRED_ERROR,
+  REVIEW_AUTHOR_NAME_ERROR,
+  REVIEW_AUTHOR_NAME_MAX_ERROR,
+  REVIEW_RATING_ERROR,
+  REVIEW_COMMENT_MAX_ERROR,
 } from "@es-market/core";
 
 // Maps the shared zod schemas' raw English validation messages (core/src/schemas/*)
@@ -46,6 +50,10 @@ const ZOD_MESSAGE_TO_I18N_KEY: Record<string, string> = Object.fromEntries([
   [CUSTOMER_PASSWORD_ERROR, "validation.password"],
   [CUSTOMER_PASSWORD_MAX_ERROR, "validation.passwordMax"],
   [CUSTOMER_PASSWORD_REQUIRED_ERROR, "validation.passwordRequired"],
+  [REVIEW_AUTHOR_NAME_ERROR, "validation.customerName"],
+  [REVIEW_AUTHOR_NAME_MAX_ERROR, "validation.nameMax"],
+  [REVIEW_RATING_ERROR, "validation.reviewRating"],
+  [REVIEW_COMMENT_MAX_ERROR, "validation.commentMax"],
 ]);
 
 // Falls back to the raw message when it isn't a known schema constant (e.g. a

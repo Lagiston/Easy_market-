@@ -20,6 +20,8 @@ const products: StorefrontProduct[] = [
     images: [],
     tags: ["organic"],
     category: { id: "c1", name: { en: "Groceries" } },
+    averageRating: 4.5,
+    reviewCount: 12,
   },
   {
     id: "p2",
@@ -30,6 +32,8 @@ const products: StorefrontProduct[] = [
     images: [],
     tags: [],
     category: { id: "c2", name: { en: "Beverages" } },
+    averageRating: null,
+    reviewCount: 0,
   },
 ];
 
@@ -92,6 +96,19 @@ describe("storefront ProductsPage", () => {
     // Only the zero-stock product gets the badge
     expect(screen.getAllByText("Out of stock")).toHaveLength(1);
     expect(lastProductsParams()).toEqual({ sort: "newest", page: 1 });
+  });
+
+  it("shows a rating summary only on cards with reviews", async () => {
+    mockApi();
+    renderPage();
+
+    // Rice has averageRating 4.5 / 12 reviews; Orange Juice is unreviewed and
+    // renders no rating line at all.
+    expect(await screen.findByText("4.5 (12)")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Average rating: 4.5 out of 5 · 12 reviews"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/Average rating/)).toHaveLength(1);
   });
 
   it("links each product card to its detail page", async () => {

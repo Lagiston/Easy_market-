@@ -1,11 +1,18 @@
+import { randomUUID } from "node:crypto";
 import { Router } from "express";
-import type { Prisma } from "../generated/prisma/client";
+import { fromNodeHeaders } from "better-auth/node";
+import { OrderStatus, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
+import { customerAuth } from "../lib/customer-auth";
 import {
   storefrontProductListQuerySchema,
+  createReviewSchema,
+  reviewListQuerySchema,
+  REVIEWS_PAGE_SIZE,
   STOREFRONT_PAGE_SIZE,
   LANGUAGES,
   type StorefrontProductSort,
+  type ReviewSort,
 } from "@es-market/core";
 
 // Public storefront endpoints — no auth; these serve the customer-facing catalog.
@@ -23,6 +30,37 @@ const publicProductSelect = {
   tags: true,
   category: { select: { id: true, name: true } },
 } as const;
+
+// Per-product review summary for product cards — one grouped aggregate scoped
+// to the ids on the current page, rather than denormalized counters on Product
+// (which would need bookkeeping on both review creation and admin deletion).
+// averageRating is null (not 0) for an unreviewed product, the usual
+// null-vs-zero convention.
+type RatingSummary = { averageRating: number | null; reviewCount: number };
+
+async function attachRatingSummaries<T extends { id: string }>(
+  products: T[],
+): Promise<(T & RatingSummary)[]> {
+  const summaries = new Map<string, RatingSummary>();
+  if (products.length > 0) {
+    const groups = await prisma.review.groupBy({
+      by: ["productId"],
+      where: { productId: { in: products.map((product) => product.id) } },
+      _avg: { rating: true },
+      _count: true,
+    });
+    for (const group of groups) {
+      summaries.set(group.productId, {
+        averageRating: group._avg.rating,
+        reviewCount: group._count,
+      });
+    }
+  }
+  return products.map((product) => ({
+    ...product,
+    ...(summaries.get(product.id) ?? { averageRating: null, reviewCount: 0 }),
+  }));
+}
 
 const SORT_ORDER_BY: Record<StorefrontProductSort, Prisma.ProductOrderByWithRelationInput[]> = {
   newest: [{ createdAt: "desc" }],
@@ -101,7 +139,12 @@ storefrontRouter.get("/storefront/products", async (req, res) => {
     prisma.product.count({ where }),
   ]);
 
-  res.json({ products, total, page, pageSize: STOREFRONT_PAGE_SIZE });
+  res.json({
+    products: await attachRatingSummaries(products),
+    total,
+    page,
+    pageSize: STOREFRONT_PAGE_SIZE,
+  });
 });
 
 storefrontRouter.get<{ id: string }>("/storefront/products/:id", async (req, res) => {
@@ -124,7 +167,162 @@ storefrontRouter.get<{ id: string }>("/storefront/products/:id", async (req, res
         orderBy: { createdAt: "asc" },
       })
     : [];
-  res.json({ product: publicProduct, relatedProducts });
+  // One combined summary lookup so the main product and its siblings share the
+  // same shape (and query) — split back apart by position below.
+  const [withSummary, ...relatedWithSummaries] = await attachRatingSummaries([
+    publicProduct,
+    ...relatedProducts,
+  ]);
+  res.json({ product: withSummary, relatedProducts: relatedWithSummaries });
+});
+
+// Customer-facing review fields only — customerId stays private (it's an
+// account identifier, not display content). Exported for reuse by the
+// customer self-service edit/delete routes in customer.ts, which return the
+// same shape.
+export const publicReviewSelect = {
+  id: true,
+  authorName: true,
+  rating: true,
+  comment: true,
+  verifiedPurchase: true,
+  staffReply: true,
+  staffReplyAt: true,
+  createdAt: true,
+} as const;
+
+// "verified" isn't a value here — verifiedOnly is a separate filter (see the
+// route below) that combines with any of these three orderings.
+const REVIEW_ORDER_BY: Record<ReviewSort, Prisma.ReviewOrderByWithRelationInput[]> = {
+  newest: [{ createdAt: "desc" }],
+  highest: [{ rating: "desc" }, { createdAt: "desc" }],
+  lowest: [{ rating: "asc" }, { createdAt: "desc" }],
+};
+
+storefrontRouter.get<{ id: string }>("/storefront/products/:id/reviews", async (req, res) => {
+  const parsed = reviewListQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]!.message });
+    return;
+  }
+  const { page, sort, verifiedOnly } = parsed.data;
+  const product = await prisma.product.findFirst({
+    where: { id: req.params.id, deletedAt: null },
+    select: { id: true },
+  });
+  if (!product) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+
+  // Only used to compute isOwnReview below (so the client can show edit/delete
+  // controls) — the raw customerId itself is never sent, same privacy stance
+  // as publicReviewSelect already takes.
+  const customerSession = await customerAuth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+
+  // total/averageRating/ratingCounts always describe *every* review for the
+  // product (unaffected by sort/verifiedOnly) — like a product listing's "4.5
+  // stars, 120 ratings" staying fixed regardless of which filtered view of
+  // the reviews you're looking at. matchingTotal is the separate, filtered
+  // count that actually drives this view's "show more" pagination.
+  const where = { productId: product.id };
+  const matchingWhere = { ...where, ...(verifiedOnly ? { verifiedPurchase: true } : {}) };
+  const [reviews, matchingTotal, aggregate, ratingGroups] = await Promise.all([
+    prisma.review.findMany({
+      where: matchingWhere,
+      select: { ...publicReviewSelect, customerId: true },
+      orderBy: REVIEW_ORDER_BY[sort],
+      skip: (page - 1) * REVIEWS_PAGE_SIZE,
+      take: REVIEWS_PAGE_SIZE,
+    }),
+    prisma.review.count({ where: matchingWhere }),
+    prisma.review.aggregate({ where, _avg: { rating: true }, _count: true }),
+    prisma.review.groupBy({ by: ["rating"], where, _count: true }),
+  ]);
+  // Zero-filled so the client's distribution bars can render all five rows
+  // without guarding against missing keys.
+  const ratingCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const group of ratingGroups) {
+    ratingCounts[group.rating] = group._count;
+  }
+  res.json({
+    reviews: reviews.map(({ customerId, ...review }) => ({
+      ...review,
+      isOwnReview: customerId !== null && customerId === customerSession?.user.id,
+    })),
+    matchingTotal,
+    total: aggregate._count,
+    averageRating: aggregate._avg.rating,
+    ratingCounts,
+    page,
+    pageSize: REVIEWS_PAGE_SIZE,
+  });
+});
+
+storefrontRouter.post<{ id: string }>("/storefront/products/:id/reviews", async (req, res) => {
+  const parsed = createReviewSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]!.message });
+    return;
+  }
+  const product = await prisma.product.findFirst({
+    where: { id: req.params.id, deletedAt: null },
+    select: { id: true },
+  });
+  if (!product) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+
+  // Soft/optional auth: reviews stay guest-submittable either way — if a valid
+  // customer session cookie happens to be present, the review is linked to
+  // that account, but nothing here requires or blocks on it (same pattern as
+  // POST /storefront/orders).
+  const customerSession = await customerAuth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+  const customerId = customerSession?.user.id ?? null;
+
+  // Point-in-time snapshot (like OrderItem's price/name): verified when the
+  // signed-in customer has any non-cancelled order containing this product.
+  // Guests are never verified — there's no identity to check purchases against.
+  const verifiedPurchase =
+    customerId !== null &&
+    (await prisma.order.findFirst({
+      where: {
+        customerId,
+        status: { not: OrderStatus.CANCELLED },
+        items: { some: { productId: product.id } },
+      },
+      select: { id: true },
+    })) !== null;
+
+  const { authorName, rating, comment } = parsed.data;
+  try {
+    const review = await prisma.review.create({
+      data: {
+        id: randomUUID(),
+        productId: product.id,
+        customerId,
+        authorName,
+        rating,
+        comment: comment ?? null,
+        verifiedPurchase,
+      },
+      select: publicReviewSelect,
+    });
+    res.status(201).json({ review });
+  } catch (err) {
+    // The (customerId, productId) unique index — one review per product per
+    // signed-in customer; race-safe where a pre-check findFirst wouldn't be.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      res.status(409).json({ error: "You have already reviewed this product" });
+      return;
+    }
+    throw err;
+  }
 });
 
 storefrontRouter.get("/storefront/categories", async (_req, res) => {

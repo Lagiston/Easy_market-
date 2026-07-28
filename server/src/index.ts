@@ -15,6 +15,7 @@ import {
   inquiryLimiter,
   inquiryPollLimiter,
   orderLimiter,
+  reviewLimiter,
 } from "./middleware/rate-limit";
 import { usersRouter } from "./routes/users";
 import { productsRouter } from "./routes/products";
@@ -26,6 +27,7 @@ import { inquiriesRouter } from "./routes/inquiries";
 import { settingsRouter } from "./routes/settings";
 import { dashboardRouter } from "./routes/dashboard";
 import { kbArticlesRouter } from "./routes/kb-articles";
+import { reviewsRouter } from "./routes/reviews";
 import { aiRouter } from "./routes/ai";
 import { startQueue } from "./lib/queue";
 import { registerProductClassificationWorker } from "./lib/product-classification-job";
@@ -60,6 +62,7 @@ if (process.env.NODE_ENV === "production") {
   app.post("/api/storefront/inquiries", inquiryLimiter);
   app.post("/api/storefront/inquiries/:id/messages", inquiryLimiter);
   app.get("/api/storefront/inquiries/:id", inquiryPollLimiter);
+  app.post("/api/storefront/products/:id/reviews", reviewLimiter);
   app.use("/api/ai", aiLimiter);
   app.use("/api", apiLimiter);
 }
@@ -90,6 +93,7 @@ app.use("/api", inquiriesRouter);
 app.use("/api", settingsRouter);
 app.use("/api", dashboardRouter);
 app.use("/api", kbArticlesRouter);
+app.use("/api", reviewsRouter);
 app.use("/api", aiRouter);
 
 Sentry.setupExpressErrorHandler(app);

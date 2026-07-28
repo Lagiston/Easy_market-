@@ -2,12 +2,13 @@ import { useState, type ReactNode } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { TriangleAlert } from "lucide-react";
+import { Star, TriangleAlert } from "lucide-react";
 import { CALL_ATTEMPTS_BEFORE_CANCEL, InquiryStatus, OrderStatus, Role } from "@es-market/core";
 import { authClient } from "@/lib/auth-client";
 import type { OrderRow } from "@/components/OrdersTable";
 import type { InquiryRow } from "@/components/InquiriesTable";
 import { getStockStatus, type ProductRow } from "@/components/ProductsTable";
+import type { ReviewRow } from "@/components/ReviewsTable";
 import SoldOutChart, { type SoldOutPoint } from "@/components/SoldOutChart";
 import SoldOutProductsDialog from "./SoldOutProductsDialog";
 import OrderStatusBadge from "@/components/OrderStatusBadge";
@@ -37,6 +38,9 @@ type DashboardStats = {
 };
 
 const ATTENTION_LIMIT = 5;
+// 1-2 stars, no staff reply yet — "needs a reply", not "is unhappy" in
+// general (a low rating the store already responded to isn't in this list).
+const LOW_RATING_THRESHOLD = 2;
 
 function StatCard({
   label,
@@ -174,6 +178,13 @@ export default function HomePage() {
     enabled: isAdmin,
   });
 
+  const { data: reviews } = useQuery({
+    queryKey: ["reviews"],
+    queryFn: () =>
+      axios.get<{ reviews: ReviewRow[] }>("/api/reviews").then((res) => res.data.reviews),
+    enabled: isAdmin,
+  });
+
   const ordersAwaitingCall = receivedOrders
     ? [...receivedOrders]
         .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
@@ -188,6 +199,11 @@ export default function HomePage() {
   const myOpenInquiries = myInquiries ? myInquiries.slice(0, ATTENTION_LIMIT) : null;
   const lowStockProducts = products
     ? products.filter((product) => getStockStatus(product) === "low-stock").slice(0, ATTENTION_LIMIT)
+    : null;
+  // GET /reviews already orders newest-first, so no re-sort is needed here
+  // (unlike ordersAwaitingCall below, which flips the API's default order).
+  const unrepliedLowRatings = reviews
+    ? reviews.filter((review) => review.rating <= LOW_RATING_THRESHOLD && review.staffReply === null)
     : null;
 
   return (
@@ -220,6 +236,10 @@ export default function HomePage() {
             label="Tag suggestion acceptance"
             value={stats?.tagSuggestionAcceptanceRate}
             suffix="%"
+          />
+          <StatCard
+            label="Reviews needing a reply"
+            value={unrepliedLowRatings?.length}
           />
         </div>
       )}
@@ -344,6 +364,37 @@ export default function HomePage() {
                     <Badge variant="secondary">
                       {product.stock}/{product.lowStockThreshold}
                     </Badge>
+                  </Link>
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Low-rated reviews</CardTitle>
+              <CardDescription>1-2 star reviews with no store response yet.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AttentionList
+                items={unrepliedLowRatings?.slice(0, ATTENTION_LIMIT) ?? null}
+                emptyLabel="Nothing needs a reply."
+                renderItem={(review) => (
+                  <Link
+                    key={review.id}
+                    to="/admin/reviews"
+                    className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted"
+                  >
+                    <div>
+                      <p className="font-medium">{review.product.name.en}</p>
+                      <p className="text-xs text-muted-foreground">by {review.authorName}</p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">
+                      <Star aria-hidden className="size-3.5 fill-primary text-primary" />
+                      {review.rating}
+                    </span>
                   </Link>
                 )}
               />

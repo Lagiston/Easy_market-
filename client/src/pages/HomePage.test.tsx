@@ -59,6 +59,9 @@ function mockGet(overrides: Record<string, unknown> = {}) {
       if (url === "/api/products") {
         return Promise.resolve({ data: { products: overrides.products ?? [] } });
       }
+      if (url === "/api/reviews") {
+        return Promise.resolve({ data: { reviews: overrides.reviews ?? [] } });
+      }
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
     },
   );
@@ -215,6 +218,61 @@ describe("HomePage", () => {
     expect(screen.getByText("2/10")).toBeInTheDocument();
     expect(screen.queryByText("In Stock Item")).not.toBeInTheDocument();
     expect(screen.queryByText("Out Of Stock Item")).not.toBeInTheDocument();
+  });
+
+  it("shows low-rated reviews needing a reply for an admin, excluding already-replied ones", async () => {
+    mockedUseSession.mockReturnValue(adminSession());
+    mockGet({
+      reviews: [
+        {
+          id: "r1",
+          authorName: "Unhappy Customer",
+          rating: 1,
+          staffReply: null,
+          product: { id: "p1", name: { en: "Sour Milk" } },
+        },
+        {
+          id: "r2",
+          authorName: "Already Handled",
+          rating: 2,
+          staffReply: "Sorry about that!",
+          product: { id: "p2", name: { en: "Bad Bread" } },
+        },
+        {
+          id: "r3",
+          authorName: "Happy Customer",
+          rating: 5,
+          staffReply: null,
+          product: { id: "p3", name: { en: "Great Rice" } },
+        },
+      ],
+    });
+
+    renderWithQuery(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Sour Milk")).toBeInTheDocument();
+    expect(screen.getByText("by Unhappy Customer")).toBeInTheDocument();
+    expect(screen.queryByText("Bad Bread")).not.toBeInTheDocument();
+    expect(screen.queryByText("Great Rice")).not.toBeInTheDocument();
+    const statTile = screen.getByText("Reviews needing a reply").closest("[data-slot=card]")!;
+    expect(await within(statTile as HTMLElement).findByText("1")).toBeInTheDocument();
+  });
+
+  it("shows the empty state when no low-rated reviews need a reply", async () => {
+    mockedUseSession.mockReturnValue(adminSession());
+    mockGet();
+
+    renderWithQuery(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Nothing needs a reply.")).toBeInTheDocument();
   });
 
   it("hides the low-stock card for an agent", async () => {

@@ -101,6 +101,7 @@ model Customer {
   sessions      CustomerSession[]
   accounts      CustomerAccount[]
   orders        Order[]
+  reviews       Review[]
 
   @@unique([email])
   @@map("customer")
@@ -199,6 +200,7 @@ model Product {
   deletedAt         DateTime?
   orderItems        OrderItem[]
   concernedInquiries Inquiry[] @relation("InquiryConcernedProduct")
+  reviews           Review[]
 
   @@index([categoryId])
   @@index([assignedAgentId])
@@ -399,6 +401,43 @@ model KbArticle {
 
   @@index([topic])
   @@map("kb_article")
+}
+
+// Customer product review, submitted from the storefront product detail page.
+// Guest-first like Order: authorName is a point-in-time free-text field, and
+// customerId is soft-attached (nullable) only when a customer-session cookie
+// happened to be present at submission — same optional-auth pattern as
+// Order.customerId. No deletedAt: reviews are never soft-deleted (there's no
+// moderation flow in v1 — add one if/when that exists).
+model Review {
+  id         String    @id
+  productId  String
+  product    Product   @relation(fields: [productId], references: [id])
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  authorName String
+  rating     Int
+  comment    String?
+  // Snapshot taken at creation (like OrderItem.productName): true when the
+  // soft-attached customer had a non-cancelled order containing this product
+  // at the time of review — not recomputed if orders change later.
+  verifiedPurchase Boolean @default(false)
+  // Public staff response to a review, shown on the storefront under the
+  // customer's own text. Plain text fields (no attribution FK, like
+  // KbArticle's lack of a createdBy) — this is a single visible reply, not a
+  // thread. staffReplyAt null means no reply yet; clearing a reply (retract)
+  // nulls both together.
+  staffReply   String?
+  staffReplyAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  // Postgres treats NULLs as distinct in unique indexes, so this blocks a
+  // signed-in customer from reviewing the same product twice while leaving
+  // guest reviews (customerId NULL) unlimited. Also serves customerId lookups
+  // (replaces the earlier plain @@index([customerId])).
+  @@unique([customerId, productId])
+  @@index([productId])
+  @@map("review")
 }
 
 // Singleton row (fixed id) of lightweight counters for the product

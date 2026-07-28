@@ -3,9 +3,10 @@ import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ImageOff, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ImageOff, ShoppingCart, Star } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
+import ProductReviews from "@/components/storefront/ProductReviews";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -102,6 +103,19 @@ export default function ProductDetailPage() {
               <p className="text-sm text-muted-foreground">
                 {localize(product.category.name, language)}
               </p>
+              {product.averageRating !== null && (
+                <p
+                  aria-label={`${t("reviews.averageLabel", {
+                    average: product.averageRating.toFixed(1),
+                  })} · ${t("reviews.count", { count: product.reviewCount })}`}
+                  className="flex items-center gap-1 text-sm text-muted-foreground"
+                >
+                  <Star aria-hidden className="size-3.5 fill-primary text-primary" />
+                  <span aria-hidden>
+                    {product.averageRating.toFixed(1)} ({product.reviewCount})
+                  </span>
+                </p>
+              )}
               {product.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-1">
                   {product.tags.map((tag) => (
@@ -176,13 +190,29 @@ export default function ProductDetailPage() {
                       <Badge variant="destructive">{t("products.outOfStock")}</Badge>
                     )}
                   </div>
-                  <p className="text-sm font-semibold">{related.price}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">{related.price}</p>
+                    {related.averageRating !== null && (
+                      <p
+                        aria-label={`${t("reviews.averageLabel", {
+                          average: related.averageRating.toFixed(1),
+                        })} · ${t("reviews.count", { count: related.reviewCount })}`}
+                        className="flex items-center gap-1 text-sm text-muted-foreground"
+                      >
+                        <Star aria-hidden className="size-3.5 fill-primary text-primary" />
+                        <span aria-hidden>
+                          {related.averageRating.toFixed(1)} ({related.reviewCount})
+                        </span>
+                      </p>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}
           </div>
         </div>
       )}
+      {!isPending && !notFound && !error && <ProductReviews productId={product.id} />}
     </div>
   );
 }

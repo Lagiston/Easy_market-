@@ -27,6 +27,8 @@ const product: StorefrontProduct = {
   images: [],
   tags: [],
   category: { id: "c1", name: { en: "Groceries" } },
+  averageRating: null,
+  reviewCount: 0,
 };
 
 function renderPage() {
@@ -54,6 +56,16 @@ function axiosErrorWithStatus(status: number) {
 describe("storefront ProductDetailPage", () => {
   beforeEach(async () => {
     mockedGet.mockReset();
+    // Per-test mockResolvedValueOnce calls (the product fetch) are consumed
+    // before this fallback, which then serves the reviews query the embedded
+    // ProductReviews section fires after the product loads.
+    mockedGet.mockImplementation((url: string) =>
+      url.endsWith("/reviews")
+        ? Promise.resolve({
+            data: { reviews: [], total: 0, averageRating: null, page: 1, pageSize: 10 },
+          })
+        : Promise.reject(new Error(`Unexpected GET ${url}`)),
+    );
     window.localStorage.clear();
     await i18n.changeLanguage("en");
   });
@@ -69,6 +81,18 @@ describe("storefront ProductDetailPage", () => {
     expect(screen.getByText("Long grain rice")).toBeInTheDocument();
     // In stock → no out-of-stock badge
     expect(screen.queryByText("Out of stock")).not.toBeInTheDocument();
+  });
+
+  it("shows a rating summary under the title when the product has reviews", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: { product: { ...product, averageRating: 4.5, reviewCount: 12 } },
+    });
+    renderPage();
+
+    expect(await screen.findByText("4.5 (12)")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Average rating: 4.5 out of 5 · 12 reviews"),
+    ).toBeInTheDocument();
   });
 
   it("shows an out-of-stock badge when stock is zero", async () => {
@@ -180,6 +204,8 @@ describe("storefront ProductDetailPage", () => {
       images: [],
       tags: [],
       category: { id: "c1", name: { en: "Groceries" } },
+      averageRating: 3.5,
+      reviewCount: 2,
     };
     mockedGet.mockResolvedValueOnce({ data: { product, relatedProducts: [sibling] } });
     renderPage();
