@@ -2,17 +2,29 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import type { CartItem } from "@/lib/cart";
 import { renderWithQuery } from "@/test/render-with-query";
 import { CartProvider } from "@/lib/cart";
+import { Toaster } from "@/components/ui/sonner";
 import i18n from "@/i18n";
 import AccountWishlistPage from "./AccountWishlistPage";
 
+function CheckoutStateProbe() {
+  const location = useLocation();
+  const buyNowItem = (location.state as { buyNowItem?: CartItem } | null)?.buyNowItem;
+  return <div>Checkout page: {buyNowItem ? JSON.stringify(buyNowItem) : "no buy-now item"}</div>;
+}
+
 function renderPage() {
   renderWithQuery(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={["/account/wishlist"]}>
       <CartProvider>
-        <AccountWishlistPage />
+        <Routes>
+          <Route path="/account/wishlist" element={<AccountWishlistPage />} />
+          <Route path="/checkout" element={<CheckoutStateProbe />} />
+        </Routes>
+        <Toaster />
       </CartProvider>
     </MemoryRouter>,
   );
@@ -125,6 +137,24 @@ describe("AccountWishlistPage", () => {
     ]);
   });
 
+  it("shows a toast when adding a wishlisted product to the cart", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products } });
+    renderPage();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Add to cart" }));
+
+    expect(await screen.findByText("Rice 5kg added to cart")).toBeInTheDocument();
+  });
+
+  it("shows a toast when buying a wishlisted product now", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products } });
+    renderPage();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Buy now" }));
+
+    expect(await screen.findByText("Heading to checkout for Rice 5kg")).toBeInTheDocument();
+  });
+
   it("disables the add-to-cart button when the product is out of stock", async () => {
     mockedAxios.get.mockResolvedValue({
       data: { products: [{ ...products[0]!, stock: 0 }] },
@@ -132,6 +162,30 @@ describe("AccountWishlistPage", () => {
     renderPage();
 
     expect(await screen.findByRole("button", { name: "Add to cart" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Buy now" })).toBeDisabled();
+  });
+
+  it("navigates to checkout with a buy-now item, without touching the cart", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products } });
+    renderPage();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Buy now" }));
+
+    expect(
+      await screen.findByText(
+        `Checkout page: ${JSON.stringify({
+          productId: "p1",
+          name: { en: "Rice 5kg" },
+          price: 1500,
+          imageUrl: null,
+          stock: 20,
+          size: null,
+          color: null,
+          quantity: 1,
+        })}`,
+      ),
+    ).toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]")).toEqual([]);
   });
 
   it("shows an out-of-stock badge", async () => {

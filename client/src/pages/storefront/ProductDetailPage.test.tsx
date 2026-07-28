@@ -2,9 +2,11 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios, { AxiosError, AxiosHeaders } from "axios";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import type { CartItem } from "@/lib/cart";
 import i18n from "@/i18n";
 import { CartProvider } from "@/lib/cart";
+import { Toaster } from "@/components/ui/sonner";
 import { renderWithQuery } from "@/test/render-with-query";
 import ProductDetailPage from "./ProductDetailPage";
 import type { StorefrontProduct } from "./ProductsPage";
@@ -46,13 +48,21 @@ const product: StorefrontProduct = {
   wishlistCount: 0,
 };
 
+function CheckoutStateProbe() {
+  const location = useLocation();
+  const buyNowItem = (location.state as { buyNowItem?: CartItem } | null)?.buyNowItem;
+  return <div>Checkout page: {buyNowItem ? JSON.stringify(buyNowItem) : "no buy-now item"}</div>;
+}
+
 function renderPage() {
   renderWithQuery(
     <MemoryRouter initialEntries={["/products/p1"]}>
       <CartProvider>
         <Routes>
           <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/checkout" element={<CheckoutStateProbe />} />
         </Routes>
+        <Toaster />
       </CartProvider>
     </MemoryRouter>,
   );
@@ -223,6 +233,94 @@ describe("storefront ProductDetailPage", () => {
     renderPage();
 
     expect(await screen.findByRole("button", { name: /add to cart/i })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: /buy now/i })).toBeDisabled();
+    // No quantity stepper to interact with when there's nothing to add.
+    expect(screen.queryByLabelText(/increase quantity/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/decrease quantity/i)).not.toBeInTheDocument();
+  });
+
+  it("navigates to checkout with the chosen quantity as a buy-now item, without touching the cart", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    const increase = await screen.findByLabelText(/increase quantity/i);
+    await userEvent.click(increase);
+    await userEvent.click(screen.getByRole("button", { name: /buy now/i }));
+
+    expect(
+      await screen.findByText(
+        `Checkout page: ${JSON.stringify({
+          productId: "p1",
+          name: product.name,
+          price: 1500,
+          imageUrl: null,
+          stock: 20,
+          size: null,
+          color: null,
+          quantity: 2,
+        })}`,
+      ),
+    ).toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]")).toEqual([]);
+  });
+
+  it("adds the chosen quantity to the cart via the quantity stepper", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    const increase = await screen.findByLabelText(/increase quantity/i);
+    await userEvent.click(increase);
+    await userEvent.click(increase);
+    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+
+    const stored = JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]");
+    expect(stored).toEqual([
+      {
+        productId: "p1",
+        name: product.name,
+        price: 1500,
+        imageUrl: null,
+        stock: 20,
+        quantity: 3,
+        size: null,
+        color: null,
+      },
+    ]);
+  });
+
+  it("disables the increase button once quantity reaches available stock", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product: { ...product, stock: 2 } } });
+    renderPage();
+
+    const increase = await screen.findByLabelText(/increase quantity/i);
+    await userEvent.click(increase);
+
+    expect(increase).toBeDisabled();
+  });
+
+  it("disables the decrease button at a quantity of one", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    expect(await screen.findByLabelText(/decrease quantity/i)).toBeDisabled();
+  });
+
+  it("shows a toast when adding to cart", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    await userEvent.click(await screen.findByRole("button", { name: /add to cart/i }));
+
+    expect(await screen.findByText("Rice 5kg added to cart")).toBeInTheDocument();
+  });
+
+  it("shows a toast when buying now", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    renderPage();
+
+    await userEvent.click(await screen.findByRole("button", { name: /buy now/i }));
+
+    expect(await screen.findByText("Heading to checkout for Rice 5kg")).toBeInTheDocument();
   });
 
   it("shows an error message when the request fails", async () => {

@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Heart, ImageOff, ShoppingCart, Star } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowLeft, Heart, ImageOff, Minus, Plus, ShoppingCart, Star } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
 import ProductReviews from "@/components/storefront/ProductReviews";
@@ -18,8 +19,10 @@ export default function ProductDetailPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { addItem } = useCart();
   const [activeImage, setActiveImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
   // Merges relatedProducts onto the product object (rather than keeping the
   // envelope's two top-level fields separate) so `product` stays the direct
@@ -34,6 +37,12 @@ export default function ProductDetailPage() {
         )
         .then((res) => ({ ...res.data.product, relatedProducts: res.data.relatedProducts ?? [] })),
   });
+
+  // Reset the chosen quantity whenever the viewed product changes — the
+  // component stays mounted when navigating between sibling variants via
+  // ProductVariantPicker, so `quantity` would otherwise carry over (and
+  // could exceed the new product's stock).
+  useEffect(() => setQuantity(1), [product?.id]);
 
   const notFound = isAxiosError(error) && error.response?.status === 404;
   // Whether to render the interactive size/color picker instead of the plain
@@ -156,22 +165,74 @@ export default function ProductDetailPage() {
               </p>
             )}
             <div className="flex items-center gap-2">
+              {product.stock > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    aria-label={t("cart.decrease", { name: localize(product.name, language) })}
+                    disabled={quantity <= 1}
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  >
+                    <Minus />
+                  </Button>
+                  <span className="w-8 text-center text-sm tabular-nums">{quantity}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    aria-label={t("cart.increase", { name: localize(product.name, language) })}
+                    disabled={quantity >= product.stock}
+                    onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                  >
+                    <Plus />
+                  </Button>
+                </div>
+              )}
               <Button
                 disabled={product.stock === 0}
-                onClick={() =>
-                  addItem({
-                    productId: product.id,
-                    name: product.name,
-                    price: product.price,
-                    imageUrl: product.images[0] ?? null,
-                    stock: product.stock,
-                    size: product.size,
-                    color: product.color,
-                  })
-                }
+                onClick={() => {
+                  addItem(
+                    {
+                      productId: product.id,
+                      name: product.name,
+                      price: product.price,
+                      imageUrl: product.images[0] ?? null,
+                      stock: product.stock,
+                      size: product.size,
+                      color: product.color,
+                    },
+                    quantity,
+                  );
+                  toast.success(t("cart.addedToast", { name: localize(product.name, language) }));
+                }}
               >
                 <ShoppingCart />
                 {t("cart.addToCart")}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={product.stock === 0}
+                onClick={() => {
+                  toast.success(t("cart.buyNowToast", { name: localize(product.name, language) }));
+                  navigate("/checkout", {
+                    state: {
+                      buyNowItem: {
+                        productId: product.id,
+                        name: product.name,
+                        price: product.price,
+                        imageUrl: product.images[0] ?? null,
+                        stock: product.stock,
+                        size: product.size,
+                        color: product.color,
+                        quantity,
+                      },
+                    },
+                  });
+                }}
+              >
+                {t("products.buyNow")}
               </Button>
               <WishlistButton productId={product.id} />
             </div>

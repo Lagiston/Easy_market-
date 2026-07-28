@@ -1,6 +1,7 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ImageOff, ShoppingCart, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { ImageOff, ShoppingCart, Trash2, Zap } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
@@ -14,6 +15,7 @@ export default function AccountWishlistPage() {
   const language = i18n.resolvedLanguage ?? "en";
   const { products, isPending, isError, removeMutation } = useWishlist();
   const { addItem } = useCart();
+  const navigate = useNavigate();
 
   const backInStockCount = products.filter((product) => product.backInStock).length;
   const priceDroppedCount = products.filter((product) => product.priceDropped).length;
@@ -111,7 +113,7 @@ export default function AccountWishlistPage() {
                     className="size-8"
                     disabled={product.stock === 0}
                     aria-label={t("cart.addToCart")}
-                    onClick={() =>
+                    onClick={() => {
                       addItem({
                         productId: product.id,
                         name: product.name,
@@ -120,10 +122,37 @@ export default function AccountWishlistPage() {
                         stock: product.stock,
                         size: product.size,
                         color: product.color,
-                      })
-                    }
+                      });
+                      toast.success(t("cart.addedToast", { name }));
+                    }}
                   >
                     <ShoppingCart />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    disabled={product.stock === 0}
+                    aria-label={t("products.buyNow")}
+                    onClick={() => {
+                      toast.success(t("cart.buyNowToast", { name }));
+                      navigate("/checkout", {
+                        state: {
+                          buyNowItem: {
+                            productId: product.id,
+                            name: product.name,
+                            price: product.price,
+                            imageUrl: product.images[0] ?? null,
+                            stock: product.stock,
+                            size: product.size,
+                            color: product.color,
+                            quantity: 1,
+                          },
+                        },
+                      });
+                    }}
+                  >
+                    <Zap />
                   </Button>
                   <Button
                     variant="ghost"

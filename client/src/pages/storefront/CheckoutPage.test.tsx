@@ -46,9 +46,11 @@ function mockSettings(deliveryFee = 200, freeDeliveryThreshold: number | null = 
   mockedGet.mockResolvedValue({ data: { settings: { deliveryFee, freeDeliveryThreshold } } });
 }
 
-function renderPage() {
+function renderPage(
+  initialEntries: (string | { pathname: string; state?: unknown })[] = ["/checkout"],
+) {
   renderWithQuery(
-    <MemoryRouter initialEntries={["/checkout"]}>
+    <MemoryRouter initialEntries={initialEntries}>
       <CartProvider>
         <Routes>
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -59,6 +61,15 @@ function renderPage() {
     </MemoryRouter>,
   );
 }
+
+const buyNowItem: CartItem = {
+  productId: "p3",
+  name: { en: "Cooking Oil 3L" },
+  price: 780,
+  imageUrl: null,
+  stock: 10,
+  quantity: 2,
+};
 
 async function fillCustomerFields() {
   await userEvent.type(screen.getByLabelText("Name"), "Jane Doe");
@@ -180,5 +191,35 @@ describe("storefront CheckoutPage", () => {
     await waitFor(() =>
       expect(JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]")).toHaveLength(2),
     );
+  });
+
+  it("checks out a buy-now item passed via location state, with an empty cart", async () => {
+    mockSettings(200);
+    renderPage([{ pathname: "/checkout", state: { buyNowItem } }]);
+
+    expect(await screen.findByText("Cooking Oil 3L × 2")).toBeInTheDocument();
+    expect(screen.getAllByText("1560").length).toBeGreaterThanOrEqual(2); // line total and subtotal, both 780 × 2
+    expect(screen.queryByText("Cart page")).not.toBeInTheDocument();
+  });
+
+  it("places a buy-now order without touching pre-existing cart items", async () => {
+    seedCart(); // unrelated items already in the cart
+    mockSettings(200);
+    mockedPost.mockResolvedValueOnce({
+      data: { order: { code: "BUYNOW1", items: [], subtotal: 1560, deliveryFee: 200, total: 1760 } },
+    });
+    renderPage([{ pathname: "/checkout", state: { buyNowItem } }]);
+
+    await fillCustomerFields();
+    await userEvent.type(await screen.findByLabelText("Address"), "12 Main Street");
+    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+
+    expect(await screen.findByText("Confirmation page")).toBeInTheDocument();
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/api/storefront/orders",
+      expect.objectContaining({ items: [{ productId: "p3", quantity: 2 }] }),
+    );
+    // The pre-existing cart (seeded via seedCart()) must survive untouched.
+    expect(JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]")).toEqual(cartItems);
   });
 });

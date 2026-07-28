@@ -1,5 +1,20 @@
 import '@testing-library/jest-dom/vitest'
 
+// jsdom has no matchMedia implementation — needed by the sonner Toaster
+// (used for toast notifications on add-to-cart/buy-now) for theme detection.
+if (!globalThis.matchMedia) {
+  globalThis.matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }) as unknown as MediaQueryList
+}
+
 // Node >=22 defines a global `localStorage` that is undefined unless the
 // --localstorage-file flag is set, shadowing jsdom's implementation when
 // vitest merges the jsdom window onto globalThis. Restore a working Storage.

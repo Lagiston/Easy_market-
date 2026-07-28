@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
@@ -14,7 +14,7 @@ import {
 } from "@es-market/core";
 import { localize } from "@/lib/localize";
 import { translateFieldError } from "@/lib/zod-error-i18n";
-import { useCart } from "@/lib/cart";
+import { useCart, type CartItem } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,14 @@ export default function CheckoutPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
   const navigate = useNavigate();
-  const { items, subtotal, clearCart } = useCart();
+  const location = useLocation();
+  // A "Buy now" purchase from the product detail page bypasses the persisted
+  // cart entirely (see ProductDetailPage.tsx) — it's never added to it, so it
+  // must neither pull in nor clear out whatever else is already in there.
+  const buyNowItem = (location.state as { buyNowItem?: CartItem } | null)?.buyNowItem;
+  const { items: cartItems, subtotal: cartSubtotal, clearCart } = useCart();
+  const items = buyNowItem ? [buyNowItem] : cartItems;
+  const subtotal = buyNowItem ? buyNowItem.price * buyNowItem.quantity : cartSubtotal;
 
   const {
     register,
@@ -83,7 +90,7 @@ export default function CheckoutPage() {
         })
         .then((res) => res.data.order),
     onSuccess: (order) => {
-      clearCart();
+      if (!buyNowItem) clearCart();
       navigate("/checkout/confirmation", { state: { order } });
     },
   });
