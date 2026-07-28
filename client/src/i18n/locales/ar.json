@@ -70,7 +70,14 @@
     "outOfStock": "غير متوفر",
     "noImage": "بدون صورة",
     "pagination": "صفحة {{page}} من {{totalPages}}",
-    "relatedTitle": "منتجات ذات صلة"
+    "relatedTitle": "منتجات ذات صلة",
+    "variants": {
+      "size": "المقاس",
+      "color": "اللون",
+      "chooseOptions": "اختر الخيارات",
+      "selectSize": "اختر المقاس {{size}}",
+      "selectColor": "اختر اللون {{color}}"
+    }
   },
   "reviews": {
     "title": "التقييمات",
@@ -222,6 +229,7 @@
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "myOrders": "طلباتي",
+    "myWishlist": "قائمة أمنياتي",
     "signOut": "تسجيل الخروج",
     "login": {
       "title": "تسجيل الدخول",
@@ -257,6 +265,17 @@
       "linkPhoneSuccess_other": "تم ربط {{count}} طلب بحسابك.",
       "linkPhoneNoMatch": "لم يتم العثور على طلبات غير مرتبطة بهذا الرقم.",
       "linkPhoneError": "تعذر ربط الطلبات. حاول مرة أخرى."
+    },
+    "wishlist": {
+      "title": "قائمة أمنياتي",
+      "empty": "لم تُضِف أي منتجات إلى قائمة أمنياتك بعد.",
+      "error": "تعذر تحميل قائمة أمنياتك. حاول مرة أخرى.",
+      "remove": "إزالة {{name}} من قائمة الأمنيات"
     }
+  },
+  "wishlist": {
+    "add": "أضف إلى قائمة الأمنيات",
+    "remove": "إزالة من قائمة الأمنيات",
+    "nav": "قائمة الأمنيات"
   }
 }

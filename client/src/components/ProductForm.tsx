@@ -83,6 +83,8 @@ export default function ProductForm({
           categoryId: product.category.id,
           assignedAgentId: product.assignedAgent?.id ?? "",
           tags: product.tags,
+          size: product.size ?? "",
+          color: product.color ?? "",
         }
       : {
           name: { en: "", ar: "" },
@@ -93,6 +95,8 @@ export default function ProductForm({
           categoryId: "",
           assignedAgentId: "",
           tags: [],
+          size: "",
+          color: "",
         },
   });
 
@@ -444,6 +448,28 @@ export default function ProductForm({
           }}
         />
         {errors.tags && <p className="text-sm text-destructive">{errors.tags.message}</p>}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-1.5">
+          <Label htmlFor="product-form-size">Size</Label>
+          <Input
+            id="product-form-size"
+            placeholder="e.g. M"
+            aria-invalid={!!errors.size}
+            {...register("size")}
+          />
+          {errors.size && <p className="text-sm text-destructive">{errors.size.message}</p>}
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="product-form-color">Color</Label>
+          <Input
+            id="product-form-color"
+            placeholder="e.g. Red"
+            aria-invalid={!!errors.color}
+            {...register("color")}
+          />
+          {errors.color && <p className="text-sm text-destructive">{errors.color.message}</p>}
+        </div>
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="product-form-assigned-agent">Assigned agent</Label>

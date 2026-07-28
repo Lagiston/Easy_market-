@@ -182,7 +182,10 @@ function EditReviewForm({
     },
   });
   const selectedRating = watch("rating");
-  const commentValue = watch("comment");
+  // z.preprocess makes the input-side type of `comment` unknown (same gotcha
+  // CLAUDE.md documents for …FormInput types generally) — watch()'s return
+  // follows suit, so it's cast back to what the field actually holds.
+  const commentValue = watch("comment") as string | undefined;
 
   const mutation = useMutation({
     mutationFn: (input: UpdateReviewFormInput) =>
@@ -306,7 +309,10 @@ export default function ProductReviews({ productId }: { productId: string }) {
     defaultValues: { authorName: "", rating: 0, comment: "" },
   });
   const selectedRating = watch("rating");
-  const commentValue = watch("comment");
+  // z.preprocess makes the input-side type of `comment` unknown (same gotcha
+  // CLAUDE.md documents for …FormInput types generally) — watch()'s return
+  // follows suit, so it's cast back to what the field actually holds.
+  const commentValue = watch("comment") as string | undefined;
 
   // Prefills once the session resolves — doesn't overwrite anything the
   // customer has already started typing (a stale-closure guard would need to

@@ -48,6 +48,8 @@ export type ProductRow = {
   lowStockThreshold: number;
   images: string[];
   tags: string[];
+  size: string | null;
+  color: string | null;
   category: { id: string; name: LocalizedName };
   assignedAgent: { id: string; name: string } | null;
   aiSuggestedCategoryId: string | null;

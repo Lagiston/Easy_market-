@@ -14,6 +14,8 @@ const redShirt = {
   price: 1500,
   images: ["/api/uploads/products/red.jpg"],
   stock: 10,
+  size: "M",
+  color: "Red",
 };
 
 function mockSelf(variants: unknown[] = []) {
@@ -39,6 +41,22 @@ describe("ProductVariantLinks", () => {
 
     expect(await screen.findByText("Shirt - Red")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove Shirt - Red" })).toBeInTheDocument();
+  });
+
+  it("shows a size/color caption on a linked variant when set", async () => {
+    mockSelf([redShirt]);
+    renderWithQuery(<ProductVariantLinks productId="1" />);
+
+    await screen.findByText("Shirt - Red");
+    expect(screen.getByText("M / Red")).toBeInTheDocument();
+  });
+
+  it("renders no caption when a linked variant has no size or color", async () => {
+    mockSelf([{ ...redShirt, size: null, color: null }]);
+    renderWithQuery(<ProductVariantLinks productId="1" />);
+
+    await screen.findByText("Shirt - Red");
+    expect(screen.queryByText("M / Red")).not.toBeInTheDocument();
   });
 
   it("shows no variant rows when there are none linked", async () => {

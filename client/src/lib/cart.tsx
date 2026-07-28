@@ -17,6 +17,11 @@ export type CartItem = {
   imageUrl: string | null;
   stock: number;
   quantity: number;
+  // Optional (not required-but-nullable like the server's StorefrontProduct
+  // type) since loadCart's runtime guard below reads arbitrary pre-existing
+  // localStorage JSON that predates these fields.
+  size?: string | null;
+  color?: string | null;
 };
 
 type CartContextValue = {

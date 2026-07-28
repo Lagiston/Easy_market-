@@ -36,6 +36,8 @@ const variantSummarySelect = {
   price: true,
   images: true,
   stock: true,
+  size: true,
+  color: true,
 } as const;
 
 // Sibling products sharing this product's variant group (e.g. other colors
@@ -200,7 +202,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId, tags } =
+  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId, tags, size, color } =
     parsed.data;
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
@@ -228,6 +230,8 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
       categoryId,
       assignedAgentId: assignedAgentId ?? null,
       tags,
+      size: size ?? null,
+      color: color ?? null,
     },
     include: productInclude,
   });
@@ -298,7 +302,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId, tags } =
+  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId, tags, size, color } =
     parsed.data;
   const productId = req.params.id;
 
@@ -333,6 +337,8 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
       categoryId,
       assignedAgentId: assignedAgentId ?? null,
       tags,
+      size: size ?? null,
+      color: color ?? null,
       // Any manual edit supersedes a stale pending bulk-reclassify suggestion.
       aiSuggestedCategoryId: null,
       aiSuggestedTags: [],

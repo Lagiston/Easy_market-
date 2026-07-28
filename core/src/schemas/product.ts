@@ -9,6 +9,7 @@ const THRESHOLD_ERROR = "Low stock threshold must be zero or a positive whole nu
 const CATEGORY_ERROR = "Category is required";
 const PAGE_ERROR = "Page must be a positive whole number";
 const TAG_ERROR = "Tags must be 50 characters or fewer";
+const VARIANT_LABEL_ERROR = "Must be 50 characters or fewer";
 
 // Lowercased so "Rice" and "rice" collapse to the same tag — otherwise the
 // storefront tag filter and admin tag list fragment over near-duplicates that
@@ -67,6 +68,18 @@ export const createProductSchema = z.object({
     .max(10)
     .default([])
     .transform((tags) => Array.from(new Set(tags))),
+  // Free-text variant-distinguishing labels (e.g. "M", "Red") — not a list
+  // like tags, since each product row is exactly one size/one color. Reuses
+  // the same empty-string-to-undefined preprocessing as assignedAgentId so a
+  // blank form field clears rather than storing "".
+  size: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().max(50, VARIANT_LABEL_ERROR).optional(),
+  ),
+  color: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().max(50, VARIANT_LABEL_ERROR).optional(),
+  ),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;

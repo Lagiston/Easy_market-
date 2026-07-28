@@ -19,8 +19,10 @@ import {
 // Mounted at /api in index.ts.
 export const storefrontRouter = Router();
 
-// Only catalog-facing fields: internal fields like lowStockThreshold stay private.
-const publicProductSelect = {
+// Only catalog-facing fields: internal fields like lowStockThreshold stay
+// private. Exported for reuse by the customer wishlist routes in
+// customer.ts, which return the same product shape.
+export const publicProductSelect = {
   id: true,
   name: true,
   description: true,
@@ -28,6 +30,8 @@ const publicProductSelect = {
   stock: true,
   images: true,
   tags: true,
+  size: true,
+  color: true,
   category: { select: { id: true, name: true } },
 } as const;
 

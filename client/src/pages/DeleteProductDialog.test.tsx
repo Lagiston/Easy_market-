@@ -18,6 +18,8 @@ const product: ProductRow = {
   lowStockThreshold: 10,
   images: [],
   tags: [],
+  size: null,
+  color: null,
   aiSuggestedCategoryId: null,
   aiSuggestedTags: [],
   aiSuggestedAt: null,

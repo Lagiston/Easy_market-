@@ -1,8 +1,9 @@
 import { Link, Outlet } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ShoppingCart, User } from "lucide-react";
+import { Heart, ShoppingCart, User } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { customerAuthClient } from "@/lib/customer-auth-client";
+import { useWishlist } from "@/lib/wishlist";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ChatWidget from "./ChatWidget";
 
@@ -10,6 +11,9 @@ export default function StorefrontLayout() {
   const { t } = useTranslation();
   const { totalQuantity } = useCart();
   const { data: session } = customerAuthClient.useSession();
+  // Safe pre-session — useWishlist's query is enabled: !!session, so this
+  // no-ops (empty products array) for a signed-out visitor.
+  const { products: wishlistProducts } = useWishlist();
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -56,6 +60,20 @@ export default function StorefrontLayout() {
               </span>
             )}
           </Link>
+          {session && (
+            <Link
+              to="/account/wishlist"
+              aria-label={t("wishlist.nav")}
+              className="relative text-muted-foreground hover:text-foreground"
+            >
+              <Heart className="size-5" />
+              {wishlistProducts.length > 0 && (
+                <span className="absolute -top-1.5 -end-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                  {wishlistProducts.length}
+                </span>
+              )}
+            </Link>
+          )}
           <Link
             to={session ? "/account" : "/account/login"}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"

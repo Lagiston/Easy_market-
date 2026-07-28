@@ -18,6 +18,18 @@ vi.mock("axios", async (importOriginal) => {
 });
 const mockedGet = vi.mocked(axios.get);
 
+// This page renders WishlistButton, which reads the customer session — kept
+// as a guest throughout so this file's existing (unauthenticated-scoped)
+// tests stay deterministic without needing wishlist add/remove mocks too.
+vi.mock("@/lib/customer-auth-client", () => ({
+  customerAuthClient: { useSession: vi.fn() },
+}));
+import { customerAuthClient } from "@/lib/customer-auth-client";
+vi.mocked(customerAuthClient.useSession).mockReturnValue({
+  data: null,
+  isPending: false,
+} as unknown as ReturnType<typeof customerAuthClient.useSession>);
+
 const product: StorefrontProduct = {
   id: "p1",
   name: { en: "Rice 5kg", ar: "أرز ٥ كجم" },
@@ -26,6 +38,8 @@ const product: StorefrontProduct = {
   stock: 20,
   images: [],
   tags: [],
+  size: null,
+  color: null,
   category: { id: "c1", name: { en: "Groceries" } },
   averageRating: null,
   reviewCount: 0,
@@ -138,8 +152,9 @@ describe("storefront ProductDetailPage", () => {
     renderPage();
 
     await screen.findByText("Rice 5kg");
-    // Only the "back to products" link should exist — no tag chips to render.
-    expect(screen.getAllByRole("link")).toHaveLength(1);
+    // Only "back to products" and the guest wishlist sign-in link should
+    // exist — no tag chips to render.
+    expect(screen.getAllByRole("link")).toHaveLength(2);
   });
 
   it("shows a not-found message when the product does not exist", async () => {
@@ -166,6 +181,8 @@ describe("storefront ProductDetailPage", () => {
         imageUrl: null,
         stock: 20,
         quantity: 2,
+        size: null,
+        color: null,
       },
     ]);
   });
@@ -203,6 +220,8 @@ describe("storefront ProductDetailPage", () => {
       stock: 0,
       images: [],
       tags: [],
+      size: null,
+      color: null,
       category: { id: "c1", name: { en: "Groceries" } },
       averageRating: 3.5,
       reviewCount: 2,

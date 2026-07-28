@@ -33,6 +33,12 @@ export default function AccountPage() {
           >
             {t("account.myOrders")}
           </Link>
+          <Link
+            to="/account/wishlist"
+            className={buttonVariants({ variant: "outline", className: "w-full" })}
+          >
+            {t("account.myWishlist")}
+          </Link>
           <Button variant="outline" className="w-full" onClick={handleSignOut}>
             {t("account.signOut")}
           </Button>

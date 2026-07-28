@@ -7,6 +7,8 @@ import { ArrowLeft, ImageOff, ShoppingCart, Star } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
 import ProductReviews from "@/components/storefront/ProductReviews";
+import ProductVariantPicker from "@/components/storefront/ProductVariantPicker";
+import WishlistButton from "@/components/storefront/WishlistButton";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +36,12 @@ export default function ProductDetailPage() {
   });
 
   const notFound = isAxiosError(error) && error.response?.status === 404;
+  // Whether to render the interactive size/color picker instead of the plain
+  // related-products grid — true only when at least one member of the group
+  // (this product or a sibling) actually has a size/color label set.
+  const hasVariantLabels = product
+    ? [product, ...product.relatedProducts].some((p) => p.size || p.color)
+    : false;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -141,25 +149,36 @@ export default function ProductDetailPage() {
                 {localize(product.description, language)}
               </p>
             )}
-            <Button
-              disabled={product.stock === 0}
-              onClick={() =>
-                addItem({
-                  productId: product.id,
-                  name: product.name,
-                  price: product.price,
-                  imageUrl: product.images[0] ?? null,
-                  stock: product.stock,
-                })
-              }
-            >
-              <ShoppingCart />
-              {t("cart.addToCart")}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={product.stock === 0}
+                onClick={() =>
+                  addItem({
+                    productId: product.id,
+                    name: product.name,
+                    price: product.price,
+                    imageUrl: product.images[0] ?? null,
+                    stock: product.stock,
+                    size: product.size,
+                    color: product.color,
+                  })
+                }
+              >
+                <ShoppingCart />
+                {t("cart.addToCart")}
+              </Button>
+              <WishlistButton productId={product.id} />
+            </div>
           </div>
         </div>
       )}
-      {!isPending && !notFound && !error && product.relatedProducts.length > 0 && (
+      {!isPending && !notFound && !error && product.relatedProducts.length > 0 && hasVariantLabels && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold">{t("products.variants.chooseOptions")}</h2>
+          <ProductVariantPicker product={product} relatedProducts={product.relatedProducts} />
+        </div>
+      )}
+      {!isPending && !notFound && !error && product.relatedProducts.length > 0 && !hasVariantLabels && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">{t("products.relatedTitle")}</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

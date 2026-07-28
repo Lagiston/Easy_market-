@@ -70,7 +70,14 @@
     "outOfStock": "Out of stock",
     "noImage": "No image",
     "pagination": "Page {{page}} of {{totalPages}}",
-    "relatedTitle": "Related products"
+    "relatedTitle": "Related products",
+    "variants": {
+      "size": "Size",
+      "color": "Color",
+      "chooseOptions": "Choose options",
+      "selectSize": "Select size {{size}}",
+      "selectColor": "Select color {{color}}"
+    }
   },
   "reviews": {
     "title": "Reviews",
@@ -214,6 +221,7 @@
     "email": "Email",
     "password": "Password",
     "myOrders": "My orders",
+    "myWishlist": "My wishlist",
     "signOut": "Sign out",
     "login": {
       "title": "Sign in",
@@ -245,6 +253,17 @@
       "linkPhoneSuccess_other": "Linked {{count}} orders to your account.",
       "linkPhoneNoMatch": "No unclaimed orders found for that phone number.",
       "linkPhoneError": "Could not link orders. Please try again."
+    },
+    "wishlist": {
+      "title": "My wishlist",
+      "empty": "You haven't wishlisted any products yet.",
+      "error": "Could not load your wishlist. Please try again.",
+      "remove": "Remove {{name}} from wishlist"
     }
+  },
+  "wishlist": {
+    "add": "Add to wishlist",
+    "remove": "Remove from wishlist",
+    "nav": "Wishlist"
   }
 }

@@ -40,6 +40,11 @@ export type StorefrontProduct = {
   stock: number;
   images: string[];
   tags: string[];
+  // Variant-distinguishing labels (e.g. "M", "Red") — null when not set.
+  // Drives whether ProductDetailPage shows a variant picker instead of the
+  // plain related-products grid.
+  size: string | null;
+  color: string | null;
   category: { id: string; name: LocalizedName };
   // null (not 0) when unreviewed — the card omits the rating line entirely.
   averageRating: number | null;

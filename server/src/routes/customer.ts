@@ -1,10 +1,11 @@
+import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { linkGuestOrdersSchema, updateReviewSchema } from "@es-market/core";
 import { prisma } from "../lib/prisma";
 import { requireCustomerAuth } from "../middleware/require-customer-auth";
 import { linkOrdersLimiter } from "../middleware/rate-limit";
 import { orderWithItems, serializePublicOrder, normalizePhone } from "./orders";
-import { publicReviewSelect } from "./storefront";
+import { publicReviewSelect, publicProductSelect } from "./storefront";
 
 // Customer-account-only endpoints (signed-in customers, not staff); mounted
 // at /api in index.ts. Signup/sign-in/sign-out themselves are handled by the
@@ -101,6 +102,62 @@ customerRouter.delete<{ id: string }>(
     });
     if (deleted.count === 0) {
       res.status(404).json({ error: "Review not found" });
+      return;
+    }
+    res.status(204).end();
+  },
+);
+
+// Signed-in customer's saved-for-later products — account-only (no guest
+// tier), newest first. Excludes soft-deleted products: a wishlisted product
+// can be deleted later, and it should silently drop off the list rather than
+// leak a null join.
+customerRouter.get("/customer/wishlist", requireCustomerAuth, async (req, res) => {
+  const items = await prisma.wishlistItem.findMany({
+    where: { customerId: req.customer.id, product: { deletedAt: null } },
+    select: { product: { select: publicProductSelect } },
+    orderBy: { createdAt: "desc" },
+  });
+  res.json({ products: items.map((item) => item.product) });
+});
+
+// Idempotent add — upsert on the (customerId, productId) unique constraint so
+// a double-clicked heart icon (or a retried request) is always safe, same
+// spirit as the variant-link route's "already linked" no-op branch.
+customerRouter.post<{ productId: string }>(
+  "/customer/wishlist/:productId",
+  requireCustomerAuth,
+  async (req, res) => {
+    const { productId } = req.params;
+    const product = await prisma.product.findFirst({
+      where: { id: productId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    await prisma.wishlistItem.upsert({
+      where: { customerId_productId: { customerId: req.customer.id, productId } },
+      create: { id: randomUUID(), customerId: req.customer.id, productId },
+      update: {},
+    });
+    res.status(204).end();
+  },
+);
+
+// Ownership enforced in the same where as the delete — a mismatched-owner or
+// nonexistent item both 404 identically, same precedent as
+// DELETE /customer/reviews/:id above.
+customerRouter.delete<{ productId: string }>(
+  "/customer/wishlist/:productId",
+  requireCustomerAuth,
+  async (req, res) => {
+    const deleted = await prisma.wishlistItem.deleteMany({
+      where: { customerId: req.customer.id, productId: req.params.productId },
+    });
+    if (deleted.count === 0) {
+      res.status(404).json({ error: "Wishlist item not found" });
       return;
     }
     res.status(204).end();

@@ -102,6 +102,7 @@ model Customer {
   accounts      CustomerAccount[]
   orders        Order[]
   reviews       Review[]
+  wishlistItems WishlistItem[]
 
   @@unique([email])
   @@map("customer")
@@ -178,6 +179,14 @@ model Product {
   // capped at MAX_PRODUCT_IMAGES in core/src/schemas/product.ts).
   images            String[]  @default([])
   tags              String[]  @default([])
+  // Free-text variant-distinguishing labels shown on the storefront and in
+  // the admin variant-linking UI — not enums (matches the low-effort style
+  // of tags/category naming elsewhere), not a nested attribute table (this
+  // codebase's variant model is "separate Product rows sharing
+  // variantGroupId", not per-SKU attributes on one row). Independent of each
+  // other: a product can have a size, a color, both, or neither.
+  size              String?   @db.VarChar(50)
+  color             String?   @db.VarChar(50)
   // Groups products that are "the same item, different variant" (e.g. color)
   // so the storefront PDP can cross-link them. Server-generated (randomUUID)
   // the first time a product is linked to another — never client-supplied.
@@ -201,6 +210,7 @@ model Product {
   orderItems        OrderItem[]
   concernedInquiries Inquiry[] @relation("InquiryConcernedProduct")
   reviews           Review[]
+  wishlistItems     WishlistItem[]
 
   @@index([categoryId])
   @@index([assignedAgentId])
@@ -438,6 +448,26 @@ model Review {
   @@unique([customerId, productId])
   @@index([productId])
   @@map("review")
+}
+
+// Signed-in customer's saved-for-later products. Account-only by design (no
+// guest/localStorage tier) — customerId is required with onDelete: Cascade,
+// the "hard ownership" pattern CustomerSession/CustomerAccount use, not the
+// nullable soft-attach pattern Order/Review use, since a wishlist has no
+// meaning without an account.
+model WishlistItem {
+  id         String   @id
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  createdAt  DateTime @default(now())
+
+  // Mirrors Review's @@unique([customerId, productId]) — prevents duplicate
+  // wishlisting and lets the add route be a simple upsert.
+  @@unique([customerId, productId])
+  @@index([productId])
+  @@map("wishlist_item")
 }
 
 // Singleton row (fixed id) of lightweight counters for the product

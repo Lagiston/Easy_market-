@@ -70,7 +70,14 @@
     "outOfStock": "Rupture de stock",
     "noImage": "Pas d'image",
     "pagination": "Page {{page}} sur {{totalPages}}",
-    "relatedTitle": "Produits associés"
+    "relatedTitle": "Produits associés",
+    "variants": {
+      "size": "Taille",
+      "color": "Couleur",
+      "chooseOptions": "Choisir les options",
+      "selectSize": "Sélectionner la taille {{size}}",
+      "selectColor": "Sélectionner la couleur {{color}}"
+    }
   },
   "reviews": {
     "title": "Avis",
@@ -214,6 +221,7 @@
     "email": "E-mail",
     "password": "Mot de passe",
     "myOrders": "Mes commandes",
+    "myWishlist": "Ma liste de souhaits",
     "signOut": "Se déconnecter",
     "login": {
       "title": "Se connecter",
@@ -245,6 +253,17 @@
       "linkPhoneSuccess_other": "{{count}} commandes liées à votre compte.",
       "linkPhoneNoMatch": "Aucune commande non liée trouvée pour ce numéro.",
       "linkPhoneError": "Impossible de lier les commandes. Veuillez réessayer."
+    },
+    "wishlist": {
+      "title": "Ma liste de souhaits",
+      "empty": "Vous n'avez encore ajouté aucun produit à votre liste de souhaits.",
+      "error": "Impossible de charger votre liste de souhaits. Veuillez réessayer.",
+      "remove": "Retirer {{name}} de la liste de souhaits"
     }
+  },
+  "wishlist": {
+    "add": "Ajouter à la liste de souhaits",
+    "remove": "Retirer de la liste de souhaits",
+    "nav": "Liste de souhaits"
   }
 }

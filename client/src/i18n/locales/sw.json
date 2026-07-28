@@ -70,7 +70,14 @@
     "outOfStock": "Imeisha",
     "noImage": "Hakuna picha",
     "pagination": "Ukurasa {{page}} kati ya {{totalPages}}",
-    "relatedTitle": "Bidhaa zinazohusiana"
+    "relatedTitle": "Bidhaa zinazohusiana",
+    "variants": {
+      "size": "Ukubwa",
+      "color": "Rangi",
+      "chooseOptions": "Chagua chaguo",
+      "selectSize": "Chagua ukubwa {{size}}",
+      "selectColor": "Chagua rangi {{color}}"
+    }
   },
   "reviews": {
     "title": "Maoni",
@@ -214,6 +221,7 @@
     "email": "Barua pepe",
     "password": "Nenosiri",
     "myOrders": "Oda zangu",
+    "myWishlist": "Orodha yangu ya matakwa",
     "signOut": "Toka",
     "login": {
       "title": "Ingia",
@@ -245,6 +253,17 @@
       "linkPhoneSuccess_other": "Oda {{count}} zimeunganishwa kwenye akaunti yako.",
       "linkPhoneNoMatch": "Hakuna oda zisizounganishwa zilizopatikana kwa nambari hiyo.",
       "linkPhoneError": "Imeshindwa kuunganisha oda. Tafadhali jaribu tena."
+    },
+    "wishlist": {
+      "title": "Orodha yangu ya matakwa",
+      "empty": "Bado hujaweka bidhaa yoyote kwenye orodha ya matakwa.",
+      "error": "Imeshindwa kupakia orodha yako ya matakwa. Tafadhali jaribu tena.",
+      "remove": "Ondoa {{name}} kwenye orodha ya matakwa"
     }
+  },
+  "wishlist": {
+    "add": "Ongeza kwenye orodha ya matakwa",
+    "remove": "Ondoa kwenye orodha ya matakwa",
+    "nav": "Orodha ya matakwa"
   }
 }

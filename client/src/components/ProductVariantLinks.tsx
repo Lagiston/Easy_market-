@@ -12,7 +12,15 @@ type VariantSummary = {
   price: number;
   images: string[];
   stock: number;
+  size: string | null;
+  color: string | null;
 };
+
+// Small "Red / M"-style caption so staff can tell variants apart while
+// linking — renders nothing when neither label is set.
+function variantLabel(variant: Pick<VariantSummary, "size" | "color">) {
+  return [variant.size, variant.color].filter(Boolean).join(" / ");
+}
 
 // Links other products in as variants of this one (e.g. the same item in a
 // different color) — edit-only, since linking needs two already-saved
@@ -95,7 +103,14 @@ export default function ProductVariantLinks({ productId }: { productId: string }
                 {variant.images[0] && <AvatarImage src={variant.images[0]} alt="" />}
                 <AvatarFallback>{variant.name.en.slice(0, 1)}</AvatarFallback>
               </Avatar>
-              <span className="flex-1 truncate">{variant.name.en}</span>
+              <span className="min-w-0 flex-1 truncate">
+                {variant.name.en}
+                {variantLabel(variant) && (
+                  <span className="ms-1.5 text-xs text-muted-foreground">
+                    {variantLabel(variant)}
+                  </span>
+                )}
+              </span>
               <button
                 type="button"
                 aria-label={`Remove ${variant.name.en}`}
@@ -133,7 +148,14 @@ export default function ProductVariantLinks({ productId }: { productId: string }
                   {candidate.images[0] && <AvatarImage src={candidate.images[0]} alt="" />}
                   <AvatarFallback>{candidate.name.en.slice(0, 1)}</AvatarFallback>
                 </Avatar>
-                <span className="flex-1 truncate">{candidate.name.en}</span>
+                <span className="min-w-0 flex-1 truncate">
+                  {candidate.name.en}
+                  {variantLabel(candidate) && (
+                    <span className="ms-1.5 text-xs text-muted-foreground">
+                      {variantLabel(candidate)}
+                    </span>
+                  )}
+                </span>
               </button>
             </li>
           ))}

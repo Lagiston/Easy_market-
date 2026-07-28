@@ -241,6 +241,44 @@ describe("ProductForm (create mode)", () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
   });
 
+  it("submits size and color when filled in", async () => {
+    const createdProduct = {
+      id: "4",
+      name: { en: "Shirt" },
+      description: null,
+      stock: 5,
+      images: [],
+      category: categories[0],
+      assignedAgent: null,
+    };
+    mockedAxios.post.mockImplementation((url: string) =>
+      url === "/api/products"
+        ? Promise.resolve({ data: { product: createdProduct } })
+        : Promise.resolve({
+            data: { product: { ...createdProduct, images: ["/api/uploads/products/4.jpg"] } },
+          }),
+    );
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Name"), "Shirt");
+    await user.clear(screen.getByLabelText("Stock"));
+    await user.type(screen.getByLabelText("Stock"), "5");
+    await selectCategory(user, "Groceries");
+    await user.type(screen.getByLabelText("Size"), "M");
+    await user.type(screen.getByLabelText("Color"), "Red");
+    const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Images"), file);
+    await user.click(screen.getByRole("button", { name: "Create product" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        "/api/products",
+        expect.objectContaining({ size: "M", color: "Red" }),
+      ),
+    );
+  });
+
   it("shows the server error and does not call onSuccess on failure", async () => {
     mockedAxios.isAxiosError.mockImplementation(
       (error) => (error as { isAxiosError?: boolean })?.isAxiosError === true,
@@ -449,6 +487,8 @@ describe("ProductForm (edit mode)", () => {
     lowStockThreshold: 10,
     images: [],
     tags: [],
+    size: null,
+    color: null,
     aiSuggestedCategoryId: null,
     aiSuggestedTags: [],
     aiSuggestedAt: null,
@@ -486,6 +526,25 @@ describe("ProductForm (edit mode)", () => {
         categoryId: "c1",
         tags: [],
       }),
+    );
+  });
+
+  it("pre-fills size and color and submits them unchanged", async () => {
+    const variantProduct = { ...existingProduct, size: "M", color: "Red" };
+    mockedAxios.put.mockResolvedValue({ data: { product: variantProduct } });
+    const user = userEvent.setup();
+    renderForm(vi.fn(), variantProduct);
+
+    expect(screen.getByLabelText("Size")).toHaveValue("M");
+    expect(screen.getByLabelText("Color")).toHaveValue("Red");
+
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.put).toHaveBeenCalledWith(
+        "/api/products/42",
+        expect.objectContaining({ size: "M", color: "Red" }),
+      ),
     );
   });
 

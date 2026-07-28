@@ -51,6 +51,11 @@ export default function CartPage() {
                       >
                         {name}
                       </Link>
+                      {(item.size || item.color) && (
+                        <p className="text-xs text-muted-foreground">
+                          {[item.size, item.color].filter(Boolean).join(" / ")}
+                        </p>
+                      )}
                       <p className="text-sm text-muted-foreground">{item.price}</p>
                     </div>
                     <div className="flex items-center gap-1.5">
