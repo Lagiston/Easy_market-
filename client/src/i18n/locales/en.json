@@ -145,6 +145,7 @@
     "title": "Checkout",
     "name": "Name",
     "phone": "Phone",
+    "phoneCountry": "Phone country code",
     "fulfillment": "Delivery or pickup",
     "delivery": "Delivery",
     "pickup": "Pickup",

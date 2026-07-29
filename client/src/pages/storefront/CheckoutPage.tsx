@@ -18,6 +18,7 @@ import { useCart, type CartItem } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/PhoneInput";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -137,12 +138,19 @@ export default function CheckoutPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="checkout-phone">{t("checkout.phone")}</Label>
-            <Input
-              id="checkout-phone"
-              type="tel"
-              autoComplete="tel"
-              aria-invalid={!!errors.customerPhone}
-              {...register("customerPhone")}
+            <Controller
+              name="customerPhone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput
+                  id="checkout-phone"
+                  autoComplete="tel"
+                  aria-invalid={!!errors.customerPhone}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
             />
             {errors.customerPhone && (
               <p className="text-sm text-destructive">

@@ -73,7 +73,7 @@ const buyNowItem: CartItem = {
 
 async function fillCustomerFields() {
   await userEvent.type(screen.getByLabelText("Name"), "Jane Doe");
-  await userEvent.type(screen.getByLabelText("Phone"), "0712345678");
+  await userEvent.type(screen.getByLabelText("Phone"), "712345678");
 }
 
 describe("storefront CheckoutPage", () => {
@@ -156,7 +156,7 @@ describe("storefront CheckoutPage", () => {
       "/api/storefront/orders",
       expect.objectContaining({
         customerName: "Jane Doe",
-        customerPhone: "0712345678",
+        customerPhone: "+255712345678",
         fulfillmentType: "DELIVERY",
         address: "12 Main Street",
         items: [

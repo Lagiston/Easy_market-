@@ -145,6 +145,7 @@
     "title": "Commande",
     "name": "Nom",
     "phone": "Téléphone",
+    "phoneCountry": "Indicatif du pays",
     "fulfillment": "Livraison ou retrait",
     "delivery": "Livraison",
     "pickup": "Retrait en magasin",

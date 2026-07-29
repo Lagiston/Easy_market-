@@ -91,7 +91,7 @@ test.describe("Guest checkout", () => {
       // seeded default settings (fee 0), delivery shows as Free.
       await expect(page.getByLabel("Delivery or pickup")).toContainText("Delivery");
       await page.getByLabel("Name").fill("E2E Guest");
-      await page.getByLabel("Phone").fill("+255700123456");
+      await page.getByLabel("Phone", { exact: true }).fill("700123456");
       await page.getByLabel("Address").fill("12 Market Street");
 
       // Order summary reflects DB price × quantity.
