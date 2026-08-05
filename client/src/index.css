@@ -4,6 +4,9 @@
 @import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
+/* Users who disable transparency (OS accessibility setting) get opaque
+   surfaces with no backdrop blur — legibility over glass. */
+@custom-variant reduced-transparency (@media (prefers-reduced-transparency: reduce));
 
 @theme inline {
     --font-heading: var(--font-sans);
@@ -49,6 +52,8 @@
 }
 
 :root {
+    /* Native UI (scrollbars, date pickers, autofill) follows the theme */
+    color-scheme: light;
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -84,19 +89,22 @@
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
+    color-scheme: dark;
+    /* Surfaces carry a whisper of the forest-green brand hue (152) so dark
+       mode feels designed rather than flat gray. */
+    --background: oklch(0.15 0.008 152);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
+    --card: oklch(0.205 0.01 152);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
+    --popover: oklch(0.205 0.01 152);
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(0.62 0.12 152);
     --primary-foreground: oklch(0.145 0.02 152);
-    --secondary: oklch(0.269 0 0);
+    --secondary: oklch(0.269 0.012 152);
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
+    --muted: oklch(0.269 0.012 152);
     --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
+    --accent: oklch(0.269 0.012 152);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);

@@ -85,7 +85,7 @@ export default function ProductDetailPage() {
               <img
                 src={product.images[activeImage]}
                 alt={localize(product.name, language)}
-                className="aspect-square w-full rounded-md border object-cover"
+                className="aspect-square w-full rounded-md border bg-white object-cover"
               />
             ) : (
               <div
@@ -108,7 +108,7 @@ export default function ProductDetailPage() {
                       index === activeImage ? "border-primary ring-1 ring-primary" : ""
                     }`}
                   >
-                    <img src={imageUrl} alt="" className="size-full object-cover" />
+                    <img src={imageUrl} alt="" className="size-full bg-white object-cover" />
                   </button>
                 ))}
               </div>
@@ -265,7 +265,7 @@ export default function ProductDetailPage() {
                   <img
                     src={related.images[0]}
                     alt={localize(related.name, language)}
-                    className="aspect-square w-full object-cover"
+                    className="aspect-square w-full bg-white object-cover"
                   />
                 ) : (
                   <div

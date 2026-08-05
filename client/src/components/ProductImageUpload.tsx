@@ -63,7 +63,7 @@ export default function ProductImageUpload({
             <img
               src={imageUrl}
               alt=""
-              className="size-16 rounded-md border object-cover"
+              className="size-16 rounded-md border bg-white object-cover"
             />
             <button
               type="button"

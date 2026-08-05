@@ -57,7 +57,7 @@ export default function ProductsCardGrid({
                 <img
                   src={product.images[0]}
                   alt=""
-                  className="aspect-square w-full object-cover"
+                  className="aspect-square w-full bg-white object-cover"
                 />
               ) : (
                 <div

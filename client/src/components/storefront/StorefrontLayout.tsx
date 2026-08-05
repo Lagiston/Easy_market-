@@ -4,6 +4,7 @@ import { Heart, ShoppingCart, User } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { customerAuthClient } from "@/lib/customer-auth-client";
 import { useWishlist } from "@/lib/wishlist";
+import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ChatWidget from "./ChatWidget";
 
@@ -16,8 +17,16 @@ export default function StorefrontLayout() {
   const { products: wishlistProducts } = useWishlist();
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex items-center gap-6 border-b bg-background px-6 py-3">
+    <div className="flex min-h-screen flex-col">
+      {/* Ambient brand-tinted glows the glass surfaces above pick up */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden reduced-transparency:hidden"
+      >
+        <div className="absolute -top-32 -start-32 size-[24rem] rounded-full bg-primary/10 blur-3xl dark:bg-primary/15" />
+        <div className="absolute top-1/3 -end-40 size-[28rem] rounded-full bg-primary/5 blur-3xl dark:bg-primary/10" />
+      </div>
+      <header className="sticky top-0 z-40 flex items-center gap-6 border-b border-border/60 bg-background/70 px-6 py-3 backdrop-blur-xl reduced-transparency:bg-background reduced-transparency:backdrop-blur-none">
         <Link to="/" className="text-lg font-semibold text-primary">
           {t("brand")}
         </Link>
@@ -81,6 +90,7 @@ export default function StorefrontLayout() {
             <User className="size-4" />
             {session ? session.user.name : t("nav.signIn")}
           </Link>
+          <ThemeToggle label={t("nav.theme")} />
           <LanguageSwitcher />
         </div>
       </header>

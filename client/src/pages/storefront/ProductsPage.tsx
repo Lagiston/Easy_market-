@@ -299,7 +299,7 @@ export default function ProductsPage() {
                     <img
                       src={product.images[0]}
                       alt={localize(product.name, language)}
-                      className="aspect-square w-full object-cover"
+                      className="aspect-square w-full bg-white object-cover"
                     />
                   ) : (
                     <div

@@ -5,7 +5,8 @@
     "products": "Products",
     "orderStatus": "Order status",
     "contact": "Contact",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "theme": "Toggle theme"
   },
   "language": {
     "label": "Language"

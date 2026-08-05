@@ -79,7 +79,7 @@ export default function ProductDetailPage() {
                     key={imageUrl}
                     src={imageUrl}
                     alt={product.name.en}
-                    className="size-40 rounded-md border object-cover"
+                    className="size-40 rounded-md border bg-white object-cover"
                   />
                 ))}
               </div>

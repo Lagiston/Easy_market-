@@ -81,12 +81,14 @@ export default function SoldOutChart({
             width={28}
           />
           <Tooltip
+            cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
             contentStyle={{
               background: "var(--popover)",
               border: "1px solid var(--border)",
               borderRadius: "var(--radius)",
               color: "var(--popover-foreground)",
             }}
+            itemStyle={{ color: "var(--popover-foreground)" }}
             labelFormatter={(d) => d}
             formatter={(value) => [value === null ? "No data" : value, "Sold out"]}
           />

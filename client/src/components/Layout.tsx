@@ -5,6 +5,7 @@ import { Role } from "@es-market/core";
 import { authClient, type SessionUser } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const ATTENTION_POLL_MS = 30000;
 
@@ -31,7 +32,7 @@ export default function Layout({ user }: { user: SessionUser }) {
   }
 
   return (
-    <nav className="flex items-center justify-between border-b bg-background px-6 py-3">
+    <nav className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background/70 px-6 py-3 backdrop-blur-xl reduced-transparency:bg-background reduced-transparency:backdrop-blur-none">
       <div className="flex items-center gap-6">
         <Link to="/admin" className="text-lg font-semibold">
           ES-Market
@@ -114,6 +115,7 @@ export default function Layout({ user }: { user: SessionUser }) {
         )}
       </div>
       <div className="flex items-center gap-4">
+        <ThemeToggle />
         <span className="text-sm text-muted-foreground">{user.name}</span>
         <Button type="button" variant="outline" size="sm" onClick={handleSignOut}>
           Sign out

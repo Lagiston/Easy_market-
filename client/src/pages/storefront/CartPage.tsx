@@ -34,7 +34,7 @@ export default function CartPage() {
                       <img
                         src={item.imageUrl}
                         alt={name}
-                        className="size-16 shrink-0 rounded-md border object-cover"
+                        className="size-16 shrink-0 rounded-md border bg-white object-cover"
                       />
                     ) : (
                       <div
