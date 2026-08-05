@@ -140,7 +140,8 @@
     "decrease": "Diminuer la quantité de {{name}}",
     "remove": "Retirer {{name}} du panier",
     "subtotal": "Sous-total",
-    "checkout": "Passer la commande"
+    "checkout": "Passer la commande",
+    "updatedToast": "Quantité de {{name}} mise à jour à {{quantity}} dans le panier"
   },
   "checkout": {
     "title": "Commande",

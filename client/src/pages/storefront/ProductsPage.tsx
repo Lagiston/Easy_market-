@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ImageOff, Search, Star, X } from "lucide-react";
+import { toast } from "sonner";
+import { ImageOff, Search, ShoppingCart, Star, X } from "lucide-react";
 import {
   STOREFRONT_PAGE_SIZE,
   STOREFRONT_PRODUCT_SORTS,
@@ -12,8 +13,10 @@ import {
   type StorefrontProductSort,
 } from "@es-market/core";
 import { localize } from "@/lib/localize";
+import { useCart } from "@/lib/cart";
 import WishlistButton from "@/components/storefront/WishlistButton";
 import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,9 +77,27 @@ const SORT_LABEL_KEYS: Record<StorefrontProductSort, string> = {
   "price-desc": "products.filters.priceDesc",
 };
 
+// A rapid double-click can fire both click handlers before React commits a
+// state update — even a `useState` guard checked in the same synchronous
+// event-dispatch stack still reads the pre-update value for the second
+// click, so both handlers see the same stale `cartItems` and each shows its
+// own toast. This window disables the button per-product just long enough
+// for a real re-render to land, collapsing an accidental double-click into
+// one add and one toast.
+const ADD_TO_CART_GUARD_MS = 400;
+
 export default function ProductsPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
+  const navigate = useNavigate();
+  const { items: cartItems, addItem } = useCart();
+  // Source of truth for the guard is a ref, not state: a ref mutates
+  // synchronously, so even two clicks dispatched within the same JS task
+  // (a genuinely instant double-click) see each other's write immediately.
+  // `pendingAddTick` exists only to trigger the re-render that reflects the
+  // ref's current contents in the button's `disabled` prop.
+  const pendingAddIdsRef = useRef<Set<string>>(new Set());
+  const [, setPendingAddTick] = useState(0);
 
   // Read-once, not two-way synced: lets a link (e.g. a tag chip on the product
   // detail page) land here pre-filtered, without making every filter change
@@ -290,10 +311,11 @@ export default function ProductsPage() {
                 key={product.id}
                 className="relative h-full overflow-hidden py-0 transition-colors hover:border-primary"
               >
-                <WishlistButton
-                  productId={product.id}
-                  className="absolute end-2 top-2 z-10 size-8 bg-background/80 backdrop-blur-sm hover:bg-background"
-                />
+                {/* Link comes first in DOM order (though visually the heart
+                    overlays its top-right corner via absolute positioning)
+                    so a keyboard user reaches the card's primary content —
+                    the product image/title — before the secondary wishlist
+                    toggle. */}
                 <Link to={`/products/${product.id}`} className="block">
                   {product.images[0] ? (
                     <img
@@ -334,6 +356,10 @@ export default function ProductsPage() {
                     )}
                   </CardContent>
                 </Link>
+                <WishlistButton
+                  productId={product.id}
+                  className="absolute end-2 top-2 z-10 size-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+                />
                 <CardContent className="space-y-1 p-4 pt-1">
                   {product.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
@@ -350,6 +376,75 @@ export default function ProductsPage() {
                     </div>
                   )}
                   <p className="font-semibold">{product.price}</p>
+                  <div className="flex gap-2">
+                    <Button
+                      className="min-w-0 flex-1"
+                      disabled={product.stock === 0 || pendingAddIdsRef.current.has(product.id)}
+                      onClick={() => {
+                        // Synchronous check-and-set on the ref: even a second
+                        // click dispatched in the same JS task as the first
+                        // sees this write immediately and bails out here.
+                        if (pendingAddIdsRef.current.has(product.id)) return;
+                        pendingAddIdsRef.current.add(product.id);
+                        setPendingAddTick((tick) => tick + 1);
+                        setTimeout(() => {
+                          pendingAddIdsRef.current.delete(product.id);
+                          setPendingAddTick((tick) => tick + 1);
+                        }, ADD_TO_CART_GUARD_MS);
+
+                        const existing = cartItems.find(
+                          (item) => item.productId === product.id,
+                        );
+                        addItem({
+                          productId: product.id,
+                          name: product.name,
+                          price: product.price,
+                          imageUrl: product.images[0] ?? null,
+                          stock: product.stock,
+                          size: product.size,
+                          color: product.color,
+                        });
+                        const name = localize(product.name, language);
+                        if (existing) {
+                          // Already in the cart — addItem clamps to stock, so
+                          // reflect the actual resulting quantity, not a bare
+                          // "added" toast that would misleadingly imply a new line.
+                          const newQuantity = Math.min(existing.quantity + 1, product.stock);
+                          toast.success(t("cart.updatedToast", { name, quantity: newQuantity }));
+                        } else {
+                          toast.success(t("cart.addedToast", { name }));
+                        }
+                      }}
+                    >
+                      <ShoppingCart /> {t("cart.addToCart")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="min-w-0 flex-1"
+                      disabled={product.stock === 0}
+                      onClick={() => {
+                        toast.success(
+                          t("cart.buyNowToast", { name: localize(product.name, language) }),
+                        );
+                        navigate("/checkout", {
+                          state: {
+                            buyNowItem: {
+                              productId: product.id,
+                              name: product.name,
+                              price: product.price,
+                              imageUrl: product.images[0] ?? null,
+                              stock: product.stock,
+                              size: product.size,
+                              color: product.color,
+                              quantity: 1,
+                            },
+                          },
+                        });
+                      }}
+                    >
+                      {t("products.buyNow")}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

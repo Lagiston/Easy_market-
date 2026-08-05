@@ -140,7 +140,8 @@
     "decrease": "Punguza idadi ya {{name}}",
     "remove": "Ondoa {{name}} kutoka kikapuni",
     "subtotal": "Jumla ndogo",
-    "checkout": "Endelea na oda"
+    "checkout": "Endelea na oda",
+    "updatedToast": "Kiasi cha {{name}} kimesasishwa hadi {{quantity}} kikapuni"
   },
   "checkout": {
     "title": "Kamilisha oda",

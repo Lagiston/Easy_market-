@@ -155,7 +155,8 @@
     "decrease": "تقليل كمية {{name}}",
     "remove": "إزالة {{name}} من السلة",
     "subtotal": "المجموع الفرعي",
-    "checkout": "متابعة إتمام الطلب"
+    "checkout": "متابعة إتمام الطلب",
+    "updatedToast": "تم تحديث كمية {{name}} إلى {{quantity}} في السلة"
   },
   "checkout": {
     "title": "إتمام الطلب",

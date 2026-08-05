@@ -140,7 +140,8 @@
     "decrease": "Decrease quantity of {{name}}",
     "remove": "Remove {{name}} from cart",
     "subtotal": "Subtotal",
-    "checkout": "Proceed to checkout"
+    "checkout": "Proceed to checkout",
+    "updatedToast": "{{name}} quantity updated to {{quantity}} in cart"
   },
   "checkout": {
     "title": "Checkout",

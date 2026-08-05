@@ -2,9 +2,11 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import i18n from "@/i18n";
 import { renderWithQuery } from "@/test/render-with-query";
+import { CartProvider, type CartItem } from "@/lib/cart";
+import { Toaster } from "@/components/ui/sonner";
 import ProductsPage, { type StorefrontProduct } from "./ProductsPage";
 
 vi.mock("axios");
@@ -79,10 +81,22 @@ function mockApi(overrides?: {
   });
 }
 
+function CheckoutStateProbe() {
+  const location = useLocation();
+  const buyNowItem = (location.state as { buyNowItem?: CartItem } | null)?.buyNowItem;
+  return <div>Checkout page: {buyNowItem ? JSON.stringify(buyNowItem) : "no buy-now item"}</div>;
+}
+
 function renderPage(initialEntry = "/products") {
   renderWithQuery(
     <MemoryRouter initialEntries={[initialEntry]}>
-      <ProductsPage />
+      <CartProvider>
+        <Routes>
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/checkout" element={<CheckoutStateProbe />} />
+        </Routes>
+        <Toaster />
+      </CartProvider>
     </MemoryRouter>,
   );
 }
@@ -175,6 +189,117 @@ describe("storefront ProductsPage", () => {
     await waitFor(() =>
       expect(mockedAxios.post).toHaveBeenCalledWith("/api/customer/wishlist/p1"),
     );
+  });
+
+  it("renders an Add to cart button per card, disabled for out-of-stock products", async () => {
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    const buttons = screen.getAllByRole("button", { name: "Add to cart" });
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0]).toBeEnabled();
+    // Orange Juice has stock 0
+    expect(buttons[1]).toBeDisabled();
+  });
+
+  it("renders a Buy now button per card, disabled for out-of-stock products", async () => {
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    const buttons = screen.getAllByRole("button", { name: "Buy now" });
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0]).toBeEnabled();
+    // Orange Juice has stock 0
+    expect(buttons[1]).toBeDisabled();
+  });
+
+  it("navigates to checkout with a quantity-1 buy-now item from the card, without touching the cart", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    const [buyRice] = screen.getAllByRole("button", { name: "Buy now" });
+    await user.click(buyRice!);
+
+    expect(await screen.findByText("Heading to checkout for Rice 5kg")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        `Checkout page: ${JSON.stringify({
+          productId: "p1",
+          name: { en: "Rice 5kg", ar: "أرز ٥ كجم" },
+          price: 1500,
+          imageUrl: null,
+          stock: 20,
+          size: null,
+          color: null,
+          quantity: 1,
+        })}`,
+      ),
+    ).toBeInTheDocument();
+    // CartProvider always persists its (here, empty) items array on mount,
+    // so assert emptiness rather than the key being absent.
+    expect(
+      JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]"),
+    ).toEqual([]);
+  });
+
+  it("adds the product to the cart from the card without navigating", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    const [addRice] = screen.getAllByRole("button", { name: "Add to cart" });
+    await user.click(addRice!);
+    // The double-click guard disables the button briefly after each add —
+    // wait it out before clicking again, same as a real (non-instant) user.
+    await waitFor(() => expect(addRice).toBeEnabled());
+    // A second click merges into the same line instead of duplicating it
+    await user.click(addRice!);
+
+    await waitFor(() => {
+      const cart = JSON.parse(
+        window.localStorage.getItem("es-market-cart") ?? "[]",
+      ) as unknown[];
+      expect(cart).toEqual([
+        expect.objectContaining({ productId: "p1", price: 1500, quantity: 2 }),
+      ]);
+    });
+    // Still on the products page — the button isn't part of the card link.
+    expect(screen.getByText("Rice 5kg")).toBeInTheDocument();
+  });
+
+  it("shows an 'added' toast on first add and an 'updated' toast with the new quantity on a repeat add", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    const [addRice] = screen.getAllByRole("button", { name: "Add to cart" });
+    await user.click(addRice!);
+    expect(await screen.findByText("Rice 5kg added to cart")).toBeInTheDocument();
+
+    await waitFor(() => expect(addRice).toBeEnabled());
+    await user.click(addRice!);
+    expect(
+      await screen.findByText("Rice 5kg quantity updated to 2 in cart"),
+    ).toBeInTheDocument();
+  });
+
+  it("briefly disables a card's Add to cart button after a click to guard against a rapid double-click", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    const [addRice] = screen.getAllByRole("button", { name: "Add to cart" });
+    expect(addRice).toBeEnabled();
+    await user.click(addRice!);
+    expect(addRice).toBeDisabled();
+    await waitFor(() => expect(addRice).toBeEnabled());
   });
 
   it("shows product and category names in the current language with English fallback", async () => {
