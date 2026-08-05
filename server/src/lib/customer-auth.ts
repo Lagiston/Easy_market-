@@ -29,6 +29,18 @@ export const customerAuth = betterAuth({
   },
   user: {
     modelName: "customer",
+    // Unlike the staff instance's read-only `role` (input: false), these are
+    // customer-settable profile fields — the client's /account/profile page
+    // writes them via Better Auth's own updateUser endpoint, no hand-written
+    // Express route needed. `image` (profile picture URL) is Better Auth's
+    // built-in avatar field, already on the Customer model, so it needs no
+    // additionalField entry here — only the upload itself is hand-written
+    // (see POST/DELETE /customer/profile/avatar in routes/customer.ts).
+    additionalFields: {
+      mobile: { type: "string", required: false, input: true },
+      gender: { type: "string", required: false, input: true },
+      region: { type: "string", required: false, input: true },
+    },
   },
   // Better Auth's internal field name for the FK back to the user is always
   // "userId" regardless of what the user model itself is called — since

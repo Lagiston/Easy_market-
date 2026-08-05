@@ -209,7 +209,8 @@
     "passwordRequired": "Le mot de passe est requis",
     "nameMax": "Le nom doit comporter au plus 100 caractères",
     "reviewRating": "Choisissez une note de 1 à 5 étoiles",
-    "commentMax": "Le commentaire doit comporter au plus 1000 caractères"
+    "commentMax": "Le commentaire doit comporter au plus 1000 caractères",
+    "regionMax": "La région doit comporter 100 caractères ou moins"
   },
   "chat": {
     "open": "Ouvrir le chat",
@@ -275,6 +276,28 @@
       "priceDrop": "Baisse de prix",
       "priceDropBanner_one": "{{count}} article de votre liste de souhaits a baissé de prix !",
       "priceDropBanner_other": "{{count}} articles de votre liste de souhaits ont baissé de prix !"
+    },
+    "editProfile": "Modifier le profil",
+    "profile": {
+      "title": "Modifier le profil",
+      "name": "Nom",
+      "mobile": "Numéro de mobile",
+      "gender": "Genre",
+      "genderUnset": "Préfère ne pas préciser",
+      "genderMale": "Homme",
+      "genderFemale": "Femme",
+      "genderPreferNotToSay": "Préfère ne pas répondre",
+      "region": "Région",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement…",
+      "success": "Profil mis à jour",
+      "error": "Impossible de mettre à jour votre profil. Veuillez réessayer.",
+      "avatarAlt": "Photo de profil",
+      "avatarUpload": "Ajouter une photo",
+      "avatarChange": "Changer la photo",
+      "avatarRemove": "Supprimer la photo",
+      "avatarUploadError": "Impossible d'importer l'image. Veuillez réessayer.",
+      "avatarRemoveError": "Impossible de supprimer l'image. Veuillez réessayer."
     }
   },
   "wishlist": {

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import { User as UserIcon } from "lucide-react";
 import { customerAuthClient } from "@/lib/customer-auth-client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,10 +24,29 @@ export default function AccountPage() {
       <h1 className="text-2xl font-semibold">{t("account.title")}</h1>
       <Card>
         <CardHeader>
-          <CardTitle>{session.user.name}</CardTitle>
+          <div className="flex items-center gap-3">
+            {session.user.image ? (
+              <img
+                src={session.user.image}
+                alt={t("account.profile.avatarAlt")}
+                className="size-10 shrink-0 rounded-full border bg-white object-cover"
+              />
+            ) : (
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted">
+                <UserIcon className="size-5 text-muted-foreground" />
+              </div>
+            )}
+            <CardTitle>{session.user.name}</CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">{session.user.email}</p>
+          <Link
+            to="/account/profile"
+            className={buttonVariants({ variant: "outline", className: "w-full" })}
+          >
+            {t("account.editProfile")}
+          </Link>
           <Link
             to="/account/orders"
             className={buttonVariants({ variant: "outline", className: "w-full" })}

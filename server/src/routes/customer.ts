@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { Router } from "express";
+import { unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { Router, type NextFunction, type Request, type Response } from "express";
+import multer, { MulterError } from "multer";
+import { fileTypeFromBuffer } from "file-type";
 import { linkGuestOrdersSchema, updateReviewSchema } from "@es-market/core";
 import { prisma } from "../lib/prisma";
+import { customerImagesDir } from "../lib/uploads";
 import { requireCustomerAuth } from "../middleware/require-customer-auth";
 import { linkOrdersLimiter } from "../middleware/rate-limit";
 import { orderWithItems, serializePublicOrder, normalizePhone } from "./orders";
@@ -197,3 +202,107 @@ customerRouter.delete<{ productId: string }>(
     res.status(204).end();
   },
 );
+
+// Profile picture upload — a single-file variant of the product image
+// upload pattern in routes/products.ts (same magic-byte validation via
+// file-type, never trusting the declared mimetype). Unlike product images
+// (an appended gallery), an avatar *replaces* whatever was there before, so
+// on success the customer's previous avatar file (if any) is best-effort
+// unlinked and Customer.image is overwritten rather than appended to.
+const AVATAR_IMAGE_EXTENSIONS: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+};
+
+const INVALID_AVATAR_MESSAGE = "Image must be a JPEG, PNG, or WebP file";
+
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!AVATAR_IMAGE_EXTENSIONS[file.mimetype]) {
+      cb(new MulterError("LIMIT_UNEXPECTED_FILE", "invalidImageType"));
+      return;
+    }
+    cb(null, true);
+  },
+});
+
+function uploadAvatar(req: Request, res: Response, next: NextFunction) {
+  avatarUpload.single("image")(req, res, (err: unknown) => {
+    if (err instanceof MulterError) {
+      const message =
+        err.code === "LIMIT_FILE_SIZE"
+          ? "Image must be 5MB or smaller"
+          : INVALID_AVATAR_MESSAGE;
+      res.status(400).json({ error: message });
+      return;
+    }
+    if (err) {
+      next(err);
+      return;
+    }
+    next();
+  });
+}
+
+// filename portion of a "/api/uploads/customers/<file>" URL, used to unlink
+// a customer's previous avatar file on replace/remove.
+function avatarFilenameFromUrl(url: string): string {
+  return url.slice(url.lastIndexOf("/") + 1);
+}
+
+customerRouter.post(
+  "/customer/profile/avatar",
+  requireCustomerAuth,
+  uploadAvatar,
+  async (req, res) => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "An image file is required" });
+      return;
+    }
+
+    const detected = await fileTypeFromBuffer(file.buffer);
+    const extension = detected ? AVATAR_IMAGE_EXTENSIONS[detected.mime] : undefined;
+    if (!extension) {
+      res.status(400).json({ error: INVALID_AVATAR_MESSAGE });
+      return;
+    }
+
+    const current = await prisma.customer.findUniqueOrThrow({
+      where: { id: req.customer.id },
+      select: { image: true },
+    });
+
+    const filename = `${randomUUID()}${extension}`;
+    await writeFile(path.join(customerImagesDir, filename), file.buffer);
+    const image = `/api/uploads/customers/${filename}`;
+
+    await prisma.customer.update({ where: { id: req.customer.id }, data: { image } });
+    if (current.image) {
+      await unlink(path.join(customerImagesDir, avatarFilenameFromUrl(current.image))).catch(
+        () => {},
+      );
+    }
+
+    res.json({ image });
+  },
+);
+
+customerRouter.delete("/customer/profile/avatar", requireCustomerAuth, async (req, res) => {
+  const current = await prisma.customer.findUniqueOrThrow({
+    where: { id: req.customer.id },
+    select: { image: true },
+  });
+  if (!current.image) {
+    res.status(404).json({ error: "No profile picture to remove" });
+    return;
+  }
+
+  await prisma.customer.update({ where: { id: req.customer.id }, data: { image: null } });
+  await unlink(path.join(customerImagesDir, avatarFilenameFromUrl(current.image))).catch(() => {});
+
+  res.status(204).end();
+});

@@ -37,3 +37,62 @@ export const customerSignInSchema = z.object({
 });
 
 export type CustomerSignInInput = z.infer<typeof customerSignInSchema>;
+
+// Mirrors the `Gender` Prisma enum (server/prisma/schema.prisma) — the client
+// has no access to the Prisma-generated enum, same precedent as Role/
+// FulfillmentType in user.ts/order.ts.
+export const Gender = {
+  MALE: "MALE",
+  FEMALE: "FEMALE",
+  PREFER_NOT_TO_SAY: "PREFER_NOT_TO_SAY",
+} as const;
+
+export type Gender = (typeof Gender)[keyof typeof Gender];
+
+export const GENDER_VALUES = [Gender.MALE, Gender.FEMALE, Gender.PREFER_NOT_TO_SAY] as const;
+
+// Client-side form validation only, same reason as customerSignUpSchema
+// above — the actual write goes through Better Auth's own /update-user
+// endpoint (server/src/lib/customer-auth.ts's additionalFields), not a
+// hand-written Express route with its own zod check.
+export const MOBILE_ERROR = "A valid phone number is required";
+export const REGION_ERROR = "Region must be 100 characters or fewer";
+
+export const updateCustomerProfileSchema = z.object({
+  name: z
+    .string(NAME_ERROR)
+    .trim()
+    .min(3, NAME_ERROR)
+    .transform(sanitizeText)
+    .refine((value) => value.length >= 3, NAME_ERROR),
+  // Optional — PhoneInput composes a single "+<dialCode><local>" string, or
+  // an empty string when the local part is blank; preprocessed to undefined
+  // the same way as assignedAgentId in product.ts so a blank field clears
+  // rather than storing "".
+  mobile: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .string(MOBILE_ERROR)
+      .trim()
+      .regex(/^\+?[0-9][0-9\s-]{6,17}$/, MOBILE_ERROR)
+      .optional(),
+  ),
+  // shadcn's Select can't use a literal "" value, so the "unset" choice maps
+  // to "" in the form and is preprocessed to undefined here — same
+  // "Unassigned" convention as assignedAgentId.
+  gender: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.enum(GENDER_VALUES).optional(),
+  ),
+  region: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .string(REGION_ERROR)
+      .trim()
+      .max(100, REGION_ERROR)
+      .transform(sanitizeText)
+      .optional(),
+  ),
+});
+
+export type UpdateCustomerProfileInput = z.input<typeof updateCustomerProfileSchema>;

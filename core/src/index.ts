@@ -11,13 +11,19 @@ export {
 export {
   customerSignUpSchema,
   customerSignInSchema,
+  updateCustomerProfileSchema,
+  Gender,
+  GENDER_VALUES,
   NAME_ERROR as CUSTOMER_NAME_MIN_ERROR,
   EMAIL_ERROR as CUSTOMER_EMAIL_ERROR,
   PASSWORD_ERROR as CUSTOMER_PASSWORD_ERROR,
   PASSWORD_MAX_ERROR as CUSTOMER_PASSWORD_MAX_ERROR,
   PASSWORD_REQUIRED_ERROR as CUSTOMER_PASSWORD_REQUIRED_ERROR,
+  MOBILE_ERROR,
+  REGION_ERROR,
   type CustomerSignUpInput,
   type CustomerSignInInput,
+  type UpdateCustomerProfileInput,
 } from "./schemas/customer";
 export {
   LANGUAGES,

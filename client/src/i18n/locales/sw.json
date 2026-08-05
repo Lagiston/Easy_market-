@@ -209,7 +209,8 @@
     "passwordRequired": "Nenosiri linahitajika",
     "nameMax": "Jina lisizidi herufi 100",
     "reviewRating": "Chagua ukadiriaji wa nyota 1 hadi 5",
-    "commentMax": "Maoni yasizidi herufi 1000"
+    "commentMax": "Maoni yasizidi herufi 1000",
+    "regionMax": "Mkoa usizidi herufi 100"
   },
   "chat": {
     "open": "Fungua mazungumzo",
@@ -275,6 +276,28 @@
       "priceDrop": "Bei imepungua",
       "priceDropBanner_one": "Bei ya bidhaa {{count}} kwenye orodha yako ya matakwa imepungua!",
       "priceDropBanner_other": "Bei za bidhaa {{count}} kwenye orodha yako ya matakwa zimepungua!"
+    },
+    "editProfile": "Hariri wasifu",
+    "profile": {
+      "title": "Hariri wasifu",
+      "name": "Jina",
+      "mobile": "Nambari ya simu",
+      "gender": "Jinsia",
+      "genderUnset": "Sitaki kutaja",
+      "genderMale": "Mwanaume",
+      "genderFemale": "Mwanamke",
+      "genderPreferNotToSay": "Sitaki kusema",
+      "region": "Mkoa",
+      "save": "Hifadhi mabadiliko",
+      "saving": "Inahifadhi…",
+      "success": "Wasifu umesasishwa",
+      "error": "Imeshindwa kusasisha wasifu wako. Tafadhali jaribu tena.",
+      "avatarAlt": "Picha ya wasifu",
+      "avatarUpload": "Pakia picha",
+      "avatarChange": "Badilisha picha",
+      "avatarRemove": "Ondoa picha",
+      "avatarUploadError": "Imeshindwa kupakia picha. Tafadhali jaribu tena.",
+      "avatarRemoveError": "Imeshindwa kuondoa picha. Tafadhali jaribu tena."
     }
   },
   "wishlist": {

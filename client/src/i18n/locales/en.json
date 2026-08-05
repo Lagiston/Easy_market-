@@ -209,7 +209,8 @@
     "passwordRequired": "Password is required",
     "nameMax": "Name must be 100 characters or fewer",
     "reviewRating": "Choose a rating from 1 to 5 stars",
-    "commentMax": "Comment must be 1000 characters or fewer"
+    "commentMax": "Comment must be 1000 characters or fewer",
+    "regionMax": "Region must be 100 characters or fewer"
   },
   "chat": {
     "open": "Open chat",
@@ -275,6 +276,28 @@
       "priceDrop": "Price drop",
       "priceDropBanner_one": "{{count}} of your wishlisted items dropped in price!",
       "priceDropBanner_other": "{{count}} of your wishlisted items dropped in price!"
+    },
+    "editProfile": "Edit profile",
+    "profile": {
+      "title": "Edit profile",
+      "name": "Name",
+      "mobile": "Mobile number",
+      "gender": "Gender",
+      "genderUnset": "Prefer not to specify",
+      "genderMale": "Male",
+      "genderFemale": "Female",
+      "genderPreferNotToSay": "Prefer not to say",
+      "region": "Region",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "success": "Profile updated",
+      "error": "Could not update your profile. Please try again.",
+      "avatarAlt": "Profile picture",
+      "avatarUpload": "Upload photo",
+      "avatarChange": "Change photo",
+      "avatarRemove": "Remove photo",
+      "avatarUploadError": "Could not upload image. Please try again.",
+      "avatarRemoveError": "Could not remove image. Please try again."
     }
   },
   "wishlist": {

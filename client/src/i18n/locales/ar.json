@@ -224,7 +224,8 @@
     "passwordRequired": "كلمة المرور مطلوبة",
     "nameMax": "يجب ألا يتجاوز الاسم 100 حرف",
     "reviewRating": "اختر تقييمًا من 1 إلى 5 نجوم",
-    "commentMax": "يجب ألا يتجاوز التعليق 1000 حرف"
+    "commentMax": "يجب ألا يتجاوز التعليق 1000 حرف",
+    "regionMax": "يجب ألا تتجاوز المنطقة 100 حرف"
   },
   "chat": {
     "open": "فتح المحادثة",
@@ -302,6 +303,28 @@
       "priceDropBanner_few": "انخفض سعر {{count}} عناصر من قائمة أمنياتك!",
       "priceDropBanner_many": "انخفض سعر {{count}} عنصرًا من قائمة أمنياتك!",
       "priceDropBanner_other": "انخفض سعر {{count}} عنصر من قائمة أمنياتك!"
+    },
+    "editProfile": "تعديل الملف الشخصي",
+    "profile": {
+      "title": "تعديل الملف الشخصي",
+      "name": "الاسم",
+      "mobile": "رقم الهاتف المحمول",
+      "gender": "الجنس",
+      "genderUnset": "أفضل عدم التحديد",
+      "genderMale": "ذكر",
+      "genderFemale": "أنثى",
+      "genderPreferNotToSay": "أفضل عدم القول",
+      "region": "المنطقة",
+      "save": "حفظ التغييرات",
+      "saving": "جارٍ الحفظ…",
+      "success": "تم تحديث الملف الشخصي",
+      "error": "تعذر تحديث ملفك الشخصي. حاول مرة أخرى.",
+      "avatarAlt": "الصورة الشخصية",
+      "avatarUpload": "رفع صورة",
+      "avatarChange": "تغيير الصورة",
+      "avatarRemove": "إزالة الصورة",
+      "avatarUploadError": "تعذر رفع الصورة. حاول مرة أخرى.",
+      "avatarRemoveError": "تعذر إزالة الصورة. حاول مرة أخرى."
     }
   },
   "wishlist": {

@@ -14,6 +14,7 @@ import StorefrontOrderStatusPage from "./pages/storefront/OrderStatusPage";
 import StorefrontAccountLoginPage from "./pages/storefront/AccountLoginPage";
 import StorefrontAccountSignUpPage from "./pages/storefront/AccountSignUpPage";
 import StorefrontAccountPage from "./pages/storefront/AccountPage";
+import StorefrontAccountProfilePage from "./pages/storefront/AccountProfilePage";
 import StorefrontAccountOrdersPage from "./pages/storefront/AccountOrdersPage";
 import StorefrontAccountWishlistPage from "./pages/storefront/AccountWishlistPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -47,6 +48,7 @@ function App() {
         <Route path="account/signup" element={<StorefrontAccountSignUpPage />} />
         <Route element={<CustomerProtectedRoute />}>
           <Route path="account" element={<StorefrontAccountPage />} />
+          <Route path="account/profile" element={<StorefrontAccountProfilePage />} />
           <Route path="account/orders" element={<StorefrontAccountOrdersPage />} />
           <Route path="account/wishlist" element={<StorefrontAccountWishlistPage />} />
         </Route>
