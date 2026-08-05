@@ -93,7 +93,7 @@ test.describe("Customer accounts", () => {
       await page.goto("/checkout");
       await expect(page.getByLabel("Delivery or pickup")).toContainText("Delivery");
       await page.getByLabel("Name").fill("E2E Customer");
-      await page.getByLabel("Phone").fill("+255700111222");
+      await page.getByLabel("Phone", { exact: true }).fill("+255700111222");
       await page.getByLabel("Address").fill("1 Account Lane");
       await page.getByRole("button", { name: "Place order" }).click();
 
@@ -146,7 +146,7 @@ test.describe("Customer accounts", () => {
 
       await page.goto("/checkout");
       await page.getByLabel("Name").fill("E2E Guest");
-      await page.getByLabel("Phone").fill("+255700333444");
+      await page.getByLabel("Phone", { exact: true }).fill("+255700333444");
       await page.getByLabel("Address").fill("2 Guest Road");
       await page.getByRole("button", { name: "Place order" }).click();
 

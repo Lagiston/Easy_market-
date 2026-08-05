@@ -93,6 +93,12 @@ export const updateCustomerProfileSchema = z.object({
       .transform(sanitizeText)
       .optional(),
   ),
+  // Uncapped, same as Order.address (checkoutFieldsSchema in order.ts) — a
+  // shipping address isn't a bounded-length field the way region/name are.
+  address: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().transform(sanitizeText).optional(),
+  ),
 });
 
 export type UpdateCustomerProfileInput = z.input<typeof updateCustomerProfileSchema>;

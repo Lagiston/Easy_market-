@@ -25,6 +25,7 @@ const baseUser = {
   mobile: null,
   gender: null,
   region: null,
+  address: null,
 };
 
 function renderPage() {
@@ -52,7 +53,13 @@ describe("AccountProfilePage", () => {
   it("prefills the form from the current session", async () => {
     mockedUseSession.mockReturnValue({
       data: {
-        user: { ...baseUser, mobile: "+255712345678", gender: "FEMALE", region: "Dar es Salaam" },
+        user: {
+          ...baseUser,
+          mobile: "+255712345678",
+          gender: "FEMALE",
+          region: "Dar es Salaam",
+          address: "12 Main Street",
+        },
         session: {},
       },
       isPending: false,
@@ -62,6 +69,7 @@ describe("AccountProfilePage", () => {
 
     expect(await screen.findByLabelText("Name")).toHaveValue("Jane Doe");
     expect(screen.getByLabelText("Region")).toHaveValue("Dar es Salaam");
+    expect(screen.getByLabelText("Address")).toHaveValue("12 Main Street");
     expect(screen.getByRole("combobox", { name: "Gender" })).toHaveTextContent("Female");
   });
 
@@ -74,11 +82,16 @@ describe("AccountProfilePage", () => {
 
     await user.clear(await screen.findByLabelText("Region"));
     await user.type(screen.getByLabelText("Region"), "Arusha");
+    await user.type(screen.getByLabelText("Address"), "12 Main Street");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
       expect(mockedUpdateUser).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "Jane Doe", region: "Arusha" }),
+        expect.objectContaining({
+          name: "Jane Doe",
+          region: "Arusha",
+          address: "12 Main Street",
+        }),
       ),
     );
     expect(await screen.findByText("Profile updated")).toBeInTheDocument();

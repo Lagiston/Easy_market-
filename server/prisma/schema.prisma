@@ -105,6 +105,7 @@ model Customer {
   mobile        String?   @db.VarChar(20)
   gender        Gender?
   region        String?   @db.VarChar(100)
+  address       String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      CustomerSession[]

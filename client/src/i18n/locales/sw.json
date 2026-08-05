@@ -160,7 +160,9 @@
     "total": "Jumla",
     "placeOrder": "Weka oda",
     "placing": "Inatuma oda…",
-    "error": "Imeshindwa kutuma oda. Tafadhali jaribu tena."
+    "error": "Imeshindwa kutuma oda. Tafadhali jaribu tena.",
+    "saveAddress": "Hifadhi anwani hii kwenye wasifu wangu",
+    "saveAddressError": "Imeshindwa kuhifadhi anwani hii kwenye wasifu wako, lakini oda yako imewekwa."
   },
   "confirmation": {
     "title": "Asante kwa oda yako!",
@@ -297,7 +299,8 @@
       "avatarChange": "Badilisha picha",
       "avatarRemove": "Ondoa picha",
       "avatarUploadError": "Imeshindwa kupakia picha. Tafadhali jaribu tena.",
-      "avatarRemoveError": "Imeshindwa kuondoa picha. Tafadhali jaribu tena."
+      "avatarRemoveError": "Imeshindwa kuondoa picha. Tafadhali jaribu tena.",
+      "address": "Anwani"
     }
   },
   "wishlist": {

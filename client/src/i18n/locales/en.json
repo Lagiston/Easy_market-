@@ -160,7 +160,9 @@
     "total": "Total",
     "placeOrder": "Place order",
     "placing": "Placing order…",
-    "error": "Could not place the order. Please try again."
+    "error": "Could not place the order. Please try again.",
+    "saveAddress": "Save this address to my profile",
+    "saveAddressError": "Could not save this address to your profile, but your order was placed."
   },
   "confirmation": {
     "title": "Thank you for your order!",
@@ -297,7 +299,8 @@
       "avatarChange": "Change photo",
       "avatarRemove": "Remove photo",
       "avatarUploadError": "Could not upload image. Please try again.",
-      "avatarRemoveError": "Could not remove image. Please try again."
+      "avatarRemoveError": "Could not remove image. Please try again.",
+      "address": "Address"
     }
   },
   "wishlist": {

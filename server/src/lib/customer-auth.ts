@@ -40,6 +40,7 @@ export const customerAuth = betterAuth({
       mobile: { type: "string", required: false, input: true },
       gender: { type: "string", required: false, input: true },
       region: { type: "string", required: false, input: true },
+      address: { type: "string", required: false, input: true },
     },
   },
   // Better Auth's internal field name for the FK back to the user is always

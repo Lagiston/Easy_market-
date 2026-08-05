@@ -12,6 +12,7 @@ export const customerAuthClient = createAuthClient({
         mobile: { type: "string", required: false, input: true },
         gender: { type: "string", required: false, input: true },
         region: { type: "string", required: false, input: true },
+        address: { type: "string", required: false, input: true },
       },
     }),
   ],

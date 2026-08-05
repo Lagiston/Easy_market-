@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from "react-router";
 import i18n from "@/i18n";
 import { CartProvider, type CartItem } from "@/lib/cart";
 import { renderWithQuery } from "@/test/render-with-query";
+import { Toaster } from "@/components/ui/sonner";
 import CheckoutPage from "./CheckoutPage";
 
 vi.mock("axios", async (importOriginal) => {
@@ -17,6 +18,15 @@ vi.mock("axios", async (importOriginal) => {
 });
 const mockedGet = vi.mocked(axios.get);
 const mockedPost = vi.mocked(axios.post);
+
+// Defaults every test to a guest (no session) — the two prefill/save-address
+// tests below override this to a signed-in session.
+vi.mock("@/lib/customer-auth-client", () => ({
+  customerAuthClient: { useSession: vi.fn(), updateUser: vi.fn() },
+}));
+import { customerAuthClient } from "@/lib/customer-auth-client";
+const mockedUseSession = vi.mocked(customerAuthClient.useSession);
+const mockedUpdateUser = vi.mocked(customerAuthClient.updateUser);
 
 const cartItems: CartItem[] = [
   {
@@ -57,6 +67,7 @@ function renderPage(
           <Route path="/checkout/confirmation" element={<div>Confirmation page</div>} />
           <Route path="/cart" element={<div>Cart page</div>} />
         </Routes>
+        <Toaster />
       </CartProvider>
     </MemoryRouter>,
   );
@@ -80,8 +91,13 @@ describe("storefront CheckoutPage", () => {
   beforeEach(async () => {
     mockedGet.mockReset();
     mockedPost.mockReset();
+    mockedUpdateUser.mockReset();
     window.localStorage.clear();
     await i18n.changeLanguage("en");
+    mockedUseSession.mockReturnValue({
+      data: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof customerAuthClient.useSession>);
   });
 
   it("redirects to the cart when it is empty", async () => {
@@ -221,5 +237,122 @@ describe("storefront CheckoutPage", () => {
     );
     // The pre-existing cart (seeded via seedCart()) must survive untouched.
     expect(JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]")).toEqual(cartItems);
+  });
+
+  it("shows no save-address checkbox and no prefill for a guest", async () => {
+    seedCart();
+    mockSettings();
+    renderPage();
+
+    expect(await screen.findByLabelText("Address")).toHaveValue("");
+    expect(screen.getByLabelText("Name")).toHaveValue("");
+    expect(screen.queryByText("Save this address to my profile")).not.toBeInTheDocument();
+  });
+
+  it("prefills name, mobile, and address from a signed-in customer's saved profile", async () => {
+    mockedUseSession.mockReturnValue({
+      data: {
+        user: {
+          name: "Jane Doe",
+          mobile: "+255712345678",
+          address: "12 Main Street",
+        },
+        session: {},
+      },
+      isPending: false,
+    } as unknown as ReturnType<typeof customerAuthClient.useSession>);
+    seedCart();
+    mockSettings();
+    renderPage();
+
+    expect(await screen.findByLabelText("Name")).toHaveValue("Jane Doe");
+    expect(screen.getByLabelText("Phone")).toHaveValue("712345678");
+    expect(screen.getByLabelText("Address")).toHaveValue("12 Main Street");
+  });
+
+  it("does not write back to the profile when the save-address checkbox is left unchecked", async () => {
+    mockedUseSession.mockReturnValue({
+      data: { user: { name: "Jane Doe", mobile: null, address: null }, session: {} },
+      isPending: false,
+    } as unknown as ReturnType<typeof customerAuthClient.useSession>);
+    seedCart();
+    mockSettings(200);
+    mockedPost.mockResolvedValueOnce({
+      data: { order: { code: "ABCD2345", items: [], subtotal: 3800, deliveryFee: 200, total: 4000 } },
+    });
+    renderPage();
+
+    await screen.findByDisplayValue("Jane Doe");
+    await userEvent.type(screen.getByLabelText("Phone"), "712345678");
+    await userEvent.type(screen.getByLabelText("Address"), "12 Main Street");
+    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+
+    await screen.findByText("Confirmation page");
+    expect(mockedUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it("writes the edited name/mobile/address back to the profile when the checkbox is checked", async () => {
+    mockedUseSession.mockReturnValue({
+      data: { user: { name: "Jane Doe", mobile: null, address: null }, session: {} },
+      isPending: false,
+    } as unknown as ReturnType<typeof customerAuthClient.useSession>);
+    mockedUpdateUser.mockResolvedValue({ data: {}, error: null } as unknown as ReturnType<
+      typeof customerAuthClient.updateUser
+    >);
+    seedCart();
+    mockSettings(200);
+    mockedPost.mockResolvedValueOnce({
+      data: { order: { code: "ABCD2345", items: [], subtotal: 3800, deliveryFee: 200, total: 4000 } },
+    });
+    renderPage();
+
+    await screen.findByDisplayValue("Jane Doe");
+    await userEvent.type(screen.getByLabelText("Phone"), "712345678");
+    await userEvent.type(screen.getByLabelText("Address"), "12 Main Street");
+    await userEvent.click(screen.getByText("Save this address to my profile"));
+    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+
+    await screen.findByText("Confirmation page");
+    await waitFor(() =>
+      expect(mockedUpdateUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "Jane Doe",
+          mobile: "+255712345678",
+          address: "12 Main Street",
+        }),
+      ),
+    );
+  });
+
+  it("shows a toast but does not block confirmation when the write-back fails", async () => {
+    mockedUseSession.mockReturnValue({
+      data: { user: { name: "Jane Doe", mobile: null, address: null }, session: {} },
+      isPending: false,
+    } as unknown as ReturnType<typeof customerAuthClient.useSession>);
+    mockedUpdateUser.mockResolvedValue({
+      data: null,
+      error: { message: "Session expired" },
+    } as unknown as ReturnType<typeof customerAuthClient.updateUser>);
+    seedCart();
+    mockSettings(200);
+    mockedPost.mockResolvedValueOnce({
+      data: { order: { code: "ABCD2345", items: [], subtotal: 3800, deliveryFee: 200, total: 4000 } },
+    });
+    renderPage();
+
+    await screen.findByDisplayValue("Jane Doe");
+    await userEvent.type(screen.getByLabelText("Phone"), "712345678");
+    await userEvent.type(screen.getByLabelText("Address"), "12 Main Street");
+    await userEvent.click(screen.getByText("Save this address to my profile"));
+    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+
+    // The order itself still succeeds and navigates — the write-back failure
+    // is a non-blocking, best-effort second request.
+    expect(await screen.findByText("Confirmation page")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Could not save this address to your profile, but your order was placed.",
+      ),
+    ).toBeInTheDocument();
   });
 });

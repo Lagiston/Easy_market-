@@ -160,7 +160,9 @@
     "total": "Total",
     "placeOrder": "Passer la commande",
     "placing": "Envoi de la commande…",
-    "error": "Impossible d'envoyer la commande. Veuillez réessayer."
+    "error": "Impossible d'envoyer la commande. Veuillez réessayer.",
+    "saveAddress": "Enregistrer cette adresse dans mon profil",
+    "saveAddressError": "Impossible d'enregistrer cette adresse dans votre profil, mais votre commande a été passée."
   },
   "confirmation": {
     "title": "Merci pour votre commande !",
@@ -297,7 +299,8 @@
       "avatarChange": "Changer la photo",
       "avatarRemove": "Supprimer la photo",
       "avatarUploadError": "Impossible d'importer l'image. Veuillez réessayer.",
-      "avatarRemoveError": "Impossible de supprimer l'image. Veuillez réessayer."
+      "avatarRemoveError": "Impossible de supprimer l'image. Veuillez réessayer.",
+      "address": "Adresse"
     }
   },
   "wishlist": {

@@ -52,7 +52,7 @@ export default function AccountProfilePage() {
     formState: { errors, isSubmitting },
   } = useForm<UpdateCustomerProfileInput>({
     resolver: zodResolver(updateCustomerProfileSchema),
-    defaultValues: { name: "", mobile: "", gender: "", region: "" },
+    defaultValues: { name: "", mobile: "", gender: "", region: "", address: "" },
   });
 
   // Prefill once the session resolves — a convenience default the customer
@@ -65,6 +65,7 @@ export default function AccountProfilePage() {
       mobile: session.user.mobile ?? "",
       gender: session.user.gender ?? "",
       region: session.user.region ?? "",
+      address: session.user.address ?? "",
     });
   }, [session, reset]);
 
@@ -72,7 +73,7 @@ export default function AccountProfilePage() {
     return null;
   }
 
-  async function onSubmit({ name, mobile, gender, region }: UpdateCustomerProfileInput) {
+  async function onSubmit({ name, mobile, gender, region, address }: UpdateCustomerProfileInput) {
     // Better Auth's additionalFields write `undefined` as "leave unchanged"
     // (mirroring Prisma's own `update` semantics) — an explicit `null` is
     // required to actually clear a previously-set value. The client's
@@ -85,6 +86,7 @@ export default function AccountProfilePage() {
       mobile: mobile ?? null,
       gender: gender ?? null,
       region: region ?? null,
+      address: address ?? null,
     } as Parameters<typeof customerAuthClient.updateUser>[0]);
     if (error) {
       setError("root", { message: error.message ?? t("account.profile.error") });
@@ -180,6 +182,20 @@ export default function AccountProfilePage() {
               {errors.region && (
                 <p className="text-sm text-destructive">
                   {translateFieldError(errors.region.message, t)}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="profile-address">{t("account.profile.address")}</Label>
+              <Input
+                id="profile-address"
+                autoComplete="street-address"
+                aria-invalid={!!errors.address}
+                {...register("address")}
+              />
+              {errors.address && (
+                <p className="text-sm text-destructive">
+                  {translateFieldError(errors.address.message, t)}
                 </p>
               )}
             </div>

@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import {
   checkoutFormSchema,
   DEFAULT_SETTINGS,
@@ -15,8 +16,10 @@ import {
 import { localize } from "@/lib/localize";
 import { translateFieldError } from "@/lib/zod-error-i18n";
 import { useCart, type CartItem } from "@/lib/cart";
+import { customerAuthClient } from "@/lib/customer-auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/PhoneInput";
 import { Label } from "@/components/ui/label";
@@ -56,6 +59,8 @@ export default function CheckoutPage() {
     control,
     handleSubmit,
     watch,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm<CheckoutFormInput>({
     resolver: zodResolver(checkoutFormSchema),
@@ -67,6 +72,25 @@ export default function CheckoutPage() {
     },
   });
   const fulfillmentType = watch("fulfillmentType");
+
+  // Signed-in customers get their name/mobile/address prefilled from their
+  // saved profile — a one-directional convenience default (same precedent as
+  // ProductReviews.tsx's authorName prefill), never written back unless the
+  // customer explicitly checks "Save this address to my profile" below. Only
+  // fills fields still at their untouched default so this can't clobber
+  // something the customer already typed before the session resolved.
+  const { data: session } = customerAuthClient.useSession();
+  const [saveAddress, setSaveAddress] = useState(false);
+  useEffect(() => {
+    if (!session) return;
+    if (!getValues("customerName")) setValue("customerName", session.user.name);
+    if (!getValues("customerPhone") && session.user.mobile) {
+      setValue("customerPhone", session.user.mobile);
+    }
+    if (!getValues("address") && session.user.address) {
+      setValue("address", session.user.address);
+    }
+  }, [session, getValues, setValue]);
 
   const { data: settings } = useQuery({
     queryKey: ["storefront", "settings"],
@@ -90,7 +114,24 @@ export default function CheckoutPage() {
           items: items.map(({ productId, quantity }) => ({ productId, quantity })),
         })
         .then((res) => res.data.order),
-    onSuccess: (order) => {
+    onSuccess: (order, input) => {
+      // Never automatic/silent — only writes back to the profile when the
+      // customer explicitly opted in via the checkbox, same "never
+      // automatic/silent" philosophy as the order-linking-by-phone flow. A
+      // failure here doesn't block the already-successful order; it's a
+      // best-effort second request, not part of order placement itself.
+      if (session && saveAddress) {
+        customerAuthClient
+          .updateUser({
+            name: input.customerName,
+            mobile: input.customerPhone,
+            address: input.address,
+          } as Parameters<typeof customerAuthClient.updateUser>[0])
+          .then(({ error }) => {
+            if (error) toast.error(t("checkout.saveAddressError"));
+          })
+          .catch(() => toast.error(t("checkout.saveAddressError")));
+      }
       if (!buyNowItem) clearCart();
       navigate("/checkout/confirmation", { state: { order } });
     },
@@ -200,6 +241,16 @@ export default function CheckoutPage() {
                 <p className="text-sm text-destructive">
                   {translateFieldError(errors.address.message, t)}
                 </p>
+              )}
+              {session && (
+                <Label className="flex items-center gap-2 text-sm font-normal">
+                  <Checkbox
+                    id="checkout-save-address"
+                    checked={saveAddress}
+                    onCheckedChange={(checked) => setSaveAddress(checked === true)}
+                  />
+                  {t("checkout.saveAddress")}
+                </Label>
               )}
             </div>
           )}
