@@ -31,7 +31,9 @@ import {
 // assignedAgentId "unassigned" mapping.
 const GENDER_UNSET = "unset";
 
-const GENDER_LABEL_KEYS: Record<Gender, string> = {
+// Exported for AccountPage.tsx's read-only summary, which shows the same
+// translated gender label without duplicating this map.
+export const GENDER_LABEL_KEYS: Record<Gender, string> = {
   MALE: "account.profile.genderMale",
   FEMALE: "account.profile.genderFemale",
   PREFER_NOT_TO_SAY: "account.profile.genderPreferNotToSay",

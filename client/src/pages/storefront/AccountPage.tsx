@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { User as UserIcon } from "lucide-react";
+import type { Gender } from "@es-market/core";
 import { customerAuthClient } from "@/lib/customer-auth-client";
+import { GENDER_LABEL_KEYS } from "./AccountProfilePage";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -40,7 +42,28 @@ export default function AccountPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">{session.user.email}</p>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{session.user.email}</p>
+            {/* Each field is independently optional — shown only when set,
+                same "omit rather than show empty" convention as the
+                averageRating line on a product card. */}
+            {session.user.mobile && (
+              <p className="text-sm text-muted-foreground">
+                {t("account.profile.mobile")}: {session.user.mobile}
+              </p>
+            )}
+            {session.user.gender && (
+              <p className="text-sm text-muted-foreground">
+                {t("account.profile.gender")}:{" "}
+                {t(GENDER_LABEL_KEYS[session.user.gender as Gender])}
+              </p>
+            )}
+            {session.user.region && (
+              <p className="text-sm text-muted-foreground">
+                {t("account.profile.region")}: {session.user.region}
+              </p>
+            )}
+          </div>
           <Link
             to="/account/profile"
             className={buttonVariants({ variant: "outline", className: "w-full" })}
