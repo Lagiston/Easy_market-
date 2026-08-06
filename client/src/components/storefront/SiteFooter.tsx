@@ -1,6 +1,9 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { usePublicStoreSettings } from "@/lib/storefront-settings";
+import { buildContactLinks, CONTACT_ICONS } from "@/lib/contact-links";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NAV_ITEMS } from "./SiteHeader";
 
 // Deliberately a fixed dark section regardless of the site's light/dark
@@ -8,10 +11,13 @@ import { NAV_ITEMS } from "./SiteHeader";
 // every other surface in this codebase.
 export default function SiteFooter() {
   const { t } = useTranslation();
+  // Same query/cache key as ContactPage.tsx and CheckoutPage.tsx.
+  const { data: settings, isPending } = usePublicStoreSettings();
+  const contactLinks = buildContactLinks(settings);
 
   return (
     <footer className="bg-neutral-950 px-8 py-12 text-neutral-400">
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 md:flex-row md:justify-between">
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 md:flex-row md:items-start md:justify-between">
         <Link to="/" className="flex items-center gap-2">
           <span
             aria-hidden
@@ -35,6 +41,33 @@ export default function SiteFooter() {
             </Link>
           ))}
         </nav>
+
+        {isPending ? (
+          <div className="flex flex-col items-center gap-2 md:items-end">
+            <Skeleton className="h-5 w-40 bg-white/10" />
+            <Skeleton className="h-5 w-48 bg-white/10" />
+            <Skeleton className="h-5 w-56 bg-white/10" />
+          </div>
+        ) : (
+          contactLinks.length > 0 && (
+            <address className="flex max-w-64 flex-col items-center gap-2 text-sm not-italic md:items-end">
+              {contactLinks.map(({ key, href, label, external }) => {
+                const Icon = CONTACT_ICONS[key];
+                return (
+                  <a
+                    key={key}
+                    href={href}
+                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className="flex items-start gap-2 text-center transition-colors hover:text-white md:text-end"
+                  >
+                    <Icon aria-hidden className="mt-0.5 size-4 shrink-0" />
+                    {label}
+                  </a>
+                );
+              })}
+            </address>
+          )
+        )}
       </div>
 
       <Separator className="my-8 bg-white/10" />

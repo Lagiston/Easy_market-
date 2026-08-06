@@ -4,7 +4,7 @@ import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { Clock } from "lucide-react";
 import { toast } from "sonner";
 import {
   createInquirySchema,
@@ -14,6 +14,7 @@ import {
 } from "@es-market/core";
 import { translateFieldError } from "@/lib/zod-error-i18n";
 import { usePublicStoreSettings } from "@/lib/storefront-settings";
+import { buildContactLinks, CONTACT_ICONS } from "@/lib/contact-links";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,36 +28,18 @@ export default function ContactPage() {
   // Phone/email/address are admin-configured (Settings page) and hidden here
   // until set, rather than shown blank — hours stay a plain translated string
   // since there's no store-hours setting yet.
-  const rows = [
-    settings?.contactPhone && {
-      key: "phone",
-      Icon: Phone,
+  const rows: { key: string; Icon: typeof Clock; value: ReactNode }[] = [
+    ...buildContactLinks(settings).map(({ key, href, label, external }) => ({
+      key,
+      Icon: CONTACT_ICONS[key],
       value: (
-        <a href={`tel:${settings.contactPhone.replace(/\s/g, "")}`}>{settings.contactPhone}</a>
-      ),
-    },
-    settings?.contactEmail && {
-      key: "email",
-      Icon: Mail,
-      value: <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>,
-    },
-    settings?.contactAddress && {
-      key: "address",
-      Icon: MapPin,
-      value: (
-        <a
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            settings.contactAddress,
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {settings.contactAddress}
+        <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+          {label}
         </a>
       ),
-    },
+    })),
     { key: "hours", Icon: Clock, value: t("contact.hoursValue") },
-  ].filter(Boolean) as { key: string; Icon: typeof Phone; value: ReactNode }[];
+  ];
 
   const {
     register,
