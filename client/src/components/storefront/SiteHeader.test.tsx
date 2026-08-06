@@ -51,12 +51,7 @@ describe("SiteHeader", () => {
     expect(desktopLink).toHaveClass("bg-primary/10");
   });
 
-  it("renders a call-us CTA linking to the contact page", () => {
-    renderHeader();
-    expect(screen.getAllByRole("link", { name: /Call us/ })[0]).toHaveAttribute("href", "/contact");
-  });
-
-  it("opens the mobile menu sheet and shows the nav links plus CTA", async () => {
+  it("opens the mobile menu sheet and shows the nav links", async () => {
     renderHeader();
     await userEvent.click(screen.getByRole("button", { name: "Menu" }));
 
@@ -64,9 +59,6 @@ describe("SiteHeader", () => {
     const dialog = screen.getByRole("dialog");
     expect(
       screen.getAllByRole("link", { name: "Contact" }).some((link) => dialog.contains(link)),
-    ).toBe(true);
-    expect(
-      screen.getAllByRole("link", { name: /Call us/ }).some((link) => dialog.contains(link)),
     ).toBe(true);
   });
 

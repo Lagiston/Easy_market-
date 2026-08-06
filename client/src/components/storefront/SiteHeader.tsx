@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Heart, Menu, Phone, ShoppingCart, User } from "lucide-react";
+import { Heart, Menu, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { customerAuthClient } from "@/lib/customer-auth-client";
 import { useWishlist } from "@/lib/wishlist";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -142,13 +141,6 @@ export default function SiteHeader() {
           </Link>
           <ThemeToggle label={t("nav.theme")} />
           <LanguageSwitcher />
-          <Link
-            to="/contact"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "shrink-0 rounded-full whitespace-nowrap")}
-          >
-            <Phone className="size-4" />
-            {t("nav.callUs")}
-          </Link>
         </div>
 
         {/* Mobile trigger */}
@@ -220,19 +212,6 @@ export default function SiteHeader() {
                   <LanguageSwitcher />
                 </div>
               </div>
-              <SheetFooter>
-                <SheetClose
-                  render={
-                    <Link
-                      to="/contact"
-                      className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full rounded-full")}
-                    />
-                  }
-                >
-                  <Phone className="size-4" />
-                  {t("nav.callUs")}
-                </SheetClose>
-              </SheetFooter>
             </SheetContent>
           </Sheet>
         </div>
