@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import type { ProductRow } from "@/components/ProductsTable";
 import { pingClassificationAccepted } from "@/lib/product-classification";
+import { useStoreSettings } from "@/lib/settings-context";
 
 type Category = { id: string; name: LocalizedName };
 type Agent = { id: string; name: string; role: Role };
@@ -42,6 +43,7 @@ export default function ProductForm({
   onSuccess?: (product: ProductRow) => void;
 }) {
   const queryClient = useQueryClient();
+  const { defaultLowStockThreshold } = useStoreSettings();
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const pendingProductRef = useRef<ProductRow | null>(null);
@@ -91,7 +93,7 @@ export default function ProductForm({
           description: { en: "", ar: "" },
           price: 0,
           stock: 0,
-          lowStockThreshold: 10,
+          lowStockThreshold: defaultLowStockThreshold,
           categoryId: "",
           assignedAgentId: "",
           tags: [],

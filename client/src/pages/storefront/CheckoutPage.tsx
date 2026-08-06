@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import axios from "axios";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -11,10 +11,10 @@ import {
   DEFAULT_SETTINGS,
   FulfillmentType,
   type CheckoutFormInput,
-  type StoreSettings,
 } from "@es-market/core";
 import { localize } from "@/lib/localize";
 import { translateFieldError } from "@/lib/zod-error-i18n";
+import { usePublicStoreSettings } from "@/lib/storefront-settings";
 import { useCart, type CartItem } from "@/lib/cart";
 import { customerAuthClient } from "@/lib/customer-auth-client";
 import { Button } from "@/components/ui/button";
@@ -92,13 +92,7 @@ export default function CheckoutPage() {
     }
   }, [session, getValues, setValue]);
 
-  const { data: settings } = useQuery({
-    queryKey: ["storefront", "settings"],
-    queryFn: () =>
-      axios
-        .get<{ settings: StoreSettings }>("/api/storefront/settings")
-        .then((res) => res.data.settings),
-  });
+  const { data: settings } = usePublicStoreSettings();
   const { deliveryFee: configuredFee, freeDeliveryThreshold } = settings ?? DEFAULT_SETTINGS;
   const deliveryFee =
     fulfillmentType === FulfillmentType.PICKUP ||

@@ -3,8 +3,9 @@ import axios from "axios";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Heart, Star, TriangleAlert } from "lucide-react";
-import { CALL_ATTEMPTS_BEFORE_CANCEL, InquiryStatus, OrderStatus, Role } from "@es-market/core";
+import { InquiryStatus, OrderStatus, Role } from "@es-market/core";
 import { authClient } from "@/lib/auth-client";
+import { useStoreSettings } from "@/lib/settings-context";
 import type { OrderRow } from "@/components/OrdersTable";
 import type { InquiryRow } from "@/components/InquiriesTable";
 import { getStockStatus, type ProductRow } from "@/components/ProductsTable";
@@ -117,6 +118,7 @@ function InquiryRowLink({ inquiry }: { inquiry: InquiryRow }) {
 export default function HomePage() {
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user.role === Role.ADMIN;
+  const { callAttemptsBeforeCancel } = useStoreSettings();
   const [soldOutDialogDate, setSoldOutDialogDate] = useState<string | null>(null);
 
   const { data: stats } = useQuery({
@@ -299,7 +301,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     {order.callAttempts > 0 && (
                       <Badge variant="destructive">
-                        {order.callAttempts}/{CALL_ATTEMPTS_BEFORE_CANCEL} calls
+                        {order.callAttempts}/{callAttemptsBeforeCancel} calls
                       </Badge>
                     )}
                     <OrderStatusBadge status={order.status} />

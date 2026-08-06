@@ -1,12 +1,12 @@
 import { Link } from "react-router";
 import { Ban, PackageCheck, PhoneCall, PhoneMissed, PhoneOff, Truck } from "lucide-react";
 import {
-  CALL_ATTEMPTS_BEFORE_CANCEL,
   FulfillmentType,
   OrderStatus,
   type CancelReason,
   type LocalizedName,
 } from "@es-market/core";
+import { useStoreSettings } from "@/lib/settings-context";
 import OrderStatusBadge from "@/components/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -73,6 +73,8 @@ export default function OrdersTable({
   onCancel: (order: OrderRow) => void;
   actionsPending: boolean;
 }) {
+  const { callAttemptsBeforeCancel } = useStoreSettings();
+
   return (
     <Table>
       <TableHeader>
@@ -152,7 +154,7 @@ export default function OrdersTable({
                       >
                         <PhoneCall />
                       </Button>
-                      {order.callAttempts >= CALL_ATTEMPTS_BEFORE_CANCEL && (
+                      {order.callAttempts >= callAttemptsBeforeCancel && (
                         <Button
                           variant="ghost"
                           size="icon-sm"

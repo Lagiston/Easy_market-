@@ -16,6 +16,21 @@ export async function getSettings(): Promise<StoreSettings> {
     if (row.key === "freeDeliveryThreshold") {
       settings.freeDeliveryThreshold = typeof row.value === "number" ? row.value : null;
     }
+    if (row.key === "callAttemptsBeforeCancel" && typeof row.value === "number") {
+      settings.callAttemptsBeforeCancel = row.value;
+    }
+    if (row.key === "defaultLowStockThreshold" && typeof row.value === "number") {
+      settings.defaultLowStockThreshold = row.value;
+    }
+    if (row.key === "contactPhone") {
+      settings.contactPhone = typeof row.value === "string" ? row.value : null;
+    }
+    if (row.key === "contactEmail") {
+      settings.contactEmail = typeof row.value === "string" ? row.value : null;
+    }
+    if (row.key === "contactAddress") {
+      settings.contactAddress = typeof row.value === "string" ? row.value : null;
+    }
   }
   return settings;
 }

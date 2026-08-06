@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
@@ -12,48 +13,50 @@ import {
   type Language,
 } from "@es-market/core";
 import { translateFieldError } from "@/lib/zod-error-i18n";
+import { usePublicStoreSettings } from "@/lib/storefront-settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-// Store contact details. Address/hours are still placeholders pending real
-// values (see implementation-plan.md 8.5, seeding real content).
-const PHONE = "+255 700 123 456";
-const EMAIL = "hello@es-market.co.tz";
-
 export default function ContactPage() {
   const { t, i18n } = useTranslation();
+  const { data: settings } = usePublicStoreSettings();
 
+  // Phone/email/address are admin-configured (Settings page) and hidden here
+  // until set, rather than shown blank — hours stay a plain translated string
+  // since there's no store-hours setting yet.
   const rows = [
-    {
+    settings?.contactPhone && {
       key: "phone",
       Icon: Phone,
-      value: <a href={`tel:${PHONE.replace(/\s/g, "")}`}>{PHONE}</a>,
+      value: (
+        <a href={`tel:${settings.contactPhone.replace(/\s/g, "")}`}>{settings.contactPhone}</a>
+      ),
     },
-    {
+    settings?.contactEmail && {
       key: "email",
       Icon: Mail,
-      value: <a href={`mailto:${EMAIL}`}>{EMAIL}</a>,
+      value: <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>,
     },
-    {
+    settings?.contactAddress && {
       key: "address",
       Icon: MapPin,
       value: (
         <a
           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            t("contact.addressValue"),
+            settings.contactAddress,
           )}`}
           target="_blank"
           rel="noopener noreferrer"
         >
-          {t("contact.addressValue")}
+          {settings.contactAddress}
         </a>
       ),
     },
     { key: "hours", Icon: Clock, value: t("contact.hoursValue") },
-  ] as const;
+  ].filter(Boolean) as { key: string; Icon: typeof Phone; value: ReactNode }[];
 
   const {
     register,

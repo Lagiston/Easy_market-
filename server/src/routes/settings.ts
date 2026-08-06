@@ -8,12 +8,21 @@ import { updateSettingsSchema } from "@es-market/core";
 // Store settings endpoints; mounted at /api in index.ts.
 export const settingsRouter = Router();
 
-// Public: checkout needs the delivery fee and free-delivery threshold to show totals.
+// Public: checkout needs the delivery fee and free-delivery threshold to show
+// totals, and the contact page needs the store's contact details.
+// callAttemptsBeforeCancel/defaultLowStockThreshold are internal ops settings,
+// not exposed here.
 settingsRouter.get("/storefront/settings", async (_req, res) => {
-  res.json({ settings: await getSettings() });
+  const { deliveryFee, freeDeliveryThreshold, contactPhone, contactEmail, contactAddress } =
+    await getSettings();
+  res.json({
+    settings: { deliveryFee, freeDeliveryThreshold, contactPhone, contactEmail, contactAddress },
+  });
 });
 
-settingsRouter.get("/settings", requireAuth, requireRole(Role.ADMIN), async (_req, res) => {
+// Any staff role (not just ADMIN) — Orders pages/dashboard need callAttemptsBeforeCancel
+// to know when to offer the cancel-as-unreachable action, and that's AGENT-visible work.
+settingsRouter.get("/settings", requireAuth, async (_req, res) => {
   res.json({ settings: await getSettings() });
 });
 
@@ -23,7 +32,15 @@ settingsRouter.put("/settings", requireAuth, requireRole(Role.ADMIN), async (req
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { deliveryFee, freeDeliveryThreshold } = parsed.data;
+  const {
+    deliveryFee,
+    freeDeliveryThreshold,
+    callAttemptsBeforeCancel,
+    defaultLowStockThreshold,
+    contactPhone,
+    contactEmail,
+    contactAddress,
+  } = parsed.data;
 
   const entries = [
     { key: "deliveryFee", value: deliveryFee as Prisma.InputJsonValue },
@@ -31,6 +48,14 @@ settingsRouter.put("/settings", requireAuth, requireRole(Role.ADMIN), async (req
       key: "freeDeliveryThreshold",
       value: freeDeliveryThreshold ?? Prisma.JsonNull,
     },
+    { key: "callAttemptsBeforeCancel", value: callAttemptsBeforeCancel as Prisma.InputJsonValue },
+    {
+      key: "defaultLowStockThreshold",
+      value: defaultLowStockThreshold as Prisma.InputJsonValue,
+    },
+    { key: "contactPhone", value: contactPhone ?? Prisma.JsonNull },
+    { key: "contactEmail", value: contactEmail ?? Prisma.JsonNull },
+    { key: "contactAddress", value: contactAddress ?? Prisma.JsonNull },
   ];
   await prisma.$transaction(
     entries.map(({ key, value }) =>

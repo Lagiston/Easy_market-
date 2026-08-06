@@ -64,7 +64,6 @@ export {
   ORDER_STATUSES,
   CancelReason,
   CANCEL_REASONS,
-  CALL_ATTEMPTS_BEFORE_CANCEL,
   checkoutFormSchema,
   placeOrderSchema,
   cancelOrderSchema,
@@ -91,6 +90,7 @@ export {
   DEFAULT_SETTINGS,
   updateSettingsSchema,
   type StoreSettings,
+  type PublicStoreSettings,
   type UpdateSettingsInput,
   type UpdateSettingsFormInput,
 } from "./schemas/settings";

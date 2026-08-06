@@ -3,13 +3,14 @@ import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { CALL_ATTEMPTS_BEFORE_CANCEL, FulfillmentType, OrderStatus } from "@es-market/core";
+import { FulfillmentType, OrderStatus } from "@es-market/core";
 import {
   canCancel,
   canComplete,
   canGoOutForDelivery,
   type OrderRow,
 } from "@/components/OrdersTable";
+import { useStoreSettings } from "@/lib/settings-context";
 import OrderStatusBadge, { CANCEL_REASON_LABELS } from "@/components/OrderStatusBadge";
 import CancelOrderDialog from "./CancelOrderDialog";
 import CancelUnreachableOrderDialog from "./CancelUnreachableOrderDialog";
@@ -49,6 +50,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const { callAttemptsBeforeCancel } = useStoreSettings();
   const [cancellingOrder, setCancellingOrder] = useState<OrderRow | null>(null);
   const [cancellingUnreachableOrder, setCancellingUnreachableOrder] = useState<OrderRow | null>(
     null,
@@ -202,7 +204,7 @@ export default function OrderDetailPage() {
                   <Button disabled={actionsPending} onClick={() => confirmMutation.mutate()}>
                     Confirm order
                   </Button>
-                  {order.callAttempts >= CALL_ATTEMPTS_BEFORE_CANCEL && (
+                  {order.callAttempts >= callAttemptsBeforeCancel && (
                     <Button
                       variant="outline"
                       className="text-destructive"

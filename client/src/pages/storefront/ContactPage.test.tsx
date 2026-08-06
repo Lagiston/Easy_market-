@@ -20,10 +20,19 @@ vi.mock("axios", async (importOriginal) => {
   const actual = await importOriginal<typeof import("axios")>();
   return {
     ...actual,
-    default: { ...actual.default, post: vi.fn() },
+    default: { ...actual.default, get: vi.fn(), post: vi.fn() },
   };
 });
+const mockedGet = vi.mocked(axios.get);
 const mockedPost = vi.mocked(axios.post);
+
+const contactSettings = {
+  deliveryFee: 0,
+  freeDeliveryThreshold: null,
+  contactPhone: "+255 700 123 456",
+  contactEmail: "hello@es-market.co.tz",
+  contactAddress: "12 Market Street, City Center",
+};
 
 async function fillForm() {
   await userEvent.type(screen.getByLabelText("Name"), "Jane Doe");
@@ -34,33 +43,55 @@ async function fillForm() {
 describe("storefront ContactPage", () => {
   beforeEach(async () => {
     window.localStorage.clear();
+    mockedGet.mockReset();
+    mockedGet.mockResolvedValue({ data: { settings: contactSettings } });
     mockedPost.mockReset();
     await i18n.changeLanguage("en");
   });
 
-  it("renders phone and email as actionable links", () => {
+  it("renders phone and email as actionable links", async () => {
     renderWithQuery(<ContactPage />);
 
-    expect(screen.getByRole("link", { name: "+255 700 123 456" })).toHaveAttribute(
-      "href",
-      "tel:+255700123456",
-    );
+    expect(
+      await screen.findByRole("link", { name: "+255 700 123 456" }),
+    ).toHaveAttribute("href", "tel:+255700123456");
     expect(screen.getByRole("link", { name: "hello@es-market.co.tz" })).toHaveAttribute(
       "href",
       "mailto:hello@es-market.co.tz",
     );
   });
 
-  it("renders address as a directions link and opening hours as text", () => {
+  it("renders address as a directions link and opening hours as text", async () => {
     renderWithQuery(<ContactPage />);
 
     expect(
-      screen.getByRole("link", { name: "12 Market Street, City Center" }),
+      await screen.findByRole("link", { name: "12 Market Street, City Center" }),
     ).toHaveAttribute(
       "href",
       "https://www.google.com/maps/search/?api=1&query=12%20Market%20Street%2C%20City%20Center",
     );
     expect(screen.getByText("Mon–Sat: 8:00–20:00, Sun: 9:00–14:00")).toBeInTheDocument();
+  });
+
+  it("hides contact rows that haven't been configured", async () => {
+    mockedGet.mockReset();
+    mockedGet.mockResolvedValue({
+      data: {
+        settings: {
+          deliveryFee: 0,
+          freeDeliveryThreshold: null,
+          contactPhone: null,
+          contactEmail: null,
+          contactAddress: null,
+        },
+      },
+    });
+    renderWithQuery(<ContactPage />);
+
+    expect(await screen.findByText("Mon–Sat: 8:00–20:00, Sun: 9:00–14:00")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^\+/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /@/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("Address")).not.toBeInTheDocument();
   });
 
   it("renders translated labels in Arabic", async () => {
@@ -69,7 +100,7 @@ describe("storefront ContactPage", () => {
 
     expect(screen.getByRole("heading", { name: "اتصل بنا" })).toBeInTheDocument();
     expect(screen.getAllByText("الهاتف").length).toBeGreaterThan(0);
-    expect(screen.getByText("شارع السوق 12، وسط المدينة")).toBeInTheDocument();
+    expect(await screen.findByText("12 Market Street, City Center")).toBeInTheDocument();
   });
 
   it("shows validation errors and does not submit", async () => {

@@ -49,9 +49,9 @@ export const CANCEL_REASONS = [
   CancelReason.OTHER,
 ] as const;
 
-// Failed call attempts on a RECEIVED order before staff may cancel it as
-// "customer unreachable" (Project-Scope resolved decision).
-export const CALL_ATTEMPTS_BEFORE_CANCEL = 3;
+// Failed call attempts on a RECEIVED order before staff may cancel it as "customer
+// unreachable" is now an admin-configurable store setting — see
+// StoreSettings.callAttemptsBeforeCancel in core/src/schemas/settings.ts.
 
 // Staff order list filter: omit `status` for all orders.
 export const orderListQuerySchema = z.object({

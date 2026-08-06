@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router";
 import { type Role } from "@es-market/core";
 import { authClient } from "../lib/auth-client";
+import { SettingsProvider } from "../lib/settings-context";
 import Layout from "./Layout";
 
 export default function ProtectedRoute({ roles }: { roles?: Role[] }) {
@@ -17,11 +18,13 @@ export default function ProtectedRoute({ roles }: { roles?: Role[] }) {
   }
 
   return (
-    <div className="min-h-screen bg-muted">
-      <Layout user={session.user} />
-      <main className="p-6">
-        <Outlet />
-      </main>
-    </div>
+    <SettingsProvider>
+      <div className="min-h-screen bg-muted">
+        <Layout user={session.user} />
+        <main className="p-6">
+          <Outlet />
+        </main>
+      </div>
+    </SettingsProvider>
   );
 }
