@@ -80,7 +80,7 @@ export default function SiteHeader() {
       <div
         className={cn(
           "grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-border/60 bg-background/70 px-4 backdrop-blur-xl transition-[height,box-shadow,background-color] duration-300 motion-reduce:transition-none reduced-transparency:bg-background reduced-transparency:backdrop-blur-none md:px-8 lg:grid-cols-[1fr_auto_1fr]",
-          scrolled ? "h-14 bg-background/90 shadow-md md:h-16" : "h-16 md:h-20",
+          scrolled ? "h-14 bg-background/50 shadow-md md:h-16" : "h-16 md:h-20",
         )}
       >
         {/* Left — logo lockup */}
