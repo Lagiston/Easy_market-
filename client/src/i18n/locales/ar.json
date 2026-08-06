@@ -7,7 +7,11 @@
     "inquiryStatus": "حالة الرسالة",
     "contact": "اتصل بنا",
     "signIn": "تسجيل الدخول",
-    "theme": "تبديل المظهر"
+    "theme": "تبديل المظهر",
+    "menu": "القائمة",
+    "mainNavigation": "التنقل الرئيسي",
+    "callUs": "اتصل بنا",
+    "skipToContent": "تخطَّ إلى المحتوى"
   },
   "language": {
     "label": "اللغة"
@@ -160,7 +164,12 @@
     "remove": "إزالة {{name}} من السلة",
     "subtotal": "المجموع الفرعي",
     "checkout": "متابعة إتمام الطلب",
-    "updatedToast": "تم تحديث كمية {{name}} إلى {{quantity}} في السلة"
+    "updatedToast": "تم تحديث كمية {{name}} إلى {{quantity}} في السلة",
+    "navCount_one": "السلة، عنصر واحد",
+    "navCount_two": "السلة، عنصران",
+    "navCount_few": "السلة، {{count}} عناصر",
+    "navCount_many": "السلة، {{count}} عنصرًا",
+    "navCount_other": "السلة، {{count}} عنصر"
   },
   "checkout": {
     "title": "إتمام الطلب",
@@ -353,6 +362,11 @@
   "wishlist": {
     "add": "أضف إلى قائمة الأمنيات",
     "remove": "إزالة من قائمة الأمنيات",
-    "nav": "قائمة الأمنيات"
+    "nav": "قائمة الأمنيات",
+    "navCount_one": "قائمة الأمنيات، عنصر واحد",
+    "navCount_two": "قائمة الأمنيات، عنصران",
+    "navCount_few": "قائمة الأمنيات، {{count}} عناصر",
+    "navCount_many": "قائمة الأمنيات، {{count}} عنصرًا",
+    "navCount_other": "قائمة الأمنيات، {{count}} عنصر"
   }
 }

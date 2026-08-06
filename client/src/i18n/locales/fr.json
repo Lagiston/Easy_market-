@@ -7,7 +7,11 @@
     "inquiryStatus": "Suivi de message",
     "contact": "Contact",
     "signIn": "Se connecter",
-    "theme": "Changer de thème"
+    "theme": "Changer de thème",
+    "menu": "Menu",
+    "mainNavigation": "Navigation principale",
+    "callUs": "Appelez-nous",
+    "skipToContent": "Aller au contenu"
   },
   "language": {
     "label": "Langue"
@@ -145,7 +149,9 @@
     "remove": "Retirer {{name}} du panier",
     "subtotal": "Sous-total",
     "checkout": "Passer la commande",
-    "updatedToast": "Quantité de {{name}} mise à jour à {{quantity}} dans le panier"
+    "updatedToast": "Quantité de {{name}} mise à jour à {{quantity}} dans le panier",
+    "navCount_one": "Panier, {{count}} article",
+    "navCount_other": "Panier, {{count}} articles"
   },
   "checkout": {
     "title": "Commande",
@@ -326,6 +332,8 @@
   "wishlist": {
     "add": "Ajouter à la liste de souhaits",
     "remove": "Retirer de la liste de souhaits",
-    "nav": "Liste de souhaits"
+    "nav": "Liste de souhaits",
+    "navCount_one": "Liste de souhaits, {{count}} article",
+    "navCount_other": "Liste de souhaits, {{count}} articles"
   }
 }

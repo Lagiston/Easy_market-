@@ -63,6 +63,15 @@ describe("StorefrontLayout", () => {
     expect(screen.getByText("Page content")).toBeInTheDocument();
   });
 
+  it("renders a skip-to-content link pointing at the main landmark", () => {
+    renderLayout();
+    expect(screen.getByRole("link", { name: "Skip to content" })).toHaveAttribute(
+      "href",
+      "#main-content",
+    );
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
+  });
+
   it("renders a cart link without a badge when the cart is empty", () => {
     renderLayout();
     const cartLink = screen.getByRole("link", { name: "Cart" });
@@ -79,6 +88,7 @@ describe("StorefrontLayout", () => {
       ]),
     );
     renderLayout();
-    expect(screen.getByRole("link", { name: "Cart" })).toHaveTextContent("3");
+    const cartLink = screen.getByRole("link", { name: "Cart, 3 items" });
+    expect(cartLink).toHaveTextContent("3");
   });
 });

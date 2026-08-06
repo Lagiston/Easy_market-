@@ -7,7 +7,11 @@
     "inquiryStatus": "Message status",
     "contact": "Contact",
     "signIn": "Sign in",
-    "theme": "Toggle theme"
+    "theme": "Toggle theme",
+    "menu": "Menu",
+    "mainNavigation": "Main navigation",
+    "callUs": "Call us",
+    "skipToContent": "Skip to content"
   },
   "language": {
     "label": "Language"
@@ -145,7 +149,9 @@
     "remove": "Remove {{name}} from cart",
     "subtotal": "Subtotal",
     "checkout": "Proceed to checkout",
-    "updatedToast": "{{name}} quantity updated to {{quantity}} in cart"
+    "updatedToast": "{{name}} quantity updated to {{quantity}} in cart",
+    "navCount_one": "Cart, {{count}} item",
+    "navCount_other": "Cart, {{count}} items"
   },
   "checkout": {
     "title": "Checkout",
@@ -326,6 +332,8 @@
   "wishlist": {
     "add": "Add to wishlist",
     "remove": "Remove from wishlist",
-    "nav": "Wishlist"
+    "nav": "Wishlist",
+    "navCount_one": "Wishlist, {{count}} item",
+    "navCount_other": "Wishlist, {{count}} items"
   }
 }

@@ -7,7 +7,11 @@
     "inquiryStatus": "Hali ya ujumbe",
     "contact": "Wasiliana",
     "signIn": "Ingia",
-    "theme": "Badilisha mandhari"
+    "theme": "Badilisha mandhari",
+    "menu": "Menyu",
+    "mainNavigation": "Urambazaji mkuu",
+    "callUs": "Tupigie",
+    "skipToContent": "Ruka hadi kwenye maudhui"
   },
   "language": {
     "label": "Lugha"
@@ -145,7 +149,9 @@
     "remove": "Ondoa {{name}} kutoka kikapuni",
     "subtotal": "Jumla ndogo",
     "checkout": "Endelea na oda",
-    "updatedToast": "Kiasi cha {{name}} kimesasishwa hadi {{quantity}} kikapuni"
+    "updatedToast": "Kiasi cha {{name}} kimesasishwa hadi {{quantity}} kikapuni",
+    "navCount_one": "Kikapu, bidhaa {{count}}",
+    "navCount_other": "Kikapu, bidhaa {{count}}"
   },
   "checkout": {
     "title": "Kamilisha oda",
@@ -326,6 +332,8 @@
   "wishlist": {
     "add": "Ongeza kwenye orodha ya matakwa",
     "remove": "Ondoa kwenye orodha ya matakwa",
-    "nav": "Orodha ya matakwa"
+    "nav": "Orodha ya matakwa",
+    "navCount_one": "Orodha ya matakwa, bidhaa {{count}}",
+    "navCount_other": "Orodha ya matakwa, bidhaa {{count}}"
   }
 }
