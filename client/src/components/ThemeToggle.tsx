@@ -1,29 +1,26 @@
 import { useEffect } from "react";
 import { useTheme } from "next-themes";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const NEXT_THEME = {
-  light: "dark",
-  dark: "system",
-  system: "light",
-} as const;
-
-const THEME_ICONS = { light: Sun, dark: Moon, system: Monitor } as const;
-
-// Cycles light → dark → system; the icon shows the current *setting*
-// (monitor = follow the OS), not the resolved appearance.
+// Two-option toggle: light/dark only, no "system" setting to cycle through.
+// The very first visit still follows the OS preference (ThemeProvider's
+// defaultTheme="system" in main.tsx), so `theme` may still read "system"
+// until the user actually clicks this — the icon and the toggle target both
+// key off `resolvedTheme` (the appearance actually shown), not `theme`
+// itself, so the first click always flips to the *opposite* of what's
+// currently on screen rather than jumping to a third state.
 export default function ThemeToggle({
   label = "Toggle theme",
 }: {
   label?: string;
 }) {
-  const { theme, resolvedTheme, setTheme } = useTheme();
-  const setting = (theme ?? "system") as keyof typeof NEXT_THEME;
-  const Icon = THEME_ICONS[setting] ?? Monitor;
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const Icon = isDark ? Moon : Sun;
 
   // Keep mobile browser chrome matching the page background — runs on
-  // toggle and also when the OS theme changes while set to "system".
+  // toggle and also on the very first render once resolvedTheme settles.
   // Hex values mirror --background in index.css / index.html.
   useEffect(() => {
     if (!resolvedTheme) return;
@@ -39,7 +36,7 @@ export default function ThemeToggle({
       size="icon-sm"
       aria-label={label}
       title={label}
-      onClick={() => setTheme(NEXT_THEME[setting] ?? "system")}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
     >
       <Icon className="size-4" />
     </Button>
