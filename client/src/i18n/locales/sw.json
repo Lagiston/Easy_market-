@@ -4,6 +4,7 @@
     "home": "Nyumbani",
     "products": "Bidhaa",
     "orderStatus": "Hali ya oda",
+    "inquiryStatus": "Hali ya ujumbe",
     "contact": "Wasiliana",
     "signIn": "Ingia",
     "theme": "Badilisha mandhari"
@@ -40,12 +41,16 @@
     "hours": "Saa za kazi",
     "hoursValue": "Jumatatu–Jumamosi: 8:00–20:00, Jumapili: 9:00–14:00",
     "formTitle": "Tutumie ujumbe",
+    "responseTime": "Kwa kawaida tunajibu ndani ya saa 24.",
     "name": "Jina",
     "message": "Ujumbe",
+    "messageCount": "{{count}} / {{max}}",
     "send": "Tuma ujumbe",
     "sending": "Inatuma…",
     "success": "Asante — tutawasiliana nawe hivi karibuni.",
-    "error": "Imeshindwa kutuma ujumbe wako. Tafadhali jaribu tena."
+    "error": "Imeshindwa kutuma ujumbe wako. Tafadhali jaribu tena.",
+    "referenceCodeLabel": "Nambari yako ya kumbukumbu",
+    "referenceCodeHint": "Hifadhi hii — unaweza kuangalia hali ya ujumbe wako wakati wowote kwa nambari hii na barua pepe yako."
   },
   "products": {
     "title": "Bidhaa",
@@ -190,11 +195,27 @@
       "cancelled": "Imeghairiwa"
     }
   },
+  "inquiryStatus": {
+    "title": "Angalia hali ya ujumbe wako",
+    "subtitle": "Weka nambari yako ya kumbukumbu na barua pepe uliyotumia kuwasiliana nasi.",
+    "code": "Nambari ya kumbukumbu",
+    "email": "Barua pepe",
+    "check": "Angalia hali",
+    "checking": "Inaangalia…",
+    "notFound": "Hakuna ujumbe uliopatikana kwa nambari hii na barua pepe hii.",
+    "error": "Imeshindwa kuangalia hali ya ujumbe. Tafadhali jaribu tena.",
+    "statuses": {
+      "open": "Wazi",
+      "resolved": "Umetatuliwa",
+      "closed": "Umefungwa"
+    }
+  },
   "footer": {
     "copyright": "© {{year}} ES-Market"
   },
   "validation": {
     "orderLookupCode": "Msimbo wa oda unahitajika",
+    "inquiryLookupCode": "Msimbo wa ujumbe unahitajika",
     "orderLookupPhone": "Nambari ya simu inahitajika",
     "customerName": "Jina lazima liwe na herufi 2 au zaidi",
     "phone": "Nambari sahihi ya simu inahitajika",

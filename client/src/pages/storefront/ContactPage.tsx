@@ -4,8 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { toast } from "sonner";
 import {
   createInquirySchema,
+  INQUIRY_MESSAGE_MAX_LENGTH,
   type CreateInquiryFormInput,
   type Language,
 } from "@es-market/core";
@@ -16,10 +18,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-// Store contact details — placeholder values until the real ones are provided
-// before launch (see implementation-plan.md 8.5, seeding real content).
-const PHONE = "+255 700 000 000";
-const EMAIL = "hello@es-market.example";
+// Store contact details. Address/hours are still placeholders pending real
+// values (see implementation-plan.md 8.5, seeding real content).
+const PHONE = "+255 700 123 456";
+const EMAIL = "hello@es-market.co.tz";
 
 export default function ContactPage() {
   const { t, i18n } = useTranslation();
@@ -35,7 +37,21 @@ export default function ContactPage() {
       Icon: Mail,
       value: <a href={`mailto:${EMAIL}`}>{EMAIL}</a>,
     },
-    { key: "address", Icon: MapPin, value: t("contact.addressValue") },
+    {
+      key: "address",
+      Icon: MapPin,
+      value: (
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            t("contact.addressValue"),
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {t("contact.addressValue")}
+        </a>
+      ),
+    },
     { key: "hours", Icon: Clock, value: t("contact.hoursValue") },
   ] as const;
 
@@ -43,16 +59,25 @@ export default function ContactPage() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<CreateInquiryFormInput>({
     resolver: zodResolver(createInquirySchema),
     defaultValues: { customerName: "", customerEmail: "", customerPhone: "", message: "" },
   });
 
+  const messageLength = (watch("message") ?? "").length;
+  const isMessageOverLimit = messageLength > INQUIRY_MESSAGE_MAX_LENGTH;
+
   const mutation = useMutation({
     mutationFn: (input: CreateInquiryFormInput) =>
-      axios.post("/api/storefront/inquiries", input).then((res) => res.data),
-    onSuccess: () => reset(),
+      axios
+        .post<{ inquiry: { id: string; code: string } }>("/api/storefront/inquiries", input)
+        .then((res) => res.data.inquiry),
+    onSuccess: () => {
+      reset();
+      toast.success(t("contact.success"));
+    },
   });
 
   const serverError = mutation.isError
@@ -80,9 +105,21 @@ export default function ContactPage() {
           ))}
         </CardContent>
       </Card>
+      {mutation.isSuccess && (
+        <Card className="py-0">
+          <CardContent className="space-y-1 p-4 text-center">
+            <p className="text-sm text-muted-foreground">{t("contact.referenceCodeLabel")}</p>
+            <p className="font-mono text-lg font-semibold tracking-widest">
+              {mutation.data.code}
+            </p>
+            <p className="text-xs text-muted-foreground">{t("contact.referenceCodeHint")}</p>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardContent className="p-6">
-          <h2 className="mb-4 text-lg font-semibold">{t("contact.formTitle")}</h2>
+          <h2 className="mb-1 text-lg font-semibold">{t("contact.formTitle")}</h2>
+          <p className="mb-4 text-sm text-muted-foreground">{t("contact.responseTime")}</p>
           <form
             noValidate
             onSubmit={handleSubmit((input) =>
@@ -95,6 +132,7 @@ export default function ContactPage() {
               <Input
                 id="contact-name"
                 autoComplete="name"
+                disabled={mutation.isPending}
                 aria-invalid={!!errors.customerName}
                 {...register("customerName")}
               />
@@ -110,6 +148,7 @@ export default function ContactPage() {
                 id="contact-email"
                 type="email"
                 autoComplete="email"
+                disabled={mutation.isPending}
                 aria-invalid={!!errors.customerEmail}
                 {...register("customerEmail")}
               />
@@ -125,6 +164,7 @@ export default function ContactPage() {
                 id="contact-phone"
                 type="tel"
                 autoComplete="tel"
+                disabled={mutation.isPending}
                 aria-invalid={!!errors.customerPhone}
                 {...register("customerPhone")}
               />
@@ -139,6 +179,7 @@ export default function ContactPage() {
               <Textarea
                 id="contact-message"
                 rows={4}
+                disabled={mutation.isPending}
                 aria-invalid={!!errors.message}
                 {...register("message")}
               />
@@ -147,11 +188,18 @@ export default function ContactPage() {
                   {translateFieldError(errors.message.message, t)}
                 </p>
               )}
+              <p
+                className={`text-end text-xs ${
+                  isMessageOverLimit ? "text-destructive" : "text-muted-foreground"
+                }`}
+              >
+                {t("contact.messageCount", {
+                  count: messageLength,
+                  max: INQUIRY_MESSAGE_MAX_LENGTH,
+                })}
+              </p>
             </div>
             {serverError && <p className="text-sm text-destructive">{serverError}</p>}
-            {mutation.isSuccess && (
-              <p className="text-sm text-primary">{t("contact.success")}</p>
-            )}
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? t("contact.sending") : t("contact.send")}
             </Button>

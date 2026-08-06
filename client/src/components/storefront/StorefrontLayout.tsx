@@ -50,6 +50,12 @@ export default function StorefrontLayout() {
             {t("nav.orderStatus")}
           </Link>
           <Link
+            to="/inquiry-status"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            {t("nav.inquiryStatus")}
+          </Link>
+          <Link
             to="/contact"
             className="text-sm text-muted-foreground hover:text-foreground"
           >

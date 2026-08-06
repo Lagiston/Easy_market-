@@ -315,6 +315,10 @@ enum MessageSender {
 
 model Inquiry {
   id              String         @id
+  // Non-enumerable short code (same alphabet/length as Order.code) letting a
+  // guest look up this thread later by code + email, without relying on the
+  // localStorage-persisted id the chat widget uses.
+  code            String         @unique
   channel         InquiryChannel @default(WEBSITE)
   status          InquiryStatus  @default(OPEN)
   customerName    String

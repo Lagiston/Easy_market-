@@ -4,6 +4,7 @@
     "home": "Accueil",
     "products": "Produits",
     "orderStatus": "Suivi de commande",
+    "inquiryStatus": "Suivi de message",
     "contact": "Contact",
     "signIn": "Se connecter",
     "theme": "Changer de thème"
@@ -40,12 +41,16 @@
     "hours": "Horaires d'ouverture",
     "hoursValue": "Lun–Sam : 8h00–20h00, Dim : 9h00–14h00",
     "formTitle": "Envoyez-nous un message",
+    "responseTime": "Nous répondons généralement sous 24 heures.",
     "name": "Nom",
     "message": "Message",
+    "messageCount": "{{count}} / {{max}}",
     "send": "Envoyer le message",
     "sending": "Envoi…",
     "success": "Merci — nous vous répondrons bientôt.",
-    "error": "Impossible d'envoyer votre message. Veuillez réessayer."
+    "error": "Impossible d'envoyer votre message. Veuillez réessayer.",
+    "referenceCodeLabel": "Votre code de référence",
+    "referenceCodeHint": "Conservez-le — vous pouvez vérifier le statut de votre message à tout moment avec ce code et votre e-mail."
   },
   "products": {
     "title": "Produits",
@@ -190,11 +195,27 @@
       "cancelled": "Annulée"
     }
   },
+  "inquiryStatus": {
+    "title": "Vérifier le statut de votre message",
+    "subtitle": "Saisissez votre code de référence et l'e-mail que vous avez utilisé pour nous contacter.",
+    "code": "Code de référence",
+    "email": "E-mail",
+    "check": "Vérifier l'état",
+    "checking": "Vérification…",
+    "notFound": "Aucun message trouvé pour ce code et cet e-mail.",
+    "error": "Impossible de vérifier l'état du message. Veuillez réessayer.",
+    "statuses": {
+      "open": "Ouvert",
+      "resolved": "Résolu",
+      "closed": "Fermé"
+    }
+  },
   "footer": {
     "copyright": "© {{year}} ES-Market"
   },
   "validation": {
     "orderLookupCode": "Le code de commande est requis",
+    "inquiryLookupCode": "Le code de message est requis",
     "orderLookupPhone": "Le numéro de téléphone est requis",
     "customerName": "Le nom doit contenir au moins 2 caractères",
     "phone": "Un numéro de téléphone valide est requis",

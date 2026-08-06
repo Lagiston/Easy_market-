@@ -4,7 +4,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
 import i18n from "@/i18n";
 import { renderWithQuery } from "@/test/render-with-query";
+import { Toaster } from "@/components/ui/sonner";
 import ContactPage from "./ContactPage";
+
+function renderPage() {
+  renderWithQuery(
+    <>
+      <ContactPage />
+      <Toaster />
+    </>,
+  );
+}
 
 vi.mock("axios", async (importOriginal) => {
   const actual = await importOriginal<typeof import("axios")>();
@@ -31,20 +41,25 @@ describe("storefront ContactPage", () => {
   it("renders phone and email as actionable links", () => {
     renderWithQuery(<ContactPage />);
 
-    expect(screen.getByRole("link", { name: "+255 700 000 000" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "+255 700 123 456" })).toHaveAttribute(
       "href",
-      "tel:+255700000000",
+      "tel:+255700123456",
     );
-    expect(screen.getByRole("link", { name: "hello@es-market.example" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "hello@es-market.co.tz" })).toHaveAttribute(
       "href",
-      "mailto:hello@es-market.example",
+      "mailto:hello@es-market.co.tz",
     );
   });
 
-  it("renders address and opening hours", () => {
+  it("renders address as a directions link and opening hours as text", () => {
     renderWithQuery(<ContactPage />);
 
-    expect(screen.getByText("12 Market Street, City Center")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "12 Market Street, City Center" }),
+    ).toHaveAttribute(
+      "href",
+      "https://www.google.com/maps/search/?api=1&query=12%20Market%20Street%2C%20City%20Center",
+    );
     expect(screen.getByText("Mon–Sat: 8:00–20:00, Sun: 9:00–14:00")).toBeInTheDocument();
   });
 
@@ -69,13 +84,14 @@ describe("storefront ContactPage", () => {
   });
 
   it("submits the inquiry and shows a success message", async () => {
-    mockedPost.mockResolvedValueOnce({ data: { inquiry: { id: "inq1" } } });
-    renderWithQuery(<ContactPage />);
+    mockedPost.mockResolvedValueOnce({ data: { inquiry: { id: "inq1", code: "ABCD2345" } } });
+    renderPage();
 
     await fillForm();
     await userEvent.click(screen.getByRole("button", { name: "Send message" }));
 
     expect(await screen.findByText("Thanks — we'll get back to you soon.")).toBeInTheDocument();
+    expect(await screen.findByText("ABCD2345")).toBeInTheDocument();
     expect(mockedPost).toHaveBeenCalledWith(
       "/api/storefront/inquiries",
       expect.objectContaining({
@@ -88,9 +104,9 @@ describe("storefront ContactPage", () => {
   });
 
   it("submits the active UI language with the inquiry", async () => {
-    mockedPost.mockResolvedValueOnce({ data: { inquiry: { id: "inq1" } } });
+    mockedPost.mockResolvedValueOnce({ data: { inquiry: { id: "inq1", code: "ABCD2345" } } });
     await i18n.changeLanguage("ar");
-    renderWithQuery(<ContactPage />);
+    renderPage();
 
     await userEvent.type(screen.getByLabelText("الاسم"), "Jane Doe");
     await userEvent.type(screen.getByLabelText("البريد الإلكتروني"), "jane@example.com");

@@ -70,7 +70,8 @@ export const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
 export const EMAIL_ERROR = "A valid email is required";
 export const PHONE_ERROR = "A valid phone number is required";
 export const MESSAGE_ERROR = "Message must be at least 10 characters";
-export const MESSAGE_MAX_ERROR = "Message must be 2000 characters or fewer";
+export const MESSAGE_MAX_LENGTH = 2000;
+export const MESSAGE_MAX_ERROR = `Message must be ${MESSAGE_MAX_LENGTH} characters or fewer`;
 
 // Contact/support form on the storefront → creates an Inquiry plus its first
 // (CUSTOMER-sent) Message. Channel isn't a form field — the route always
@@ -96,7 +97,7 @@ export const createInquirySchema = z.object({
     .string(MESSAGE_ERROR)
     .trim()
     .min(10, MESSAGE_ERROR)
-    .max(2000, MESSAGE_MAX_ERROR)
+    .max(MESSAGE_MAX_LENGTH, MESSAGE_MAX_ERROR)
     .transform(sanitizeText)
     .refine((value) => value.length >= 10, MESSAGE_ERROR),
   // The customer's UI language at submission time — defaulted (not required)
@@ -109,13 +110,32 @@ export type CreateInquiryInput = z.infer<typeof createInquirySchema>;
 // Pre-transform shape (what the form fields hold before name/message are normalized).
 export type CreateInquiryFormInput = z.input<typeof createInquirySchema>;
 
+export const LOOKUP_CODE_ERROR = "Inquiry code is required";
+
+// Guest status lookup: inquiry code + the email the inquiry was submitted
+// with (non-enumerable — both must match), mirroring order.ts's
+// orderLookupSchema (code + phone).
+export const inquiryLookupSchema = z.object({
+  code: z
+    .string(LOOKUP_CODE_ERROR)
+    .trim()
+    .min(1, LOOKUP_CODE_ERROR)
+    .transform((value) => value.toUpperCase()),
+  email: z.string(EMAIL_ERROR).trim().toLowerCase().pipe(z.email(EMAIL_ERROR)),
+});
+
+export type InquiryLookupInput = z.infer<typeof inquiryLookupSchema>;
+
+// Pre-transform shape (what the form fields hold).
+export type InquiryLookupFormInput = z.input<typeof inquiryLookupSchema>;
+
 // Follow-up customer message on an existing inquiry (chat widget reply box).
 export const addMessageSchema = z.object({
   message: z
     .string(MESSAGE_ERROR)
     .trim()
     .min(10, MESSAGE_ERROR)
-    .max(2000, MESSAGE_MAX_ERROR)
+    .max(MESSAGE_MAX_LENGTH, MESSAGE_MAX_ERROR)
     .transform(sanitizeText)
     .refine((value) => value.length >= 10, MESSAGE_ERROR),
 });

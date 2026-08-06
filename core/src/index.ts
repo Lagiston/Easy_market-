@@ -116,6 +116,7 @@ export {
   EMAIL_ERROR as INQUIRY_EMAIL_ERROR,
   PHONE_ERROR as INQUIRY_PHONE_ERROR,
   MESSAGE_ERROR as INQUIRY_MESSAGE_ERROR,
+  MESSAGE_MAX_LENGTH as INQUIRY_MESSAGE_MAX_LENGTH,
   MESSAGE_MAX_ERROR as INQUIRY_MESSAGE_MAX_ERROR,
   type CreateInquiryInput,
   type CreateInquiryFormInput,
@@ -131,6 +132,10 @@ export {
   type AssignInquiryFormInput,
   escalateInquirySchema,
   type EscalateInquiryInput,
+  LOOKUP_CODE_ERROR as INQUIRY_LOOKUP_CODE_ERROR,
+  inquiryLookupSchema,
+  type InquiryLookupInput,
+  type InquiryLookupFormInput,
 } from "./schemas/inquiry";
 export {
   INQUIRY_URGENCIES,

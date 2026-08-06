@@ -4,6 +4,7 @@
     "home": "Home",
     "products": "Products",
     "orderStatus": "Order status",
+    "inquiryStatus": "Message status",
     "contact": "Contact",
     "signIn": "Sign in",
     "theme": "Toggle theme"
@@ -40,12 +41,16 @@
     "hours": "Opening hours",
     "hoursValue": "Mon–Sat: 8:00–20:00, Sun: 9:00–14:00",
     "formTitle": "Send us a message",
+    "responseTime": "We usually reply within 24 hours.",
     "name": "Name",
     "message": "Message",
+    "messageCount": "{{count}} / {{max}}",
     "send": "Send message",
     "sending": "Sending…",
     "success": "Thanks — we'll get back to you soon.",
-    "error": "Could not send your message. Please try again."
+    "error": "Could not send your message. Please try again.",
+    "referenceCodeLabel": "Your reference code",
+    "referenceCodeHint": "Save this — you can check your message's status anytime with this code and your email."
   },
   "products": {
     "title": "Products",
@@ -190,11 +195,27 @@
       "cancelled": "Cancelled"
     }
   },
+  "inquiryStatus": {
+    "title": "Check your message status",
+    "subtitle": "Enter your reference code and the email you contacted us with.",
+    "code": "Reference code",
+    "email": "Email",
+    "check": "Check status",
+    "checking": "Checking…",
+    "notFound": "No message found for this code and email.",
+    "error": "Could not check the message status. Please try again.",
+    "statuses": {
+      "open": "Open",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
+  },
   "footer": {
     "copyright": "© {{year}} ES-Market"
   },
   "validation": {
     "orderLookupCode": "Order code is required",
+    "inquiryLookupCode": "Inquiry code is required",
     "orderLookupPhone": "Phone number is required",
     "customerName": "Name must be at least 2 characters",
     "phone": "A valid phone number is required",

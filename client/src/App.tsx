@@ -11,6 +11,7 @@ import StorefrontCartPage from "./pages/storefront/CartPage";
 import StorefrontCheckoutPage from "./pages/storefront/CheckoutPage";
 import StorefrontOrderConfirmationPage from "./pages/storefront/OrderConfirmationPage";
 import StorefrontOrderStatusPage from "./pages/storefront/OrderStatusPage";
+import StorefrontInquiryStatusPage from "./pages/storefront/InquiryStatusPage";
 import StorefrontAccountLoginPage from "./pages/storefront/AccountLoginPage";
 import StorefrontAccountSignUpPage from "./pages/storefront/AccountSignUpPage";
 import StorefrontAccountPage from "./pages/storefront/AccountPage";
@@ -44,6 +45,7 @@ function App() {
         <Route path="checkout" element={<StorefrontCheckoutPage />} />
         <Route path="checkout/confirmation" element={<StorefrontOrderConfirmationPage />} />
         <Route path="order-status" element={<StorefrontOrderStatusPage />} />
+        <Route path="inquiry-status" element={<StorefrontInquiryStatusPage />} />
         <Route path="account/login" element={<StorefrontAccountLoginPage />} />
         <Route path="account/signup" element={<StorefrontAccountSignUpPage />} />
         <Route element={<CustomerProtectedRoute />}>

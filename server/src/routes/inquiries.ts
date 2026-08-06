@@ -1,8 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { Router, type Response } from "express";
 import * as Sentry from "@sentry/node";
-import { InquiryChannel, InquiryStatus, MessageSender, DraftStatus, Role } from "../generated/prisma/client";
+import {
+  InquiryChannel,
+  InquiryStatus,
+  MessageSender,
+  DraftStatus,
+  Role,
+  Prisma,
+} from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
+import { generateInquiryCode } from "../lib/inquiry-code";
 import { requireAuth } from "../middleware/require-auth";
 import { classifyInquiry } from "../lib/inquiry-classification";
 import {
@@ -11,10 +19,13 @@ import {
   createInquirySchema,
   escalateInquirySchema,
   inquiryListQuerySchema,
+  inquiryLookupSchema,
 } from "@es-market/core";
 
 // Public inquiry endpoints; mounted at /api in index.ts.
 export const inquiriesRouter = Router();
+
+const CODE_RETRIES = 5;
 
 inquiriesRouter.post("/storefront/inquiries", async (req, res) => {
   const parsed = createInquirySchema.safeParse(req.body);
@@ -24,26 +35,77 @@ inquiriesRouter.post("/storefront/inquiries", async (req, res) => {
   }
   const { customerName, customerEmail, customerPhone, message, language } = parsed.data;
 
-  const inquiry = await prisma.inquiry.create({
-    data: {
-      id: randomUUID(),
-      channel: InquiryChannel.WEBSITE,
-      customerName,
-      customerEmail,
-      customerPhone: customerPhone ?? null,
-      language,
-      messages: {
-        create: [{ id: randomUUID(), sender: MessageSender.CUSTOMER, body: message }],
-      },
+  for (let attempt = 0; attempt < CODE_RETRIES; attempt++) {
+    const code = generateInquiryCode();
+    try {
+      const inquiry = await prisma.inquiry.create({
+        data: {
+          id: randomUUID(),
+          code,
+          channel: InquiryChannel.WEBSITE,
+          customerName,
+          customerEmail,
+          customerPhone: customerPhone ?? null,
+          language,
+          messages: {
+            create: [{ id: randomUUID(), sender: MessageSender.CUSTOMER, body: message }],
+          },
+        },
+      });
+
+      void classifyInquiry(inquiry.id, message, language).catch((error) => {
+        console.error("Unhandled inquiry classification error:", error);
+        Sentry.captureException(error, { extra: { inquiryId: inquiry.id } });
+      });
+
+      res.status(201).json({ inquiry: { id: inquiry.id, code: inquiry.code } });
+      return;
+    } catch (err) {
+      // Unique collision on the inquiry code — roll the dice again.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  res.status(500).json({ error: "Could not generate an inquiry code, please try again" });
+});
+
+// Guest status lookup by inquiry code + email (non-enumerable — both must
+// match), mirroring orders.ts's /storefront/orders/lookup. Must be registered
+// before the /storefront/inquiries/:id route below, otherwise Express would
+// match "lookup" itself as the :id param.
+inquiriesRouter.get("/storefront/inquiries/lookup", async (req, res) => {
+  const parsed = inquiryLookupSchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]!.message });
+    return;
+  }
+  const { code, email } = parsed.data;
+
+  const inquiry = await prisma.inquiry.findUnique({
+    where: { code },
+    include: { messages: { orderBy: { createdAt: "asc" } } },
+  });
+  if (!inquiry || inquiry.customerEmail.toLowerCase() !== email) {
+    res.status(404).json({ error: "Inquiry not found" });
+    return;
+  }
+
+  res.json({
+    inquiry: {
+      id: inquiry.id,
+      code: inquiry.code,
+      status: inquiry.status,
+      messages: inquiry.messages.map((m) => ({
+        id: m.id,
+        sender: m.sender,
+        body: m.body,
+        createdAt: m.createdAt,
+      })),
     },
   });
-
-  void classifyInquiry(inquiry.id, message, language).catch((error) => {
-    console.error("Unhandled inquiry classification error:", error);
-    Sentry.captureException(error, { extra: { inquiryId: inquiry.id } });
-  });
-
-  res.status(201).json({ inquiry: { id: inquiry.id } });
 });
 
 // Guest thread view for the chat widget — id is a non-enumerable random UUID
