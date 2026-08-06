@@ -5,8 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createUserSchema,
   updateUserSchema,
+  Role,
   type UpdateUserInput,
 } from "@es-market/core";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,6 +58,16 @@ export default function UserForm({
       onSubmit={handleSubmit((input) => mutation.mutate(input))}
       className="grid gap-4"
     >
+      {user && (
+        <div className="grid gap-1.5">
+          <Label>Role</Label>
+          <div>
+            <Badge variant={user.role === Role.ADMIN ? "default" : "secondary"}>
+              {user.role === Role.ADMIN ? "Admin" : "Agent"}
+            </Badge>
+          </div>
+        </div>
+      )}
       <div className="grid gap-1.5">
         <Label htmlFor="user-form-name">Name</Label>
         <Input

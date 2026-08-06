@@ -14,7 +14,6 @@ const userSelect = {
   name: true,
   email: true,
   role: true,
-  emailVerified: true,
   createdAt: true,
 } as const;
 
@@ -28,10 +27,20 @@ usersRouter.get("/users", requireAuth, requireRole(Role.ADMIN), async (req, res)
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { status } = parsed.data;
+  const { status, search } = parsed.data;
 
   const users = await prisma.user.findMany({
-    where: { deletedAt: status === "active" ? null : { not: null } },
+    where: {
+      deletedAt: status === "active" ? null : { not: null },
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
     select: userSelect,
     orderBy: { createdAt: "desc" },
   });

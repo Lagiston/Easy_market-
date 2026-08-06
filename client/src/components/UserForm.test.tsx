@@ -73,7 +73,6 @@ describe("UserForm (create mode)", () => {
           name: "New Agent",
           email: "agent@es-market.test",
           role: Role.AGENT,
-          emailVerified: false,
           createdAt: "2026-07-16T00:00:00.000Z",
         },
       },
@@ -168,7 +167,6 @@ describe("UserForm (edit mode)", () => {
     name: "Grace Hopper",
     email: "grace@es-market.test",
     role: Role.AGENT,
-    emailVerified: false,
     createdAt: "2026-02-14T00:00:00.000Z",
   };
 
@@ -177,16 +175,23 @@ describe("UserForm (edit mode)", () => {
     mockedAxios.isAxiosError.mockReset();
   });
 
-  it("pre-fills name and email and leaves the password blank", () => {
+  it("pre-fills name and email, shows the current role, and leaves the password blank", () => {
     renderForm(vi.fn(), existingUser);
 
     expect(screen.getByLabelText("Name")).toHaveValue("Grace Hopper");
     expect(screen.getByLabelText("Email")).toHaveValue("grace@es-market.test");
     expect(screen.getByLabelText("Password")).toHaveValue("");
+    expect(screen.getByText("Agent")).toBeInTheDocument();
     expect(
       screen.getByText("Leave blank to keep the current password."),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+  });
+
+  it("shows the Admin role badge for an admin user", () => {
+    renderForm(vi.fn(), { ...existingUser, role: Role.ADMIN });
+
+    expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 
   it("submits with a blank password and calls onSuccess", async () => {

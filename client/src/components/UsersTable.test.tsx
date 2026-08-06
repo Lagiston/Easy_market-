@@ -10,7 +10,6 @@ const activeUsers: UserRow[] = [
     name: "Ada Lovelace",
     email: "ada@es-market.test",
     role: Role.ADMIN,
-    emailVerified: true,
     createdAt: "2026-01-10T00:00:00.000Z",
   },
   {
@@ -18,7 +17,6 @@ const activeUsers: UserRow[] = [
     name: "Grace Hopper",
     email: "grace@es-market.test",
     role: Role.AGENT,
-    emailVerified: false,
     createdAt: "2026-02-14T00:00:00.000Z",
   },
 ];

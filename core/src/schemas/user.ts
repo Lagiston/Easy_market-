@@ -48,6 +48,7 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
 export const userListQuerySchema = z.object({
   status: z.enum(["active", "deactivated"]).default("active"),
+  search: z.string().trim().max(200).optional(),
 });
 
 export type UserListQuery = z.infer<typeof userListQuerySchema>;

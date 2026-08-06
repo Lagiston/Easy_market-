@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, X } from "lucide-react";
+import { useSearchParams } from "react-router";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CreateUserDialog from "./CreateUserDialog";
 import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
@@ -12,23 +14,72 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function UsersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [status, setStatus] = useState<"active" | "deactivated">("active");
+  const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(
+    () => searchParams.get("search")?.trim() ?? "",
+  );
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserRow | null>(null);
   const queryClient = useQueryClient();
 
-  const { data, isError } = useQuery({
-    queryKey: ["users", status],
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const trimmed = search.trim();
+      setDebouncedSearch(trimmed);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (trimmed) {
+            next.set("search", trimmed);
+          } else {
+            next.delete("search");
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [search, setSearchParams]);
+
+  const clearSearch = () => {
+    setSearch("");
+    setDebouncedSearch("");
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("search");
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  const { data, isError, isFetching } = useQuery({
+    queryKey: ["users", status, debouncedSearch],
     queryFn: () =>
       axios
-        .get<{ users: UserRow[] }>("/api/users", { params: { status } })
+        .get<{ users: UserRow[] }>("/api/users", {
+          params: { status, ...(debouncedSearch ? { search: debouncedSearch } : {}) },
+        })
         .then((res) => res.data.users),
+    placeholderData: keepPreviousData,
   });
   const users = data ?? null;
   const error = isError;
+  const isRefetching = isFetching && users !== null;
+  const emptyMessage = debouncedSearch
+    ? `No users match "${debouncedSearch}".`
+    : status === "active"
+      ? "No active users."
+      : "No deactivated users.";
 
   const reactivateMutation = useMutation({
     mutationFn: (user: UserRow) => axios.post(`/api/users/${user.id}/reactivate`),
@@ -52,16 +103,47 @@ export default function UsersPage() {
         {status === "active" && <CreateUserDialog />}
       </CardHeader>
       <CardContent>
-        <Tabs
-          value={status}
-          onValueChange={(value) => setStatus(value as "active" | "deactivated")}
-          className="gap-4"
-        >
-          <TabsList>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="deactivated">Deactivated</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Tabs
+            value={status}
+            onValueChange={(value) => setStatus(value as "active" | "deactivated")}
+            className="gap-4"
+          >
+            <TabsList>
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="deactivated">Deactivated</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="relative sm:max-w-xs sm:flex-1">
+            <Input
+              placeholder="Search by name or email…"
+              aria-label="Search users"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="pr-8"
+            />
+            {isRefetching ? (
+              <Loader2
+                role="status"
+                aria-label="Searching"
+                className="absolute top-1/2 right-2 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
+              />
+            ) : (
+              search && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Clear search"
+                  onClick={clearSearch}
+                  className="absolute top-1/2 right-1 size-6 -translate-y-1/2"
+                >
+                  <X />
+                </Button>
+              )
+            )}
+          </div>
+        </div>
         {reactivateError && (
           <p className="mt-4 text-sm text-destructive">{reactivateError}</p>
         )}
@@ -77,6 +159,7 @@ export default function UsersPage() {
               onEdit={setEditingUser}
               onDelete={setDeletingUser}
               onReactivate={(user) => reactivateMutation.mutate(user)}
+              emptyMessage={emptyMessage}
             />
           </div>
         )}

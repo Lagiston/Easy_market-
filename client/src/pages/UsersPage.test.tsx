@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { Role } from "@es-market/core";
 import { renderWithQuery } from "@/test/render-with-query";
 import UsersPage from "./UsersPage";
@@ -9,13 +10,43 @@ import UsersPage from "./UsersPage";
 vi.mock("axios");
 const mockedAxios = vi.mocked(axios, { deep: true });
 
+function renderUsersPage(initialEntry = "/admin/users") {
+  return renderWithQuery(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <UsersPage />
+    </MemoryRouter>,
+  );
+}
+
+function LocationDisplay() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
+
+function renderUsersPageWithLocation(initialEntry = "/admin/users") {
+  return renderWithQuery(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Routes>
+        <Route
+          path="*"
+          element={
+            <>
+              <UsersPage />
+              <LocationDisplay />
+            </>
+          }
+        />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 const users = [
   {
     id: "1",
     name: "Ada Lovelace",
     email: "ada@es-market.test",
     role: Role.ADMIN,
-    emailVerified: true,
     createdAt: "2026-01-10T00:00:00.000Z",
   },
   {
@@ -23,7 +54,6 @@ const users = [
     name: "Grace Hopper",
     email: "grace@es-market.test",
     role: Role.AGENT,
-    emailVerified: false,
     createdAt: "2026-02-14T00:00:00.000Z",
   },
 ];
@@ -39,7 +69,7 @@ describe("UsersPage", () => {
   it("shows skeleton rows while loading", () => {
     mockedAxios.get.mockReturnValue(new Promise(() => {}));
 
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
 
     expect(screen.getByText("Staff accounts")).toBeInTheDocument();
     expect(screen.queryByText("Ada Lovelace")).not.toBeInTheDocument();
@@ -48,7 +78,7 @@ describe("UsersPage", () => {
   it("renders users once loaded", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
 
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
 
     expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
     expect(screen.getByText("ada@es-market.test")).toBeInTheDocument();
@@ -57,16 +87,13 @@ describe("UsersPage", () => {
     expect(screen.getByText("Admin")).toBeInTheDocument();
     expect(screen.getByText("Agent")).toBeInTheDocument();
 
-    expect(screen.getByLabelText("Verified")).toBeInTheDocument();
-    expect(screen.getByLabelText("Not verified")).toBeInTheDocument();
-
     expect(await screen.findByText("2 members")).toBeInTheDocument();
   });
 
   it("shows an error message when the request fails", async () => {
     mockedAxios.get.mockRejectedValue(new Error("Network error"));
 
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
 
     await waitFor(() =>
       expect(
@@ -76,10 +103,139 @@ describe("UsersPage", () => {
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
+  it("debounces the search box and refetches with the search param", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup({ delay: null });
+    renderUsersPage();
+    await screen.findByText("Ada Lovelace");
+
+    await user.type(screen.getByLabelText("Search users"), "grace");
+
+    await vi.advanceTimersByTimeAsync(300);
+
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/users", {
+        params: { status: "active", search: "grace" },
+      }),
+    );
+    vi.useRealTimers();
+  });
+
+  it("shows a search-specific empty message when no users match", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockedAxios.get.mockImplementation((_url: string, config?: { params?: { search?: string } }) =>
+      Promise.resolve({ data: { users: config?.params?.search ? [] : users } }),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderUsersPage();
+    await screen.findByText("Ada Lovelace");
+
+    await user.type(screen.getByLabelText("Search users"), "nobody");
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(await screen.findByText('No users match "nobody".')).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("shows a generic empty message for a status tab with no users", async () => {
+    mockedAxios.get.mockImplementation((_url: string, config?: { params?: { status?: string } }) =>
+      config?.params?.status === "deactivated"
+        ? Promise.resolve({ data: { users: [] } })
+        : Promise.resolve({ data: { users } }),
+    );
+    const user = userEvent.setup();
+    renderUsersPage();
+    await screen.findByText("Ada Lovelace");
+
+    await user.click(screen.getByRole("tab", { name: "Deactivated" }));
+
+    expect(await screen.findByText("No deactivated users.")).toBeInTheDocument();
+  });
+
+  it("shows a searching indicator while a refetch is in flight, then hides it", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockedAxios.get.mockResolvedValueOnce({ data: { users } });
+    const user = userEvent.setup({ delay: null });
+    renderUsersPage();
+    await screen.findByText("Ada Lovelace");
+
+    let resolveSearch!: (value: { data: { users: typeof users } }) => void;
+    mockedAxios.get.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSearch = resolve;
+      }),
+    );
+
+    await user.type(screen.getByLabelText("Search users"), "grace");
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(await screen.findByRole("status", { name: "Searching" })).toBeInTheDocument();
+
+    resolveSearch({ data: { users: [users[1]!] } });
+
+    await waitFor(() =>
+      expect(screen.queryByRole("status", { name: "Searching" })).not.toBeInTheDocument(),
+    );
+    vi.useRealTimers();
+  });
+
+  it("shows a clear button once search text is entered, and clears it on click", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup();
+    renderUsersPage();
+    await screen.findByText("Ada Lovelace");
+
+    expect(screen.queryByRole("button", { name: "Clear search" })).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Search users"), "grace");
+
+    const clearButton = await screen.findByRole("button", { name: "Clear search" });
+    await user.click(clearButton);
+
+    await waitFor(() => expect(screen.getByLabelText("Search users")).toHaveValue(""));
+    expect(screen.queryByRole("button", { name: "Clear search" })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenLastCalledWith("/api/users", {
+        params: { status: "active" },
+      }),
+    );
+  });
+
+  it("initializes the search box from the URL's search param", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users: [users[1]!] } });
+    renderUsersPage("/admin/users?search=grace");
+
+    expect(await screen.findByLabelText("Search users")).toHaveValue("grace");
+    await waitFor(() =>
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/users", {
+        params: { status: "active", search: "grace" },
+      }),
+    );
+  });
+
+  it("reflects the debounced search term in the URL", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockedAxios.get.mockResolvedValue({ data: { users } });
+    const user = userEvent.setup({ delay: null });
+    renderUsersPageWithLocation();
+    await screen.findByText("Ada Lovelace");
+
+    expect(screen.getByTestId("location-search")).toHaveTextContent("");
+
+    await user.type(screen.getByLabelText("Search users"), "grace");
+    await vi.advanceTimersByTimeAsync(300);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location-search")).toHaveTextContent("?search=grace"),
+    );
+    vi.useRealTimers();
+  });
+
   it("shows the create user dialog when the button is clicked", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("button", { name: /create user/i }));
@@ -90,7 +246,7 @@ describe("UsersPage", () => {
   it("hides the create user dialog when clicking outside", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("button", { name: /create user/i }));
@@ -106,7 +262,7 @@ describe("UsersPage", () => {
   it("hides the create user dialog when pressing Escape", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("button", { name: /create user/i }));
@@ -122,7 +278,7 @@ describe("UsersPage", () => {
   it("opens the edit dialog pre-filled when a row's edit button is clicked", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("button", { name: "Edit Ada Lovelace" }));
@@ -136,7 +292,7 @@ describe("UsersPage", () => {
 
   it("does not render a delete button for the admin row", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     expect(screen.queryByRole("button", { name: "Delete Ada Lovelace" })).not.toBeInTheDocument();
@@ -146,7 +302,7 @@ describe("UsersPage", () => {
   it("opens a confirmation dialog when the delete button is clicked", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("button", { name: "Delete Grace Hopper" }));
@@ -159,7 +315,7 @@ describe("UsersPage", () => {
   it("closes the confirmation dialog without deleting when Cancel is clicked", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("button", { name: "Delete Grace Hopper" }));
@@ -176,7 +332,7 @@ describe("UsersPage", () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
     mockedAxios.delete.mockResolvedValue({});
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("button", { name: "Delete Grace Hopper" }));
@@ -191,7 +347,7 @@ describe("UsersPage", () => {
 
   it("fetches active users by default", async () => {
     mockedAxios.get.mockResolvedValue({ data: { users } });
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     expect(mockedAxios.get).toHaveBeenCalledWith("/api/users", {
@@ -206,7 +362,6 @@ describe("UsersPage", () => {
         name: "Margaret Hamilton",
         email: "margaret@es-market.test",
         role: Role.AGENT,
-        emailVerified: true,
         createdAt: "2026-03-01T00:00:00.000Z",
       },
     ];
@@ -216,7 +371,7 @@ describe("UsersPage", () => {
         : Promise.resolve({ data: { users } }),
     );
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("tab", { name: "Deactivated" }));
@@ -235,7 +390,6 @@ describe("UsersPage", () => {
         name: "Margaret Hamilton",
         email: "margaret@es-market.test",
         role: Role.AGENT,
-        emailVerified: true,
         createdAt: "2026-03-01T00:00:00.000Z",
       },
     ];
@@ -245,7 +399,7 @@ describe("UsersPage", () => {
         : Promise.resolve({ data: { users } }),
     );
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("tab", { name: "Deactivated" }));
@@ -266,7 +420,6 @@ describe("UsersPage", () => {
         name: "Margaret Hamilton",
         email: "margaret@es-market.test",
         role: Role.AGENT,
-        emailVerified: true,
         createdAt: "2026-03-01T00:00:00.000Z",
       },
     ];
@@ -277,7 +430,7 @@ describe("UsersPage", () => {
     );
     mockedAxios.post.mockResolvedValue({ data: { user: deactivatedUsers[0] } });
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("tab", { name: "Deactivated" }));
@@ -306,7 +459,7 @@ describe("UsersPage", () => {
       response: { data: { error: "Admins can't be deleted" } },
     });
     const user = userEvent.setup();
-    renderWithQuery(<UsersPage />);
+    renderUsersPage();
     await screen.findByText("Ada Lovelace");
 
     await user.click(screen.getByRole("button", { name: "Delete Grace Hopper" }));

@@ -47,7 +47,8 @@ export default function DeleteUserDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {user?.name}?</AlertDialogTitle>
           <AlertDialogDescription>
-            This revokes their access immediately and can&apos;t be undone.
+            This revokes their access immediately. You can reactivate them later from the
+            Deactivated tab.
           </AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}

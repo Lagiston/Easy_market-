@@ -1,4 +1,4 @@
-import { Check, Minus, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { Role } from "@es-market/core";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ export type UserRow = {
   name: string;
   email: string;
   role: Role;
-  emailVerified: boolean;
   createdAt: string;
 };
 
@@ -42,12 +41,14 @@ export default function UsersTable({
   onEdit,
   onDelete,
   onReactivate,
+  emptyMessage = "No users found.",
 }: {
   users: UserRow[] | null;
   status: "active" | "deactivated";
   onEdit: (user: UserRow) => void;
   onDelete: (user: UserRow) => void;
   onReactivate: (user: UserRow) => void;
+  emptyMessage?: string;
 }) {
   return (
     <Table>
@@ -55,7 +56,6 @@ export default function UsersTable({
         <TableRow>
           <TableHead>User</TableHead>
           <TableHead>Role</TableHead>
-          <TableHead>Verified</TableHead>
           <TableHead className="text-right">Joined</TableHead>
           <TableHead>
             <span className="sr-only">Actions</span>
@@ -63,6 +63,13 @@ export default function UsersTable({
         </TableRow>
       </TableHeader>
       <TableBody>
+        {users !== null && users.length === 0 && (
+          <TableRow>
+            <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+              {emptyMessage}
+            </TableCell>
+          </TableRow>
+        )}
         {users === null
           ? Array.from({ length: 3 }, (_, i) => (
               <TableRow key={i}>
@@ -77,9 +84,6 @@ export default function UsersTable({
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-5 w-16 rounded-4xl" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-3 w-8" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="ml-auto h-3 w-24" />
@@ -106,13 +110,6 @@ export default function UsersTable({
                   <Badge variant={user.role === Role.ADMIN ? "default" : "secondary"}>
                     {user.role === Role.ADMIN ? "Admin" : "Agent"}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  {user.emailVerified ? (
-                    <Check aria-label="Verified" className="size-4 text-muted-foreground" />
-                  ) : (
-                    <Minus aria-label="Not verified" className="size-4 text-muted-foreground/50" />
-                  )}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
                   {joinedDateFormat.format(new Date(user.createdAt))}

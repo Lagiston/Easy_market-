@@ -14,7 +14,6 @@ const createdUser = {
   name: "New Agent",
   email: "agent@es-market.test",
   role: Role.AGENT,
-  emailVerified: false,
   createdAt: "2026-07-16T00:00:00.000Z",
 };
 
