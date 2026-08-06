@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ export default function ProductDetailPage() {
   const language = i18n.resolvedLanguage ?? "en";
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addItem } = useCart();
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -54,13 +55,20 @@ export default function ProductDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <Link
-        to="/products"
+      <button
+        type="button"
+        // Goes back in history (preserving the products list's page/filters,
+        // which live in its own URL/state, not this page's) rather than
+        // always landing on a bare /products — but only when there's actual
+        // in-app history to return to: `location.key === "default"` means
+        // this is the first entry (a fresh load/shared link), where a real
+        // back navigation would leave the app entirely.
+        onClick={() => (location.key === "default" ? navigate("/products") : navigate(-1))}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4 rtl:rotate-180" />
         {t("products.backToList")}
-      </Link>
+      </button>
 
       {isPending ? (
         <div className="grid gap-8 sm:grid-cols-2">

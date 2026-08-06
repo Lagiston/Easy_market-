@@ -99,10 +99,14 @@ export default function ProductsPage() {
   const pendingAddIdsRef = useRef<Set<string>>(new Set());
   const [, setPendingAddTick] = useState(0);
 
-  // Read-once, not two-way synced: lets a link (e.g. a tag chip on the product
-  // detail page) land here pre-filtered, without making every filter change
-  // round-trip through the URL.
-  const [searchParams] = useSearchParams();
+  // `tag` is read-once, not two-way synced: lets a link (e.g. a tag chip on
+  // the product detail page) land here pre-filtered, without making every
+  // filter change round-trip through the URL. `page` *is* synced back below
+  // (replacing, not pushing, so pagination doesn't spam browser history) —
+  // otherwise browser back-navigation from a product detail page always
+  // remounts this page at page 1, since nothing in the URL recorded which
+  // page the visitor was on.
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -112,7 +116,10 @@ export default function ProductsPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [debouncedPrices, setDebouncedPrices] = useState({ minPrice: "", maxPrice: "" });
   const [sort, setSort] = useState<StorefrontProductSort>("newest");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    const fromUrl = Number(searchParams.get("page"));
+    return Number.isInteger(fromUrl) && fromUrl > 0 ? fromUrl : 1;
+  });
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -127,10 +134,33 @@ export default function ProductsPage() {
     return () => clearTimeout(timeout);
   }, [minPrice, maxPrice]);
 
-  // Changing any filter or the sort invalidates the current page's meaning.
+  // Changing any filter or the sort invalidates the current page's meaning —
+  // but not on the very first render, or this would stomp a page restored
+  // from the URL (e.g. ?page=2, or a browser back-navigation) back to 1
+  // before the initial fetch even goes out.
+  const isFirstFilterRender = useRef(true);
   useEffect(() => {
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
     setPage(1);
   }, [debouncedSearch, categoryId, tag, debouncedPrices.minPrice, debouncedPrices.maxPrice, sort]);
+
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (page > 1) {
+          next.set("page", String(page));
+        } else {
+          next.delete("page");
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  }, [page, setSearchParams]);
 
   const { data: categoriesData } = useQuery({
     queryKey: ["storefront", "categories"],

@@ -55,11 +55,21 @@ function CheckoutStateProbe() {
   return <div>Checkout page: {buyNowItem ? JSON.stringify(buyNowItem) : "no buy-now item"}</div>;
 }
 
-function renderPage() {
+function ProductsListStub() {
+  const location = useLocation();
+  return (
+    <div>
+      Products list stub<span data-testid="location-search">{location.search}</span>
+    </div>
+  );
+}
+
+function renderPage(initialEntries: string[] = ["/products/p1"]) {
   renderWithQuery(
-    <MemoryRouter initialEntries={["/products/p1"]}>
+    <MemoryRouter initialEntries={initialEntries}>
       <CartProvider>
         <Routes>
+          <Route path="/products" element={<ProductsListStub />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route path="/checkout" element={<CheckoutStateProbe />} />
         </Routes>
@@ -188,14 +198,30 @@ describe("storefront ProductDetailPage", () => {
     expect(screen.getByText("Groceries")).toBeInTheDocument();
   });
 
-  it("renders a back link to the product list", async () => {
+  it("navigates to the plain product list when there's no in-app history to go back to", async () => {
+    const user = userEvent.setup();
     mockedGet.mockResolvedValueOnce({ data: { product } });
+    // Single initial entry ⇒ location.key === "default": a fresh load/shared
+    // link, where a real history-back would leave the app entirely.
     renderPage();
 
-    expect(await screen.findByRole("link", { name: /back to products/i })).toHaveAttribute(
-      "href",
-      "/products",
-    );
+    await user.click(await screen.findByRole("button", { name: /back to products/i }));
+
+    expect(await screen.findByText("Products list stub")).toBeInTheDocument();
+  });
+
+  it("goes back in history (preserving the list's page/filters) when reached via in-app navigation", async () => {
+    const user = userEvent.setup();
+    mockedGet.mockResolvedValueOnce({ data: { product } });
+    // Two entries ⇒ this page was reached by navigating from the list, so
+    // location.key !== "default" and the back button should pop history
+    // instead of forcing a fresh /products navigation.
+    renderPage(["/products?page=2", "/products/p1"]);
+
+    await user.click(await screen.findByRole("button", { name: /back to products/i }));
+
+    await screen.findByText("Products list stub");
+    expect(screen.getByTestId("location-search")).toHaveTextContent("?page=2");
   });
 
   it("renders tags as links back to the product list, filtered by that tag", async () => {
@@ -213,9 +239,9 @@ describe("storefront ProductDetailPage", () => {
     renderPage();
 
     await screen.findByText("Rice 5kg");
-    // Only "back to products" and the guest wishlist sign-in link should
-    // exist — no tag chips to render.
-    expect(screen.getAllByRole("link")).toHaveLength(2);
+    // Only the guest wishlist sign-in link should exist — no tag chips to
+    // render, and "back to products" is a button, not a link.
+    expect(screen.getAllByRole("link")).toHaveLength(1);
   });
 
   it("shows a not-found message when the product does not exist", async () => {

@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from "react-router";
 import i18n from "@/i18n";
 import { renderWithQuery } from "@/test/render-with-query";
 import { CartProvider, type CartItem } from "@/lib/cart";
@@ -87,6 +87,11 @@ function CheckoutStateProbe() {
   return <div>Checkout page: {buyNowItem ? JSON.stringify(buyNowItem) : "no buy-now item"}</div>;
 }
 
+function LocationSearchProbe() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
+
 function renderPage(initialEntry = "/products") {
   renderWithQuery(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -95,7 +100,37 @@ function renderPage(initialEntry = "/products") {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/checkout" element={<CheckoutStateProbe />} />
         </Routes>
+        <LocationSearchProbe />
         <Toaster />
+      </CartProvider>
+    </MemoryRouter>,
+  );
+}
+
+// A stub detail page with a plain browser-style back button (`navigate(-1)`),
+// standing in for ProductDetailPage's own navigation-away behavior — the
+// point of this suite is what happens to ProductsPage's own state on return,
+// not the detail page's rendering.
+function ProductDetailStub() {
+  const navigate = useNavigate();
+  return (
+    <div>
+      <p>Product detail stub</p>
+      <button type="button" onClick={() => navigate(-1)}>
+        Go back
+      </button>
+    </div>
+  );
+}
+
+function renderPageWithDetailRoute(initialEntry = "/products") {
+  renderWithQuery(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <CartProvider>
+        <Routes>
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailStub />} />
+        </Routes>
       </CartProvider>
     </MemoryRouter>,
   );
@@ -471,6 +506,49 @@ describe("storefront ProductsPage", () => {
     await waitFor(() => {
       expect(lastProductsParams()).toEqual({ sort: "price-asc", page: 1 });
     });
+  });
+
+  it("fetches the next page and reflects it in the URL, replacing rather than pushing a history entry", async () => {
+    const user = userEvent.setup();
+    mockApi({ total: 13 });
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: "Go to next page" }));
+
+    await waitFor(() => expect(lastProductsParams()).toEqual({ sort: "newest", page: 2 }));
+    expect(screen.getByTestId("location-search")).toHaveTextContent("?page=2");
+
+    await user.click(screen.getByRole("button", { name: "Go to previous page" }));
+
+    await waitFor(() => expect(lastProductsParams()).toEqual({ sort: "newest", page: 1 }));
+    // Back to the default page — the param is dropped, not left as "?page=1".
+    expect(screen.getByTestId("location-search")).toHaveTextContent("");
+  });
+
+  it("initializes the page from an incoming ?page= query param", async () => {
+    mockApi({ total: 13 });
+    renderPage("/products?page=2");
+
+    await waitFor(() => expect(lastProductsParams()).toEqual({ sort: "newest", page: 2 }));
+  });
+
+  it("preserves the current page across a back-navigation from a product's detail page", async () => {
+    const user = userEvent.setup();
+    mockApi({ total: 13 });
+    renderPageWithDetailRoute();
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByRole("button", { name: "Go to next page" }));
+    await waitFor(() => expect(lastProductsParams()).toEqual({ sort: "newest", page: 2 }));
+
+    await user.click(screen.getByRole("link", { name: /Rice 5kg/ }));
+    expect(await screen.findByText("Product detail stub")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Go back" }));
+
+    await screen.findByText("Rice 5kg");
+    expect(lastProductsParams()).toEqual({ sort: "newest", page: 2 });
   });
 
   it("shows an empty state when no products match", async () => {
