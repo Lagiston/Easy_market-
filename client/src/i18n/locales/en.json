@@ -215,7 +215,8 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} ES-Market"
+    "copyright": "© {{year}} ES-Market. All rights reserved.",
+    "nav": "Footer navigation"
   },
   "validation": {
     "orderLookupCode": "Order code is required",

@@ -233,7 +233,8 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} إي إس ماركت"
+    "copyright": "© {{year}} إي إس ماركت. جميع الحقوق محفوظة.",
+    "nav": "روابط التذييل"
   },
   "validation": {
     "orderLookupCode": "رمز الطلب مطلوب",

@@ -215,7 +215,8 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} ES-Market"
+    "copyright": "© {{year}} ES-Market. Haki zote zimehifadhiwa.",
+    "nav": "Urambazaji wa kijachini"
   },
   "validation": {
     "orderLookupCode": "Msimbo wa oda unahitajika",

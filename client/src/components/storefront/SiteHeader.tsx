@@ -18,7 +18,8 @@ import {
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
 
-const NAV_ITEMS = [
+// Shared with SiteFooter.tsx so the two nav lists can't drift apart.
+export const NAV_ITEMS = [
   { labelKey: "nav.home", to: "/" },
   { labelKey: "nav.products", to: "/products" },
   { labelKey: "nav.orderStatus", to: "/order-status" },

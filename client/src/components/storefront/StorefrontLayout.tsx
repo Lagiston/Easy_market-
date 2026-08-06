@@ -1,6 +1,7 @@
 import { Outlet } from "react-router";
 import { useTranslation } from "react-i18next";
 import SiteHeader from "./SiteHeader";
+import SiteFooter from "./SiteFooter";
 import ChatWidget from "./ChatWidget";
 
 export default function StorefrontLayout() {
@@ -26,9 +27,7 @@ export default function StorefrontLayout() {
       <main id="main-content" tabIndex={-1} className="flex-1 px-6 py-8 focus:outline-none">
         <Outlet />
       </main>
-      <footer className="border-t px-6 py-4 text-sm text-muted-foreground">
-        {t("footer.copyright", { year: new Date().getFullYear() })}
-      </footer>
+      <SiteFooter />
       <ChatWidget />
     </div>
   );

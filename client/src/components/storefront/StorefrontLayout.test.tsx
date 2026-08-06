@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, it, expect, beforeEach } from "vitest";
@@ -31,7 +31,8 @@ describe("StorefrontLayout", () => {
 
   it("renders the brand link pointing to the storefront root", () => {
     renderLayout();
-    expect(screen.getByRole("link", { name: "ES-Market" })).toHaveAttribute(
+    const header = within(screen.getByRole("banner"));
+    expect(header.getByRole("link", { name: "ES-Market" })).toHaveAttribute(
       "href",
       "/",
     );
@@ -39,7 +40,8 @@ describe("StorefrontLayout", () => {
 
   it("renders a nav link to the products page", () => {
     renderLayout();
-    expect(screen.getByRole("link", { name: "Products" })).toHaveAttribute(
+    const header = within(screen.getByRole("banner"));
+    expect(header.getByRole("link", { name: "Products" })).toHaveAttribute(
       "href",
       "/products",
     );
@@ -47,10 +49,16 @@ describe("StorefrontLayout", () => {
 
   it("renders a nav link to the contact page", () => {
     renderLayout();
-    expect(screen.getByRole("link", { name: "Contact" })).toHaveAttribute(
+    const header = within(screen.getByRole("banner"));
+    expect(header.getByRole("link", { name: "Contact" })).toHaveAttribute(
       "href",
       "/contact",
     );
+  });
+
+  it("renders the footer", () => {
+    renderLayout();
+    expect(screen.getByRole("contentinfo")).toBeInTheDocument();
   });
 
   it("renders the language switcher", () => {
