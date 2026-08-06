@@ -7,6 +7,7 @@ import type { LocalizedDescription, LocalizedName } from "@es-market/core";
 import { localize } from "@/lib/localize";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollFrameAnimation } from "@/components/storefront/ScrollFrameAnimation";
 
 const FEATURES = [
   { key: "payOnDelivery", Icon: HandCoins },
@@ -73,34 +74,37 @@ export default function HomePage() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-12">
-      <section className="space-y-4 py-8 text-center">
-        <h1 className="text-4xl font-semibold">{t("home.title")}</h1>
-        <p className="text-lg text-muted-foreground">{t("home.subtitle")}</p>
-        <Link to="/products" className={buttonVariants({ size: "lg" })}>
-          {t("home.cta")}
-        </Link>
-      </section>
-      {promoBlocks && promoBlocks.length > 0 && (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {promoBlocks.map((promoBlock) => (
-            <PromoBlockCard key={promoBlock.id} promoBlock={promoBlock} language={language} />
+    <div className="space-y-12">
+      <ScrollFrameAnimation />
+      <div className="mx-auto max-w-5xl space-y-12">
+        <section className="space-y-4 py-8 text-center">
+          <h1 className="text-4xl font-semibold">{t("home.title")}</h1>
+          <p className="text-lg text-muted-foreground">{t("home.subtitle")}</p>
+          <Link to="/products" className={buttonVariants({ size: "lg" })}>
+            {t("home.cta")}
+          </Link>
+        </section>
+        {promoBlocks && promoBlocks.length > 0 && (
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {promoBlocks.map((promoBlock) => (
+              <PromoBlockCard key={promoBlock.id} promoBlock={promoBlock} language={language} />
+            ))}
+          </section>
+        )}
+        <section className="grid gap-4 sm:grid-cols-3">
+          {FEATURES.map(({ key, Icon }) => (
+            <Card key={key}>
+              <CardContent className="space-y-2 p-6">
+                <Icon aria-hidden className="size-6 text-primary" />
+                <h2 className="font-medium">{t(`home.features.${key}.title`)}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {t(`home.features.${key}.text`)}
+                </p>
+              </CardContent>
+            </Card>
           ))}
         </section>
-      )}
-      <section className="grid gap-4 sm:grid-cols-3">
-        {FEATURES.map(({ key, Icon }) => (
-          <Card key={key}>
-            <CardContent className="space-y-2 p-6">
-              <Icon aria-hidden className="size-6 text-primary" />
-              <h2 className="font-medium">{t(`home.features.${key}.title`)}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t(`home.features.${key}.text`)}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
+      </div>
     </div>
   );
 }
