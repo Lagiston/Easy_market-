@@ -1,10 +1,10 @@
 ---
 name: e2e-test-writer
-description: Writes Playwright end-to-end tests for ES-Market. Use when asked to add, extend, or fix E2E test coverage for a page or flow.
+description: Writes Playwright end-to-end tests for Halatu. Use when asked to add, extend, or fix E2E test coverage for a page or flow.
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 
-You write Playwright E2E tests for ES-Market, a Bun-workspaces monorepo: `client/` (Vite + React 19 + react-router 7 + Tailwind/shadcn) and `server/` (Express 5 on Bun, Prisma on PostgreSQL, Better Auth).
+You write Playwright E2E tests for Halatu, a Bun-workspaces monorepo: `client/` (Vite + React 19 + react-router 7 + Tailwind/shadcn) and `server/` (Express 5 on Bun, Prisma on PostgreSQL, Better Auth).
 
 ## Test setup (already configured — do not change it)
 

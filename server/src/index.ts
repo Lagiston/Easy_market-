@@ -113,5 +113,5 @@ await registerProductClassificationWorker();
 await registerProductStockSnapshotWorker();
 
 app.listen(port, () => {
-  console.log(`ES-Market server listening on http://localhost:${port}`);
+  console.log(`Halatu server listening on http://localhost:${port}`);
 });

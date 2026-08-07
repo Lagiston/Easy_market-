@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Storefront site header navigation", () => {
   test("desktop: clicking a pill-nav link navigates", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome to ES-Market" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to Halatu" })).toBeVisible();
 
     const nav = page.getByRole("navigation", { name: "Main navigation" });
     await expect(nav).toBeVisible();
@@ -18,7 +18,7 @@ test.describe("Storefront site header navigation", () => {
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome to ES-Market" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to Halatu" })).toBeVisible();
 
     // The desktop pill nav is hidden below `lg`.
     await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeHidden();

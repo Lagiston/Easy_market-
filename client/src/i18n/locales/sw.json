@@ -1,5 +1,5 @@
 {
-  "brand": "ES-Market",
+  "brand": "Halatu",
   "nav": {
     "home": "Nyumbani",
     "products": "Bidhaa",
@@ -16,7 +16,7 @@
     "label": "Lugha"
   },
   "home": {
-    "title": "Karibu ES-Market",
+    "title": "Karibu Halatu",
     "subtitle": "Vinjari bidhaa zetu",
     "cta": "Vinjari bidhaa",
     "features": {
@@ -215,7 +215,7 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} ES-Market. Haki zote zimehifadhiwa.",
+    "copyright": "© {{year}} Halatu. Haki zote zimehifadhiwa.",
     "nav": "Urambazaji wa kijachini"
   },
   "validation": {

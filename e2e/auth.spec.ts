@@ -11,7 +11,7 @@ test.describe("Login page", () => {
   test("renders the form fields and submit button", async ({ page }) => {
     await page.goto("/admin/login");
 
-    await expect(page.getByText("ES-Market")).toBeVisible();
+    await expect(page.getByText("Halatu")).toBeVisible();
     await expect(page.getByLabel("Email")).toBeVisible();
     await expect(page.getByLabel("Password")).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();

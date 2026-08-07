@@ -1,4 +1,4 @@
-# ES-Market — Implementation Plan
+# Halatu — Implementation Plan
 
 Phases build on each other; each ends with something demoable. Tasks are sized to be one focused work session each. Stack per [tech-stack.md](tech-stack.md); scope per [Project-Scope.md](Project-Scope.md).
 

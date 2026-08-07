@@ -35,7 +35,7 @@ describe("storefront HomePage", () => {
     renderPage();
 
     expect(
-      screen.getByRole("heading", { name: "Welcome to ES-Market" }),
+      screen.getByRole("heading", { name: "Welcome to Halatu" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Browse products" })).toHaveAttribute(
       "href",
@@ -65,7 +65,7 @@ describe("storefront HomePage", () => {
     mockedGet.mockResolvedValue({ data: { promoBlocks: [] } });
     renderPage();
 
-    await screen.findByRole("heading", { name: "Welcome to ES-Market" });
+    await screen.findByRole("heading", { name: "Welcome to Halatu" });
     expect(mockedGet).toHaveBeenCalledWith("/api/storefront/promo-blocks");
     expect(screen.queryByRole("link", { name: /shop now/i })).not.toBeInTheDocument();
   });

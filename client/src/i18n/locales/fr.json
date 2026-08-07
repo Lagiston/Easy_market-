@@ -1,5 +1,5 @@
 {
-  "brand": "ES-Market",
+  "brand": "Halatu",
   "nav": {
     "home": "Accueil",
     "products": "Produits",
@@ -16,7 +16,7 @@
     "label": "Langue"
   },
   "home": {
-    "title": "Bienvenue chez ES-Market",
+    "title": "Bienvenue chez Halatu",
     "subtitle": "Parcourez nos produits",
     "cta": "Parcourir les produits",
     "features": {
@@ -215,7 +215,7 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} ES-Market. Tous droits réservés.",
+    "copyright": "© {{year}} Halatu. Tous droits réservés.",
     "nav": "Navigation du pied de page"
   },
   "validation": {

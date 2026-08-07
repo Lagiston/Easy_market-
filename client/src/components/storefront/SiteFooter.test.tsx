@@ -42,7 +42,7 @@ describe("SiteFooter", () => {
 
   it("renders the brand link pointing to the storefront root", () => {
     renderFooter();
-    expect(screen.getByRole("link", { name: "ES-Market" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Halatu" })).toHaveAttribute("href", "/");
   });
 
   it("renders nav links to the existing storefront routes", () => {
@@ -57,7 +57,7 @@ describe("SiteFooter", () => {
     renderFooter();
     const year = new Date().getFullYear();
     expect(
-      screen.getByText(`© ${year} ES-Market. All rights reserved.`),
+      screen.getByText(`© ${year} Halatu. All rights reserved.`),
     ).toBeInTheDocument();
   });
 

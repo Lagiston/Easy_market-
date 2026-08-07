@@ -73,7 +73,7 @@ export default function Layout({ user }: { user: SessionUser }) {
         {/* Desktop */}
         <div className="hidden items-center gap-6 lg:flex">
           <Link to="/admin" className="text-lg font-semibold">
-            ES-Market
+            Halatu
           </Link>
           {navLinks.map((item) => (
             <Link
@@ -103,7 +103,7 @@ export default function Layout({ user }: { user: SessionUser }) {
 
         {/* Mobile */}
         <Link to="/admin" className="text-lg font-semibold lg:hidden">
-          ES-Market
+          Halatu
         </Link>
         <div className="lg:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -112,7 +112,7 @@ export default function Layout({ user }: { user: SessionUser }) {
             </SheetTrigger>
             <SheetContent side="right" className="flex flex-col">
               <SheetHeader>
-                <SheetTitle>ES-Market</SheetTitle>
+                <SheetTitle>Halatu</SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-1 px-4">
                 {navLinks.map((item) => (

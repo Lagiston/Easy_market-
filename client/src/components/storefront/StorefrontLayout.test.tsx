@@ -32,7 +32,7 @@ describe("StorefrontLayout", () => {
   it("renders the brand link pointing to the storefront root", () => {
     renderLayout();
     const header = within(screen.getByRole("banner"));
-    expect(header.getByRole("link", { name: "ES-Market" })).toHaveAttribute(
+    expect(header.getByRole("link", { name: "Halatu" })).toHaveAttribute(
       "href",
       "/",
     );

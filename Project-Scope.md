@@ -1,15 +1,15 @@
-# ES-Market — AI-Powered E-Commerce & Customer Support System
+# Halatu — AI-Powered E-Commerce & Customer Support System
 
 ## Problem
 
-ES-Market (Easy Shopping Market) is a physical store selling a variety of goods. Two problems limit growth:
+Halatu is a physical store selling a variety of goods. Two problems limit growth:
 
 1. **No online presence.** Customers can only browse and buy in-store; the business wants to expand by selling through a website.
 2. **Slow, impersonal customer support.** Hundreds of orders and inquiries arrive daily. An agent manually reads each message, figures out which product it concerns, and writes a response. This is slow, and the pressure to keep up leads to canned, impersonal replies.
 
 ## Solution
 
-Build the ES-Market e-commerce website with an internal dashboard, using AI in two distinct ways:
+Build the Halatu e-commerce website with an internal dashboard, using AI in two distinct ways:
 
 1. **AI product classification** — when staff add a product, AI automatically suggests its category and tags, keeping the catalog consistently organized.
 2. **AI-assisted customer support** — incoming customer inquiries are automatically classified and routed, and AI drafts a personalized reply from a knowledge base. **An agent reviews, edits, and approves every reply before it is sent** (human-in-the-loop). Complex or sensitive cases are escalated directly to agents.
@@ -72,7 +72,7 @@ The result: customers get faster, more personalized responses and can order onli
   - Order numbers are non-sequential random short codes, so order status lookup (code + phone) can't be enumerated
   - The confirmation call doubles as the fraud filter; the order endpoint is also rate-limited per IP/phone
   - Revisit: if volume exceeds ~50 orders/day, consider auto-confirming repeat customers (known phone numbers) instead of calling every order
-- ~~Delivery logistics: who delivers, delivery zones, and fees~~ **Resolved: ES-Market delivers with its own staff, within the city only, for a flat delivery fee (pickup remains free). Fee amount is a config value; out-of-city delivery is out of scope for v1.** Details:
+- ~~Delivery logistics: who delivers, delivery zones, and fees~~ **Resolved: Halatu delivers with its own staff, within the city only, for a flat delivery fee (pickup remains free). Fee amount is a config value; out-of-city delivery is out of scope for v1.** Details:
   - City-only is enforced by staff during the confirmation call (cancel reason "outside delivery area") — no geo/zone validation built in v1
   - Free delivery above a configurable order-total threshold (admin setting, alongside the flat fee)
   - Delivery expectation shown at checkout and on the confirmation page: delivered within 24–48h in-city

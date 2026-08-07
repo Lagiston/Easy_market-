@@ -1,4 +1,4 @@
-# ES-Market — Tech Stack
+# Halatu — Tech Stack
 
 TypeScript end-to-end: one language across client and server, with shared types for orders, products, and inquiries.
 

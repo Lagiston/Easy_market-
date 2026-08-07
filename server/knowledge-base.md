@@ -1,4 +1,4 @@
-# ES-Market -- Support Knowledge Base
+# Halatu -- Support Knowledge Base
 
 *Last Updated: 2026*
 This document contains official support policies and troubleshooting

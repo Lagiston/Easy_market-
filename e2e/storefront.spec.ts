@@ -6,16 +6,16 @@ test.describe("Storefront shell", () => {
 
     // No redirect to the staff login — the storefront is public.
     await expect(page).toHaveURL("/");
-    await expect(page.getByRole("heading", { name: "Welcome to ES-Market" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to Halatu" })).toBeVisible();
     await expect(page.getByText("Browse our products")).toBeVisible();
 
     // Header: brand link + Home nav link + language switcher.
-    await expect(page.getByRole("link", { name: "ES-Market" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Halatu" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Language" })).toBeVisible();
 
     // Footer copyright.
-    await expect(page.getByText(`© ${new Date().getFullYear()} ES-Market`)).toBeVisible();
+    await expect(page.getByText(`© ${new Date().getFullYear()} Halatu`)).toBeVisible();
 
     // Default document language/direction.
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
@@ -26,7 +26,7 @@ test.describe("Storefront shell", () => {
     page,
   }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Welcome to ES-Market" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to Halatu" })).toBeVisible();
 
     // Switch to Arabic.
     await page.getByRole("combobox", { name: "Language" }).click();
@@ -53,6 +53,6 @@ test.describe("Storefront shell", () => {
 
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
-    await expect(page.getByRole("heading", { name: "Welcome to ES-Market" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome to Halatu" })).toBeVisible();
   });
 });

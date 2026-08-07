@@ -30,7 +30,7 @@ describe("SiteHeader", () => {
 
   it("renders the brand link pointing to the storefront root", () => {
     renderHeader();
-    expect(screen.getByRole("link", { name: "ES-Market" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Halatu" })).toHaveAttribute("href", "/");
   });
 
   it("marks the active nav link", () => {

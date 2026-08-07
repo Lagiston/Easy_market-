@@ -77,12 +77,16 @@ export default function HomePage() {
     <div className="space-y-12">
       <ScrollFrameAnimation />
       <div className="mx-auto max-w-5xl space-y-12">
-        <section className="space-y-4 py-8 text-center">
-          <h1 className="text-4xl font-semibold">{t("home.title")}</h1>
-          <p className="text-lg text-muted-foreground">{t("home.subtitle")}</p>
-          <Link to="/products" className={buttonVariants({ size: "lg" })}>
-            {t("home.cta")}
-          </Link>
+        <section className="grid items-center gap-8 py-8 text-center md:grid-cols-2 md:text-start">
+          <h1 className="text-5xl font-bold tracking-tight text-primary md:text-6xl">
+            {t("home.title")}
+          </h1>
+          <div className="space-y-4">
+            <p className="text-lg text-muted-foreground">{t("home.subtitle")}</p>
+            <Link to="/products" className={buttonVariants({ size: "lg" })}>
+              {t("home.cta")}
+            </Link>
+          </div>
         </section>
         {promoBlocks && promoBlocks.length > 0 && (
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
