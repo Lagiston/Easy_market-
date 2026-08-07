@@ -77,19 +77,23 @@ export default function HomePage() {
   return (
     <div className="space-y-12">
       <ScrollFrameAnimation
-        endChildren={
-          <div className="w-full md:w-[380px]">
+        endChildren={{
+          eyebrow: (
             <div className="mb-3 flex items-center gap-2">
               <span className="h-[2px] w-[28px] bg-brand-orange drop-shadow-lg" />
               <span className="font-work-sans text-[13px] font-bold tracking-[0.18em] text-brand-orange uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
                 {t("home.introEyebrow")}
               </span>
             </div>
+          ),
+          headline: (
             <p className="mb-[12px] font-sora text-[30px] font-bold leading-[1.15] tracking-[-0.01em] text-intro-ink drop-shadow-lg">
               {t("home.introHeadlinePart1")}
               <span className="text-brand-orange">{t("home.introHeadlineHighlight")}</span>
               {t("home.introHeadlinePart2")}
             </p>
+          ),
+          body: (
             <p className="mb-[16px] w-full max-w-md rounded-[16px] bg-intro-card/35 px-[26px] py-[22px] font-work-sans text-lg leading-[1.55] font-light text-intro-ink/72 backdrop-blur-[6px]">
               <span className="font-bold text-primary">{t("home.introBodyHighlight0")}</span>
               {t("home.introBodyPart1")}
@@ -98,14 +102,16 @@ export default function HomePage() {
               <span className="font-bold text-primary">{t("home.introBodyHighlight2")}</span>
               {t("home.introBodyPart3")}
             </p>
+          ),
+          cta: (
             <Link
               to="/products"
               className="inline-block border-b border-brand-orange pb-0.5 font-work-sans text-[15px] font-medium text-white drop-shadow-lg outline-none hover:opacity-80 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-white"
             >
               {t("home.introCta")}
             </Link>
-          </div>
-        }
+          ),
+        }}
         outroChildren={
           <p className="font-dm-sans text-lg text-white/80 drop-shadow-lg md:text-xl">
             {t("home.outroLine")}

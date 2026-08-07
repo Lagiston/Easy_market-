@@ -15,10 +15,28 @@ const SCROLL_HEIGHT_VH = 400;
 // only fades in near the very end of the scrub, as a closing line just before
 // the section releases its scroll-jacking and the page moves on.
 const OVERLAY_FADE_END_PROGRESS = 0.2;
-const END_OVERLAY_FADE_START_PROGRESS = 0.2;
-const END_OVERLAY_FADE_END_PROGRESS = 0.4;
+// The intro card's four pieces reveal one after another within the same
+// 0.2–0.4 window the whole card used to fade in as one block, each on its
+// own slightly-overlapping slice (overlap keeps the reveal feeling fluid
+// rather than four hard snaps).
+const END_EYEBROW_FADE = [0.2, 0.26] as const;
+const END_HEADLINE_FADE = [0.24, 0.3] as const;
+const END_BODY_FADE = [0.28, 0.34] as const;
+const END_CTA_FADE = [0.32, 0.4] as const;
 const OUTRO_OVERLAY_FADE_START_PROGRESS = 0.55;
 const OUTRO_OVERLAY_FADE_END_PROGRESS = 0.7;
+
+// Shared linear-interpolation clamp used by every fade slot below — how far
+// `clamped` (0–1 scroll progress) has moved through a [start, end] window.
+function computeFadeOpacity(clamped: number, start: number, end: number) {
+  return Math.min(1, Math.max(0, (clamped - start) / (end - start)));
+}
+
+function applyOpacity(el: HTMLElement | null, opacity: number) {
+  if (!el) return;
+  el.style.opacity = String(opacity);
+  el.style.pointerEvents = opacity === 0 ? "none" : "auto";
+}
 
 export function ScrollFrameAnimation({
   children,
@@ -26,13 +44,21 @@ export function ScrollFrameAnimation({
   outroChildren,
 }: {
   children?: ReactNode;
-  endChildren?: ReactNode;
+  endChildren?: {
+    eyebrow: ReactNode;
+    headline: ReactNode;
+    body: ReactNode;
+    cta: ReactNode;
+  };
   outroChildren?: ReactNode;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const endOverlayRef = useRef<HTMLDivElement>(null);
+  const endEyebrowRef = useRef<HTMLDivElement>(null);
+  const endHeadlineRef = useRef<HTMLDivElement>(null);
+  const endBodyRef = useRef<HTMLDivElement>(null);
+  const endCtaRef = useRef<HTMLDivElement>(null);
   const outroOverlayRef = useRef<HTMLDivElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const currentFrameRef = useRef(1);
@@ -140,36 +166,24 @@ export function ScrollFrameAnimation({
       currentFrameRef.current = frame;
       draw(frame);
 
-      const fadeProgress = Math.min(1, clamped / OVERLAY_FADE_END_PROGRESS);
+      applyOpacity(
+        overlayRef.current,
+        1 - computeFadeOpacity(clamped, 0, OVERLAY_FADE_END_PROGRESS),
+      );
 
-      const overlay = overlayRef.current;
-      if (overlay) {
-        const opacity = 1 - fadeProgress;
-        overlay.style.opacity = String(opacity);
-        overlay.style.pointerEvents = opacity === 0 ? "none" : "auto";
-      }
+      applyOpacity(endEyebrowRef.current, computeFadeOpacity(clamped, ...END_EYEBROW_FADE));
+      applyOpacity(endHeadlineRef.current, computeFadeOpacity(clamped, ...END_HEADLINE_FADE));
+      applyOpacity(endBodyRef.current, computeFadeOpacity(clamped, ...END_BODY_FADE));
+      applyOpacity(endCtaRef.current, computeFadeOpacity(clamped, ...END_CTA_FADE));
 
-      const endOverlay = endOverlayRef.current;
-      if (endOverlay) {
-        const endFadeRange = END_OVERLAY_FADE_END_PROGRESS - END_OVERLAY_FADE_START_PROGRESS;
-        const opacity = Math.min(
-          1,
-          Math.max(0, (clamped - END_OVERLAY_FADE_START_PROGRESS) / endFadeRange),
-        );
-        endOverlay.style.opacity = String(opacity);
-        endOverlay.style.pointerEvents = opacity === 0 ? "none" : "auto";
-      }
-
-      const outroOverlay = outroOverlayRef.current;
-      if (outroOverlay) {
-        const outroFadeRange = OUTRO_OVERLAY_FADE_END_PROGRESS - OUTRO_OVERLAY_FADE_START_PROGRESS;
-        const opacity = Math.min(
-          1,
-          Math.max(0, (clamped - OUTRO_OVERLAY_FADE_START_PROGRESS) / outroFadeRange),
-        );
-        outroOverlay.style.opacity = String(opacity);
-        outroOverlay.style.pointerEvents = opacity === 0 ? "none" : "auto";
-      }
+      applyOpacity(
+        outroOverlayRef.current,
+        computeFadeOpacity(
+          clamped,
+          OUTRO_OVERLAY_FADE_START_PROGRESS,
+          OUTRO_OVERLAY_FADE_END_PROGRESS,
+        ),
+      );
     };
 
     const onScrollOrResize = () => {
@@ -204,8 +218,11 @@ export function ScrollFrameAnimation({
           </div>
         )}
         {endChildren && (
-          <div className="absolute inset-x-0 bottom-0 p-4 md:inset-auto md:right-[5%] md:bottom-[6%] md:p-0">
-            {endChildren}
+          <div className="absolute inset-x-0 bottom-0 w-full p-4 md:inset-auto md:right-[5%] md:bottom-[6%] md:w-[380px] md:p-0">
+            <div>{endChildren.eyebrow}</div>
+            <div>{endChildren.headline}</div>
+            <div>{endChildren.body}</div>
+            <div>{endChildren.cta}</div>
           </div>
         )}
         {outroChildren && (
@@ -230,11 +247,19 @@ export function ScrollFrameAnimation({
           </div>
         )}
         {endChildren && (
-          <div
-            ref={endOverlayRef}
-            className="absolute inset-x-0 bottom-0 p-4 opacity-0 md:inset-auto md:right-[5%] md:bottom-[6%] md:p-0"
-          >
-            {endChildren}
+          <div className="absolute inset-x-0 bottom-0 w-full p-4 md:inset-auto md:right-[5%] md:bottom-[6%] md:w-[380px] md:p-0">
+            <div ref={endEyebrowRef} className="opacity-0">
+              {endChildren.eyebrow}
+            </div>
+            <div ref={endHeadlineRef} className="opacity-0">
+              {endChildren.headline}
+            </div>
+            <div ref={endBodyRef} className="opacity-0">
+              {endChildren.body}
+            </div>
+            <div ref={endCtaRef} className="opacity-0">
+              {endChildren.cta}
+            </div>
           </div>
         )}
         {outroChildren && (
