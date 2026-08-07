@@ -8,6 +8,17 @@
    surfaces with no backdrop blur — legibility over glass. */
 @custom-variant reduced-transparency (@media (prefers-reduced-transparency: reduce));
 
+@keyframes navbar-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;

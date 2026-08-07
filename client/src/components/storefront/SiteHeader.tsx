@@ -5,6 +5,7 @@ import { Heart, Menu, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { customerAuthClient } from "@/lib/customer-auth-client";
+import { useHideOnScroll } from "@/lib/use-hide-on-scroll";
 import { useWishlist } from "@/lib/wishlist";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +50,10 @@ export default function SiteHeader() {
   const { products: wishlistProducts } = useWishlist();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // Slide the header away on scroll-down, back on scroll-up; kept visible
+  // while the mobile menu sheet is open, since its own trigger button lives
+  // inside the header.
+  const hidden = useHideOnScroll(mobileOpen);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -77,11 +82,12 @@ export default function SiteHeader() {
     );
 
   return (
-    <header className="sticky top-4 z-40 mx-4 md:mx-8">
+    <header className="sticky top-4 z-40 mx-4 animate-[navbar-enter_0.5s_ease-out_forwards] motion-reduce:animate-none md:mx-8">
       <div
         className={cn(
-          "grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-border/60 bg-background/70 px-4 backdrop-blur-xl transition-[height,box-shadow,background-color] duration-300 motion-reduce:transition-none reduced-transparency:bg-background reduced-transparency:backdrop-blur-none md:px-8 lg:grid-cols-[1fr_auto_1fr]",
+          "grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-border/60 bg-background/70 px-4 backdrop-blur-xl transition-[height,box-shadow,background-color,transform] duration-300 motion-reduce:transition-none reduced-transparency:bg-background reduced-transparency:backdrop-blur-none md:px-8 lg:grid-cols-[1fr_auto_1fr]",
           scrolled ? "h-14 bg-background/50 shadow-md md:h-16" : "h-16 md:h-20",
+          hidden ? "pointer-events-none translate-y-[calc(-100%_-_1rem)]" : "translate-y-0",
         )}
       >
         {/* Left — logo lockup */}

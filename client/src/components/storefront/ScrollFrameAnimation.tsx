@@ -150,7 +150,7 @@ export function ScrollFrameAnimation() {
 
   return (
     <div ref={containerRef} style={{ height: `${SCROLL_HEIGHT_VH}vh` }} className="relative">
-      <div className="sticky top-0 h-screen w-full">
+      <div className="sticky top-0 h-screen w-full animate-[navbar-enter_0.6s_ease-out_0.15s_both] motion-reduce:animate-none">
         <canvas ref={canvasRef} className="h-full w-full" />
       </div>
     </div>
