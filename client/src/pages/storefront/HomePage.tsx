@@ -113,7 +113,7 @@ export default function HomePage() {
         }
       >
         <div className="space-y-6 font-dm-sans md:space-y-8">
-          <p className="text-sm font-bold tracking-[0.3em] text-primary">{t("home.eyebrow")}</p>
+          <p className="text-sm font-bold tracking-[0.1em] text-primary">{t("home.eyebrow")}</p>
           <h1 className="text-6xl leading-[0.94] font-black tracking-tight md:text-8xl">
             <span className="block text-white drop-shadow-lg">{t("home.headlineLine1")}</span>
             <span className="block text-primary drop-shadow-lg">{t("home.headlineLine2")}</span>

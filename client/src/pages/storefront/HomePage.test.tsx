@@ -34,7 +34,7 @@ describe("storefront HomePage", () => {
   it("renders the hero with a CTA linking to the product list", async () => {
     renderPage();
 
-    expect(screen.getByText("GEGYAFA")).toBeInTheDocument();
+    expect(screen.getByText("Geyafa")).toBeInTheDocument();
     const heading = screen.getByRole("heading", { name: /serve looks.*head to toe/i });
     expect(heading).toBeInTheDocument();
     expect(

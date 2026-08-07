@@ -5,7 +5,7 @@ test.describe("Storefront homepage hero (ScrollFrameAnimation)", () => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: "Serve looks. Head to toe." })).toBeVisible();
-    await expect(page.getByText("GEGYAFA")).toBeVisible();
+    await expect(page.getByText("Geyafa")).toBeVisible();
     await expect(page.getByRole("link", { name: "Shop the collection" })).toBeVisible();
   });
 
