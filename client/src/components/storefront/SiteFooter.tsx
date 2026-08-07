@@ -6,9 +6,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NAV_ITEMS } from "./SiteHeader";
 
-// Deliberately a fixed dark section regardless of the site's light/dark
-// theme toggle — a "closing band" look, not driven by theme tokens like
-// every other surface in this codebase.
 export default function SiteFooter() {
   const { t } = useTranslation();
   // Same query/cache key as ContactPage.tsx and CheckoutPage.tsx.
@@ -16,16 +13,16 @@ export default function SiteFooter() {
   const contactLinks = buildContactLinks(settings);
 
   return (
-    <footer className="bg-neutral-950 px-8 py-12 text-neutral-400">
+    <footer className="border-t bg-background px-8 py-12 text-muted-foreground">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 md:flex-row md:items-start md:justify-between">
         <Link to="/" className="flex items-center gap-2">
           <span
             aria-hidden
-            className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white"
+            className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary"
           >
-            <span className="absolute h-[150%] w-1.5 -rotate-45 bg-neutral-950" />
+            <span className="absolute h-[150%] w-1.5 -rotate-45 bg-primary-foreground" />
           </span>
-          <span className="text-lg font-bold tracking-tight whitespace-nowrap text-white">
+          <span className="text-lg font-bold tracking-tight whitespace-nowrap text-foreground">
             {t("brand")}
           </span>
         </Link>
@@ -35,7 +32,7 @@ export default function SiteFooter() {
             <Link
               key={item.to}
               to={item.to}
-              className="text-[15px] transition-colors hover:text-white"
+              className="text-[15px] transition-colors hover:text-foreground"
             >
               {t(item.labelKey)}
             </Link>
@@ -44,9 +41,9 @@ export default function SiteFooter() {
 
         {isPending ? (
           <div className="flex flex-col items-center gap-2 md:items-end">
-            <Skeleton className="h-5 w-40 bg-white/10" />
-            <Skeleton className="h-5 w-48 bg-white/10" />
-            <Skeleton className="h-5 w-56 bg-white/10" />
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-5 w-56" />
           </div>
         ) : (
           contactLinks.length > 0 && (
@@ -58,7 +55,7 @@ export default function SiteFooter() {
                     key={key}
                     href={href}
                     {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                    className="flex items-start gap-2 text-center transition-colors hover:text-white md:text-end"
+                    className="flex items-start gap-2 text-center transition-colors hover:text-foreground md:text-end"
                   >
                     <Icon aria-hidden className="mt-0.5 size-4 shrink-0" />
                     {label}
@@ -70,7 +67,7 @@ export default function SiteFooter() {
         )}
       </div>
 
-      <Separator className="my-8 bg-white/10" />
+      <Separator className="my-8" />
 
       <p className="text-center text-sm">
         {t("footer.copyright", { year: new Date().getFullYear() })}

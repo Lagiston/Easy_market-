@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -89,7 +89,6 @@ const ADD_TO_CART_GUARD_MS = 400;
 export default function ProductsPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
-  const navigate = useNavigate();
   const { items: cartItems, addItem } = useCart();
   // Source of truth for the guard is a ref, not state: a ref mutates
   // synchronously, so even two clicks dispatched within the same JS task
@@ -406,75 +405,47 @@ export default function ProductsPage() {
                     </div>
                   )}
                   <p className="font-semibold">{product.price}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      className="min-w-0 flex-1"
-                      disabled={product.stock === 0 || pendingAddIdsRef.current.has(product.id)}
-                      onClick={() => {
-                        // Synchronous check-and-set on the ref: even a second
-                        // click dispatched in the same JS task as the first
-                        // sees this write immediately and bails out here.
-                        if (pendingAddIdsRef.current.has(product.id)) return;
-                        pendingAddIdsRef.current.add(product.id);
+                  <Button
+                    className="w-full"
+                    disabled={product.stock === 0 || pendingAddIdsRef.current.has(product.id)}
+                    onClick={() => {
+                      // Synchronous check-and-set on the ref: even a second
+                      // click dispatched in the same JS task as the first
+                      // sees this write immediately and bails out here.
+                      if (pendingAddIdsRef.current.has(product.id)) return;
+                      pendingAddIdsRef.current.add(product.id);
+                      setPendingAddTick((tick) => tick + 1);
+                      setTimeout(() => {
+                        pendingAddIdsRef.current.delete(product.id);
                         setPendingAddTick((tick) => tick + 1);
-                        setTimeout(() => {
-                          pendingAddIdsRef.current.delete(product.id);
-                          setPendingAddTick((tick) => tick + 1);
-                        }, ADD_TO_CART_GUARD_MS);
+                      }, ADD_TO_CART_GUARD_MS);
 
-                        const existing = cartItems.find(
-                          (item) => item.productId === product.id,
-                        );
-                        addItem({
-                          productId: product.id,
-                          name: product.name,
-                          price: product.price,
-                          imageUrl: product.images[0] ?? null,
-                          stock: product.stock,
-                          size: product.size,
-                          color: product.color,
-                        });
-                        const name = localize(product.name, language);
-                        if (existing) {
-                          // Already in the cart — addItem clamps to stock, so
-                          // reflect the actual resulting quantity, not a bare
-                          // "added" toast that would misleadingly imply a new line.
-                          const newQuantity = Math.min(existing.quantity + 1, product.stock);
-                          toast.success(t("cart.updatedToast", { name, quantity: newQuantity }));
-                        } else {
-                          toast.success(t("cart.addedToast", { name }));
-                        }
-                      }}
-                    >
-                      <ShoppingCart /> {t("cart.addToCart")}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="min-w-0 flex-1"
-                      disabled={product.stock === 0}
-                      onClick={() => {
-                        toast.success(
-                          t("cart.buyNowToast", { name: localize(product.name, language) }),
-                        );
-                        navigate("/checkout", {
-                          state: {
-                            buyNowItem: {
-                              productId: product.id,
-                              name: product.name,
-                              price: product.price,
-                              imageUrl: product.images[0] ?? null,
-                              stock: product.stock,
-                              size: product.size,
-                              color: product.color,
-                              quantity: 1,
-                            },
-                          },
-                        });
-                      }}
-                    >
-                      {t("products.buyNow")}
-                    </Button>
-                  </div>
+                      const existing = cartItems.find(
+                        (item) => item.productId === product.id,
+                      );
+                      addItem({
+                        productId: product.id,
+                        name: product.name,
+                        price: product.price,
+                        imageUrl: product.images[0] ?? null,
+                        stock: product.stock,
+                        size: product.size,
+                        color: product.color,
+                      });
+                      const name = localize(product.name, language);
+                      if (existing) {
+                        // Already in the cart — addItem clamps to stock, so
+                        // reflect the actual resulting quantity, not a bare
+                        // "added" toast that would misleadingly imply a new line.
+                        const newQuantity = Math.min(existing.quantity + 1, product.stock);
+                        toast.success(t("cart.updatedToast", { name, quantity: newQuantity }));
+                      } else {
+                        toast.success(t("cart.addedToast", { name }));
+                      }
+                    }}
+                  >
+                    <ShoppingCart /> {t("cart.addToCart")}
+                  </Button>
                 </CardContent>
               </Card>
             ))}

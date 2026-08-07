@@ -238,49 +238,6 @@ describe("storefront ProductsPage", () => {
     expect(buttons[1]).toBeDisabled();
   });
 
-  it("renders a Buy now button per card, disabled for out-of-stock products", async () => {
-    mockApi();
-    renderPage();
-    await screen.findByText("Rice 5kg");
-
-    const buttons = screen.getAllByRole("button", { name: "Buy now" });
-    expect(buttons).toHaveLength(2);
-    expect(buttons[0]).toBeEnabled();
-    // Orange Juice has stock 0
-    expect(buttons[1]).toBeDisabled();
-  });
-
-  it("navigates to checkout with a quantity-1 buy-now item from the card, without touching the cart", async () => {
-    const user = userEvent.setup();
-    mockApi();
-    renderPage();
-    await screen.findByText("Rice 5kg");
-
-    const [buyRice] = screen.getAllByRole("button", { name: "Buy now" });
-    await user.click(buyRice!);
-
-    expect(await screen.findByText("Heading to checkout for Rice 5kg")).toBeInTheDocument();
-    expect(
-      await screen.findByText(
-        `Checkout page: ${JSON.stringify({
-          productId: "p1",
-          name: { en: "Rice 5kg", ar: "أرز ٥ كجم" },
-          price: 1500,
-          imageUrl: null,
-          stock: 20,
-          size: null,
-          color: null,
-          quantity: 1,
-        })}`,
-      ),
-    ).toBeInTheDocument();
-    // CartProvider always persists its (here, empty) items array on mount,
-    // so assert emptiness rather than the key being absent.
-    expect(
-      JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]"),
-    ).toEqual([]);
-  });
-
   it("adds the product to the cart from the card without navigating", async () => {
     const user = userEvent.setup();
     mockApi();
