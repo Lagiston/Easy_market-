@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 const FRAME_COUNT = 270;
 const FRAME_PATH = (index: number) =>
@@ -8,9 +8,32 @@ const FRAME_PATH = (index: number) =>
 // doesn't demand an absurd amount of scrolling on very tall viewports.
 const SCROLL_HEIGHT_VH = 400;
 
-export function ScrollFrameAnimation() {
+// The headline overlay fades out over the first slice of scroll progress so
+// the frames get full attention once real scrubbing kicks in. The end-side
+// overlay only starts fading in once the headline is fully gone, then stays
+// visible — sequential, not a cross-fade. The outro overlay (left side again)
+// only fades in near the very end of the scrub, as a closing line just before
+// the section releases its scroll-jacking and the page moves on.
+const OVERLAY_FADE_END_PROGRESS = 0.2;
+const END_OVERLAY_FADE_START_PROGRESS = 0.2;
+const END_OVERLAY_FADE_END_PROGRESS = 0.4;
+const OUTRO_OVERLAY_FADE_START_PROGRESS = 0.55;
+const OUTRO_OVERLAY_FADE_END_PROGRESS = 0.7;
+
+export function ScrollFrameAnimation({
+  children,
+  endChildren,
+  outroChildren,
+}: {
+  children?: ReactNode;
+  endChildren?: ReactNode;
+  outroChildren?: ReactNode;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const endOverlayRef = useRef<HTMLDivElement>(null);
+  const outroOverlayRef = useRef<HTMLDivElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const currentFrameRef = useRef(1);
   const rafRef = useRef<number | null>(null);
@@ -116,6 +139,37 @@ export function ScrollFrameAnimation() {
       );
       currentFrameRef.current = frame;
       draw(frame);
+
+      const fadeProgress = Math.min(1, clamped / OVERLAY_FADE_END_PROGRESS);
+
+      const overlay = overlayRef.current;
+      if (overlay) {
+        const opacity = 1 - fadeProgress;
+        overlay.style.opacity = String(opacity);
+        overlay.style.pointerEvents = opacity === 0 ? "none" : "auto";
+      }
+
+      const endOverlay = endOverlayRef.current;
+      if (endOverlay) {
+        const endFadeRange = END_OVERLAY_FADE_END_PROGRESS - END_OVERLAY_FADE_START_PROGRESS;
+        const opacity = Math.min(
+          1,
+          Math.max(0, (clamped - END_OVERLAY_FADE_START_PROGRESS) / endFadeRange),
+        );
+        endOverlay.style.opacity = String(opacity);
+        endOverlay.style.pointerEvents = opacity === 0 ? "none" : "auto";
+      }
+
+      const outroOverlay = outroOverlayRef.current;
+      if (outroOverlay) {
+        const outroFadeRange = OUTRO_OVERLAY_FADE_END_PROGRESS - OUTRO_OVERLAY_FADE_START_PROGRESS;
+        const opacity = Math.min(
+          1,
+          Math.max(0, (clamped - OUTRO_OVERLAY_FADE_START_PROGRESS) / outroFadeRange),
+        );
+        outroOverlay.style.opacity = String(opacity);
+        outroOverlay.style.pointerEvents = opacity === 0 ? "none" : "auto";
+      }
     };
 
     const onScrollOrResize = () => {
@@ -142,8 +196,23 @@ export function ScrollFrameAnimation() {
 
   if (reducedMotionRef.current) {
     return (
-      <div ref={containerRef} className="h-screen w-full">
+      <div ref={containerRef} className="relative h-screen w-full">
         <canvas ref={canvasRef} className="h-full w-full" />
+        {children && (
+          <div className="absolute inset-y-0 start-0 flex w-full max-w-xl items-center p-8 md:p-16">
+            {children}
+          </div>
+        )}
+        {endChildren && (
+          <div className="absolute inset-x-0 bottom-0 p-4 md:inset-auto md:right-[5%] md:bottom-[6%] md:p-0">
+            {endChildren}
+          </div>
+        )}
+        {outroChildren && (
+          <div className="absolute inset-x-0 top-0 flex w-full max-w-xl items-start p-6 md:inset-y-0 md:items-center md:p-16">
+            {outroChildren}
+          </div>
+        )}
       </div>
     );
   }
@@ -152,6 +221,30 @@ export function ScrollFrameAnimation() {
     <div ref={containerRef} style={{ height: `${SCROLL_HEIGHT_VH}vh` }} className="relative">
       <div className="sticky top-0 h-screen w-full animate-[navbar-enter_0.6s_ease-out_0.15s_both] motion-reduce:animate-none">
         <canvas ref={canvasRef} className="h-full w-full" />
+        {children && (
+          <div
+            ref={overlayRef}
+            className="absolute inset-y-0 start-0 flex w-full max-w-xl items-center p-8 md:p-16"
+          >
+            {children}
+          </div>
+        )}
+        {endChildren && (
+          <div
+            ref={endOverlayRef}
+            className="absolute inset-x-0 bottom-0 p-4 opacity-0 md:inset-auto md:right-[5%] md:bottom-[6%] md:p-0"
+          >
+            {endChildren}
+          </div>
+        )}
+        {outroChildren && (
+          <div
+            ref={outroOverlayRef}
+            className="absolute inset-x-0 top-0 flex w-full max-w-xl items-start p-6 opacity-0 md:inset-y-0 md:items-center md:p-16"
+          >
+            {outroChildren}
+          </div>
+        )}
       </div>
     </div>
   );

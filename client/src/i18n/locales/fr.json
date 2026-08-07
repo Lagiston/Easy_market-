@@ -16,9 +16,6 @@
     "label": "Langue"
   },
   "home": {
-    "title": "Bienvenue chez Halatu",
-    "subtitle": "Parcourez nos produits",
-    "cta": "Parcourir les produits",
     "features": {
       "payOnDelivery": {
         "title": "Paiement à la livraison",

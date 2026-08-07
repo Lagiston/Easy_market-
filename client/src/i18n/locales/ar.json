@@ -1,5 +1,5 @@
 {
-  "brand": "إي إس ماركت",
+  "brand": "Halatu",
   "nav": {
     "home": "الرئيسية",
     "products": "المنتجات",
@@ -16,9 +16,6 @@
     "label": "اللغة"
   },
   "home": {
-    "title": "مرحبًا بكم في إي إس ماركت",
-    "subtitle": "تصفح منتجاتنا",
-    "cta": "تصفح المنتجات",
     "features": {
       "payOnDelivery": {
         "title": "الدفع عند الاستلام",
@@ -233,7 +230,7 @@
     }
   },
   "footer": {
-    "copyright": "© {{year}} إي إس ماركت. جميع الحقوق محفوظة.",
+    "copyright": "© {{year}} Halatu. جميع الحقوق محفوظة.",
     "nav": "روابط التذييل"
   },
   "validation": {

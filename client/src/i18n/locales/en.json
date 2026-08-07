@@ -16,9 +16,23 @@
     "label": "Language"
   },
   "home": {
-    "title": "Welcome to Halatu",
-    "subtitle": "Browse our products",
-    "cta": "Browse products",
+    "eyebrow": "GEGYAFA",
+    "headlineLine1": "Serve looks.",
+    "headlineLine2": "Head to toe.",
+    "subline": "Wigs, makeup, fashion, and fine details — everything to turn heads.",
+    "cta": "Shop the collection",
+    "introEyebrow": "OUR STORY",
+    "introHeadlinePart1": "Halatu is here for those who choose to ",
+    "introHeadlineHighlight": "stand out",
+    "introHeadlinePart2": " rather than blend in.",
+    "introBodyHighlight0": "Our goal",
+    "introBodyPart1": " is to make luxury feel natural and self-expression limitless, with everything you need to create a look that reflects your ",
+    "introBodyHighlight1": "unique spirit",
+    "introBodyPart2": ". From a daring new wig to a flawless makeup set, a sharp suit, or the perfect heels, you'll find it all in ",
+    "introBodyHighlight2": "one caring space",
+    "introBodyPart3": ".",
+    "introCta": "Discover the collection →",
+    "outroLine": "One brand. Every category. Infinite ways to express yourself.",
     "features": {
       "payOnDelivery": {
         "title": "Pay on delivery",

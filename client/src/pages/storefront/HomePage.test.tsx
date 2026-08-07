@@ -34,10 +34,13 @@ describe("storefront HomePage", () => {
   it("renders the hero with a CTA linking to the product list", async () => {
     renderPage();
 
+    expect(screen.getByText("GEGYAFA")).toBeInTheDocument();
+    const heading = screen.getByRole("heading", { name: /serve looks.*head to toe/i });
+    expect(heading).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Welcome to Halatu" }),
+      screen.getByText("Wigs, makeup, fashion, and fine details — everything to turn heads."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Browse products" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /shop the collection/i })).toHaveAttribute(
       "href",
       "/products",
     );
@@ -55,17 +58,14 @@ describe("storefront HomePage", () => {
     await i18n.changeLanguage("ar");
     renderPage();
 
-    expect(
-      screen.getByRole("heading", { name: "مرحبًا بكم في إي إس ماركت" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "تصفح المنتجات" })).toBeInTheDocument();
+    expect(screen.getByText("الدفع عند الاستلام")).toBeInTheDocument();
   });
 
   it("renders no promo section when there are no active promo blocks", async () => {
     mockedGet.mockResolvedValue({ data: { promoBlocks: [] } });
     renderPage();
 
-    await screen.findByRole("heading", { name: "Welcome to Halatu" });
+    await screen.findByRole("heading", { name: /serve looks.*head to toe/i });
     expect(mockedGet).toHaveBeenCalledWith("/api/storefront/promo-blocks");
     expect(screen.queryByRole("link", { name: /shop now/i })).not.toBeInTheDocument();
   });
