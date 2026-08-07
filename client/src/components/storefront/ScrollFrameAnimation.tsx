@@ -226,7 +226,7 @@ export function ScrollFrameAnimation({
           </div>
         )}
         {outroChildren && (
-          <div className="absolute inset-x-0 top-0 flex w-full max-w-xl items-start p-6 md:inset-y-0 md:items-center md:p-16">
+          <div className="absolute left-0 top-24 flex w-full max-w-xl items-start p-6 md:inset-y-0 md:items-center md:p-16">
             {outroChildren}
           </div>
         )}
@@ -265,7 +265,7 @@ export function ScrollFrameAnimation({
         {outroChildren && (
           <div
             ref={outroOverlayRef}
-            className="absolute inset-x-0 top-0 flex w-full max-w-xl items-start p-6 opacity-0 md:inset-y-0 md:items-center md:p-16"
+            className="absolute left-0 top-24 flex w-full max-w-xl items-start p-6 opacity-0 md:inset-y-0 md:items-center md:p-16"
           >
             {outroChildren}
           </div>
