@@ -36,6 +36,8 @@ const products: StorefrontProduct[] = [
     averageRating: 4.5,
     reviewCount: 12,
     wishlistCount: 0,
+    salePrice: null,
+    createdAt: "2020-01-01T00:00:00.000Z",
   },
   {
     id: "p2",
@@ -52,6 +54,8 @@ const products: StorefrontProduct[] = [
     averageRating: null,
     reviewCount: 0,
     wishlistCount: 0,
+    salePrice: null,
+    createdAt: "2020-01-01T00:00:00.000Z",
   },
 ];
 
@@ -162,7 +166,8 @@ describe("storefront ProductsPage", () => {
 
     expect(await screen.findByText("Rice 5kg")).toBeInTheDocument();
     expect(screen.getByText("Orange Juice")).toBeInTheDocument();
-    expect(screen.getByText("Groceries")).toBeInTheDocument();
+    // "Groceries" appears twice — once as a category chip, once on the card
+    expect(screen.getAllByText("Groceries").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("1500")).toBeInTheDocument();
     // Only the zero-stock product gets the badge
     expect(screen.getAllByText("Out of stock")).toHaveLength(1);
@@ -226,16 +231,20 @@ describe("storefront ProductsPage", () => {
     );
   });
 
-  it("renders an Add to cart button per card, disabled for out-of-stock products", async () => {
+  it("renders an Add to cart button for in-stock products and a Notify me button for out-of-stock ones", async () => {
     mockApi();
     renderPage();
     await screen.findByText("Rice 5kg");
 
-    const buttons = screen.getAllByRole("button", { name: "Add to cart" });
-    expect(buttons).toHaveLength(2);
-    expect(buttons[0]).toBeEnabled();
-    // Orange Juice has stock 0
-    expect(buttons[1]).toBeDisabled();
+    const addButtons = screen.getAllByRole("button", { name: "Add to cart" });
+    expect(addButtons).toHaveLength(1);
+    expect(addButtons[0]).toBeEnabled();
+    // Orange Juice has stock 0 — its quick-add bar swaps to "Notify me"
+    // (a guest sign-in link here, since this suite keeps the session guest).
+    expect(screen.getByRole("link", { name: /Notify me/ })).toHaveAttribute(
+      "href",
+      "/account/login",
+    );
   });
 
   it("adds the product to the cart from the card without navigating", async () => {
@@ -418,14 +427,13 @@ describe("storefront ProductsPage", () => {
     });
   });
 
-  it("filters by category", async () => {
+  it("filters by category via the chip rail", async () => {
     const user = userEvent.setup();
     mockApi();
     renderPage();
     await screen.findByText("Rice 5kg");
 
-    await user.click(screen.getByLabelText("Category"));
-    await user.click(await screen.findByRole("option", { name: "Groceries" }));
+    await user.click(await screen.findByRole("button", { name: "Groceries" }));
 
     await waitFor(() => {
       expect(lastProductsParams()).toEqual({ categoryId: "c1", sort: "newest", page: 1 });
@@ -449,6 +457,69 @@ describe("storefront ProductsPage", () => {
         page: 1,
       });
     });
+  });
+
+  it("shows an active-filter bar with a removable pill per applied filter", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    expect(screen.queryByText("Clear all")).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Search", { exact: true }), "rice");
+    await user.type(screen.getByLabelText("Min price"), "100");
+    await user.type(screen.getByLabelText("Max price"), "2000");
+
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({
+        search: "rice",
+        minPrice: "100",
+        maxPrice: "2000",
+        sort: "newest",
+        page: 1,
+      });
+    });
+
+    expect(screen.getByText("2 filters")).toBeInTheDocument();
+    expect(screen.getByText("rice")).toBeInTheDocument();
+    expect(screen.getByText("KSh 100 – 2000")).toBeInTheDocument();
+
+    // Removing the search pill clears only the search filter
+    await user.click(screen.getByRole("button", { name: "Remove filter: rice" }));
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({
+        minPrice: "100",
+        maxPrice: "2000",
+        sort: "newest",
+        page: 1,
+      });
+    });
+
+    await user.click(screen.getByText("Clear all"));
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({ sort: "newest", page: 1 });
+    });
+    expect(screen.queryByText("Clear all")).not.toBeInTheDocument();
+  });
+
+  it("filters by availability via the availability dropdown", async () => {
+    const user = userEvent.setup();
+    mockApi();
+    renderPage();
+    await screen.findByText("Rice 5kg");
+
+    await user.click(screen.getByLabelText("Availability"));
+    await user.click(await screen.findByRole("option", { name: "In stock" }));
+
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({
+        availability: "inStock",
+        sort: "newest",
+        page: 1,
+      });
+    });
+    expect(screen.getByText("1 filter")).toBeInTheDocument();
   });
 
   it("sorts by price", async () => {

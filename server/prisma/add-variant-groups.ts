@@ -111,10 +111,23 @@ async function main() {
     });
 
     for (const sibling of group.siblings) {
+      // The base product's own name has its size baked into the text (e.g.
+      // "Nescafé Classic Instant Coffee 200g") — copying it verbatim onto
+      // every sibling row left each variant's displayed name/title
+      // contradicting its own `size` field (a "500g" product still titled
+      // "...200g"). Substitute the base size for the sibling's own size in
+      // every language the name has, falling back to the unedited text if a
+      // given translation doesn't literally contain the base size string.
+      const siblingName = Object.fromEntries(
+        Object.entries(base.name as Record<string, string>).map(([lang, text]) => [
+          lang,
+          text.includes(group.baseSize) ? text.replace(group.baseSize, sibling.size) : text,
+        ]),
+      );
       await prisma.product.create({
         data: {
           id: randomUUID(),
-          name: base.name as object,
+          name: siblingName,
           description: base.description as object | null,
           price: sibling.price,
           stock: sibling.stock,

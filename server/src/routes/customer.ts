@@ -82,10 +82,10 @@ customerRouter.put<{ id: string }>("/customer/reviews/:id", requireCustomerAuth,
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { authorName, rating, comment } = parsed.data;
+  const { authorName, rating, headline, comment } = parsed.data;
   const updated = await prisma.review.updateMany({
     where: { id: req.params.id, customerId: req.customer.id },
-    data: { authorName, rating, comment: comment ?? null },
+    data: { authorName, rating, headline: headline ?? null, comment: comment ?? null },
   });
   if (updated.count === 0) {
     res.status(404).json({ error: "Review not found" });

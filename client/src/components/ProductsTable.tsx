@@ -44,6 +44,7 @@ export type ProductRow = {
   name: LocalizedName;
   description: LocalizedDescription | null;
   price: number;
+  salePrice: number | null;
   stock: number;
   lowStockThreshold: number;
   images: string[];
@@ -79,6 +80,7 @@ export function SuggestionBadge({ product }: { product: ProductRow }) {
         name: product.name,
         description: product.description ?? undefined,
         price: product.price,
+        salePrice: product.salePrice ?? undefined,
         stock: product.stock,
         lowStockThreshold: product.lowStockThreshold,
         categoryId: product.aiSuggestedCategoryId!,
@@ -256,7 +258,21 @@ export default function ProductsTable({
       columnHelper.accessor("price", {
         id: "price",
         header: "Price",
-        cell: ({ getValue }) => <div className="text-right">{getValue()}</div>,
+        cell: ({ getValue, row }) => {
+          const salePrice = row.original.salePrice;
+          if (salePrice === null) {
+            return <div className="text-right">{getValue()}</div>;
+          }
+          return (
+            <div className="flex items-center justify-end gap-1.5">
+              <Badge variant="secondary" className="shrink-0">
+                Sale
+              </Badge>
+              <span className="text-muted-foreground line-through">{getValue()}</span>
+              <span className="font-medium">{salePrice}</span>
+            </div>
+          );
+        },
       }),
       columnHelper.accessor("stock", {
         id: "stock",

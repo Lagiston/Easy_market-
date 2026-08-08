@@ -58,6 +58,9 @@
   },
   "products": {
     "title": "Bidhaa",
+    "subtitle": "Kila kitu unachohitaji ili kuonekana na kujisikia vizuri zaidi, mahali pamoja.",
+    "itemCount_one": "bidhaa",
+    "itemCount_other": "bidhaa",
     "filters": {
       "search": "Tafuta",
       "searchPlaceholder": "Tafuta bidhaa…",
@@ -66,12 +69,34 @@
       "allCategories": "Kategoria zote",
       "tag": "Lebo",
       "allTags": "Lebo zote",
+      "priceRange": "Wigo wa bei",
       "minPrice": "Bei ya chini",
       "maxPrice": "Bei ya juu",
+      "minPricePlaceholder": "Chini",
+      "maxPricePlaceholder": "Juu",
+      "priceRangeBoth": "KSh {{min}} – {{max}}",
+      "priceRangeMinOnly": "KSh {{min}}+",
+      "priceRangeMaxOnly": "Hadi KSh {{max}}",
+      "availability": "Upatikanaji",
+      "allAvailability": "Vitu vyote",
+      "inStock": "Ipo stoo",
+      "onSale": "Punguzo",
       "sort": "Panga kwa",
       "newest": "Mpya zaidi",
       "priceAsc": "Bei: chini kwenda juu",
-      "priceDesc": "Bei: juu kwenda chini"
+      "priceDesc": "Bei: juu kwenda chini",
+      "activeFilters_one": "kichujio {{count}}",
+      "activeFilters_other": "vichujio {{count}}",
+      "clearAll": "Futa vyote",
+      "removeFilter": "Ondoa kichujio: {{label}}"
+    },
+    "new": "Mpya",
+    "notifyMe": "Nijulishe",
+    "saleBadge": "−{{percent}}%",
+    "stock": {
+      "inStock": "Ipo stoo",
+      "lowStock": "Inakaribia kuisha",
+      "soldOut": "Imeisha"
     },
     "empty": "Hakuna bidhaa zilizopatikana.",
     "error": "Imeshindwa kupakia bidhaa. Tafadhali jaribu tena.",
@@ -86,6 +111,12 @@
     "relatedTitle": "Bidhaa zinazohusiana",
     "wishlistCount_one": "Mtu {{count}} ana bidhaa hii kwenye orodha yake ya matakwa",
     "wishlistCount_other": "Watu {{count}} wana bidhaa hii kwenye orodha zao za matakwa",
+    "inStockReady": "Ipo stoo — tayari kutumwa",
+    "perks": {
+      "delivery": { "title": "Uwasilishaji saa 24–48", "text": "Ada isiyobadilika jijini" },
+      "payOnDelivery": { "title": "Lipa ukipokea", "text": "Taslimu inakubalika" },
+      "pickup": { "title": "Kuchukua bila malipo", "text": "Kutoka dukani kwetu" }
+    },
     "variants": {
       "size": "Ukubwa",
       "color": "Rangi",
@@ -107,7 +138,9 @@
     "rateStars_one": "Kadiria nyota {{count}}",
     "rateStars_other": "Kadiria nyota {{count}}",
     "name": "Jina",
+    "headline": "Kichwa (hiari)",
     "comment": "Maoni (hiari)",
+    "postedPubliclyNote": "Itachapishwa hadharani kwa jina lako.",
     "submit": "Tuma maoni",
     "submitting": "Inatuma…",
     "success": "Asante kwa maoni yako!",

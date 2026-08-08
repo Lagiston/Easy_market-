@@ -58,6 +58,9 @@
   },
   "products": {
     "title": "Produits",
+    "subtitle": "Tout ce dont vous avez besoin pour être et vous sentir au mieux, au même endroit.",
+    "itemCount_one": "article",
+    "itemCount_other": "articles",
     "filters": {
       "search": "Rechercher",
       "searchPlaceholder": "Rechercher des produits…",
@@ -66,12 +69,34 @@
       "allCategories": "Toutes les catégories",
       "tag": "Étiquette",
       "allTags": "Toutes les étiquettes",
+      "priceRange": "Fourchette de prix",
       "minPrice": "Prix min",
       "maxPrice": "Prix max",
+      "minPricePlaceholder": "Min",
+      "maxPricePlaceholder": "Max",
+      "priceRangeBoth": "KSh {{min}} – {{max}}",
+      "priceRangeMinOnly": "KSh {{min}}+",
+      "priceRangeMaxOnly": "Jusqu'à KSh {{max}}",
+      "availability": "Disponibilité",
+      "allAvailability": "Tous les articles",
+      "inStock": "En stock",
+      "onSale": "En promotion",
       "sort": "Trier par",
       "newest": "Plus récents",
       "priceAsc": "Prix : croissant",
-      "priceDesc": "Prix : décroissant"
+      "priceDesc": "Prix : décroissant",
+      "activeFilters_one": "{{count}} filtre",
+      "activeFilters_other": "{{count}} filtres",
+      "clearAll": "Tout effacer",
+      "removeFilter": "Retirer le filtre : {{label}}"
+    },
+    "new": "Nouveau",
+    "notifyMe": "Me prévenir",
+    "saleBadge": "−{{percent}}%",
+    "stock": {
+      "inStock": "En stock",
+      "lowStock": "Stock limité",
+      "soldOut": "Épuisé"
     },
     "empty": "Aucun produit trouvé.",
     "error": "Impossible de charger les produits. Veuillez réessayer.",
@@ -86,6 +111,12 @@
     "relatedTitle": "Produits associés",
     "wishlistCount_one": "{{count}} personne a ajouté ce produit à sa liste de souhaits",
     "wishlistCount_other": "{{count}} personnes ont ajouté ce produit à leur liste de souhaits",
+    "inStockReady": "En stock — prêt à expédier",
+    "perks": {
+      "delivery": { "title": "Livraison 24–48 h", "text": "Tarif fixe en ville" },
+      "payOnDelivery": { "title": "Paiement à la livraison", "text": "Espèces acceptées" },
+      "pickup": { "title": "Retrait gratuit", "text": "Dans notre magasin" }
+    },
     "variants": {
       "size": "Taille",
       "color": "Couleur",
@@ -107,7 +138,9 @@
     "rateStars_one": "Noter {{count}} étoile",
     "rateStars_other": "Noter {{count}} étoiles",
     "name": "Nom",
+    "headline": "Titre (facultatif)",
     "comment": "Commentaire (facultatif)",
+    "postedPubliclyNote": "Publié publiquement avec votre nom.",
     "submit": "Envoyer l'avis",
     "submitting": "Envoi…",
     "success": "Merci pour votre avis !",

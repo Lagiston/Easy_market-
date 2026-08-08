@@ -9,6 +9,8 @@ export const RATING_ERROR = "Choose a rating from 1 to 5 stars";
 // sync with what the server actually enforces.
 export const COMMENT_MAX_LENGTH = 1000;
 export const COMMENT_MAX_ERROR = `Comment must be ${COMMENT_MAX_LENGTH} characters or fewer`;
+export const HEADLINE_MAX_LENGTH = 120;
+export const HEADLINE_MAX_ERROR = `Headline must be ${HEADLINE_MAX_LENGTH} characters or fewer`;
 
 // Storefront product review form → POST /api/storefront/products/:id/reviews.
 // Guest-first like checkout: authorName is a free-text field, not tied to a
@@ -28,6 +30,15 @@ export const createReviewSchema = z.object({
     .int(RATING_ERROR)
     .min(1, RATING_ERROR)
     .max(5, RATING_ERROR),
+  headline: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .string()
+      .trim()
+      .max(HEADLINE_MAX_LENGTH, HEADLINE_MAX_ERROR)
+      .transform(sanitizeText)
+      .optional(),
+  ),
   comment: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z

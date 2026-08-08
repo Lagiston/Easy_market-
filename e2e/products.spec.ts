@@ -724,6 +724,71 @@ test.describe("Assign agent (ADMIN)", () => {
   });
 });
 
+test.describe("Sale price", () => {
+  test("setting a sale price in admin persists and shows the discount on the storefront", async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+    await page.goto("/admin/products");
+
+    const name = `On Sale Product ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      await page.getByRole("button", { name: "Create product" }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("Name").fill(name);
+      await dialog.getByLabel("Price", { exact: true }).fill("100");
+      await dialog.getByLabel("Sale price (optional)").fill("75");
+      await dialog.getByLabel("Stock", { exact: true }).fill("10");
+      await dialog.getByLabel("Category").click();
+      await page.getByRole("option", { name: "Groceries" }).click();
+      await dialog.getByLabel("Images").setInputFiles(SAMPLE_JPEG);
+      await dialog.getByRole("button", { name: "Create product" }).click();
+      await expect(dialog).not.toBeVisible();
+
+      // Admin table: "Sale" badge + struck-through original price + sale price.
+      const row = page.getByRole("row").filter({ hasText: name });
+      await expect(row).toBeVisible();
+      await expect(row.getByText("Sale", { exact: true })).toBeVisible();
+      await expect(row.getByText("100", { exact: true })).toBeVisible();
+      await expect(row.getByText("75", { exact: true })).toBeVisible();
+
+      // Reload to confirm the sale price actually persisted server-side, not
+      // just optimistic client state, then reopen the edit dialog to confirm
+      // it's pre-filled from the real DB row.
+      await page.reload();
+      const rowAfterReload = page.getByRole("row").filter({ hasText: name });
+      await expect(rowAfterReload.getByText("Sale", { exact: true })).toBeVisible();
+      await rowAfterReload.getByRole("button", { name: `Edit ${name}` }).click();
+      const editDialog = page.getByRole("dialog");
+      await expect(editDialog.getByRole("heading", { name: "Edit product" })).toBeVisible();
+      await expect(editDialog.getByLabel("Sale price (optional)")).toHaveValue("75");
+      await page.keyboard.press("Escape");
+      await expect(editDialog).not.toBeVisible();
+
+      // Storefront (unauthenticated): find the product via search, confirm the
+      // "−25%" badge and discounted/struck-through price both render, using a
+      // real, unauthenticated query against the same DB row. The search term
+      // is unique to this throwaway product, so the grid narrows to just it.
+      await page.context().clearCookies();
+      await page.goto("/products");
+      await page.getByLabel("Search", { exact: true }).fill(name);
+
+      await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+      await expect(page.getByText("−25%", { exact: true })).toBeVisible();
+      await expect(page.getByText("75", { exact: true })).toBeVisible();
+      await expect(page.getByText("100", { exact: true })).toBeVisible();
+
+      // Filtering by the "On sale" availability option still shows the product.
+      await page.getByLabel("Availability", { exact: true }).click();
+      await page.getByRole("option", { name: "On sale" }).click();
+      await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+    } finally {
+      await hardDeleteProduct(name);
+    }
+  });
+});
+
 test.describe("Product list access control", () => {
   test("AGENT visiting /admin/products is redirected home and sees no Products nav link", async ({
     page,

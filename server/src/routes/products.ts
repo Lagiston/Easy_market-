@@ -202,7 +202,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId, tags, size, color } =
+  const { name, description, price, salePrice, stock, lowStockThreshold, categoryId, assignedAgentId, tags, size, color } =
     parsed.data;
 
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
@@ -225,6 +225,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
       name,
       description: description ?? Prisma.JsonNull,
       price,
+      salePrice: salePrice ?? null,
       stock,
       lowStockThreshold,
       categoryId,
@@ -302,7 +303,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { name, description, price, stock, lowStockThreshold, categoryId, assignedAgentId, tags, size, color } =
+  const { name, description, price, salePrice, stock, lowStockThreshold, categoryId, assignedAgentId, tags, size, color } =
     parsed.data;
   const productId = req.params.id;
 
@@ -353,6 +354,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
       name,
       description: description ?? Prisma.JsonNull,
       price,
+      salePrice: salePrice ?? null,
       stock,
       lowStockThreshold,
       categoryId,

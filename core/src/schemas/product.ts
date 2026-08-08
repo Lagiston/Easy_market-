@@ -56,6 +56,16 @@ export const createProductSchema = z.object({
   // missing description too.
   description: localizedDescriptionSchema.optional(),
   price: z.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR),
+  // Nullable discounted price — same empty-string/NaN-to-undefined
+  // preprocessing as assignedAgentId/size/color, since a number input's
+  // `valueAsNumber` yields NaN (not "") when cleared. undefined means "no
+  // sale" and, unlike assignedAgentId, is explicitly coerced back to a
+  // Prisma `null` write on both create and update (see products.ts) so
+  // clearing a previously-set sale price actually persists.
+  salePrice: z.preprocess(
+    (value) => (value === "" || (typeof value === "number" && Number.isNaN(value)) ? undefined : value),
+    z.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
+  ),
   stock: z.number(STOCK_ERROR).int(STOCK_ERROR).min(0, STOCK_ERROR),
   lowStockThreshold: z.number(THRESHOLD_ERROR).int(THRESHOLD_ERROR).min(0, THRESHOLD_ERROR),
   categoryId: z.string(CATEGORY_ERROR).trim().min(1, CATEGORY_ERROR).max(100, CATEGORY_ERROR),
@@ -80,6 +90,14 @@ export const createProductSchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.string().trim().max(50, VARIANT_LABEL_ERROR).optional(),
   ),
+}).superRefine((value, ctx) => {
+  if (value.salePrice !== undefined && value.salePrice >= value.price) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["salePrice"],
+      message: "Sale price must be less than the regular price",
+    });
+  }
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
@@ -140,6 +158,13 @@ export type StorefrontProductSort = (typeof STOREFRONT_PRODUCT_SORTS)[number];
 
 export const STOREFRONT_PAGE_SIZE = 12;
 
+// "all" is the default/no-op; "inStock" filters to stock > 0; "onSale"
+// filters to salePrice not null. Deliberately not a fourth sort value (same
+// reasoning as reviews' verifiedOnly) since it needs to compose with sort,
+// not replace it.
+export const STOREFRONT_AVAILABILITY_FILTERS = ["all", "inStock", "onSale"] as const;
+export type StorefrontAvailabilityFilter = (typeof STOREFRONT_AVAILABILITY_FILTERS)[number];
+
 export const storefrontProductListQuerySchema = z.object({
   search: z.string().trim().max(200).optional(),
   categoryId: z.string().trim().min(1).optional(),
@@ -156,6 +181,7 @@ export const storefrontProductListQuerySchema = z.object({
   minPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
   maxPrice: z.coerce.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
   sort: z.enum(STOREFRONT_PRODUCT_SORTS).default("newest"),
+  availability: z.enum(STOREFRONT_AVAILABILITY_FILTERS).default("all"),
   page: z.coerce.number(PAGE_ERROR).int(PAGE_ERROR).min(1, PAGE_ERROR).default(1),
 });
 

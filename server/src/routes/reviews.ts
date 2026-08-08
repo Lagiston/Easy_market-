@@ -13,6 +13,7 @@ const adminReviewSelect = {
   id: true,
   authorName: true,
   rating: true,
+  headline: true,
   comment: true,
   verifiedPurchase: true,
   staffReply: true,

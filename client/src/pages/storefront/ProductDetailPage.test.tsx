@@ -37,6 +37,7 @@ const product: StorefrontProduct = {
   name: { en: "Rice 5kg", ar: "أرز ٥ كجم" },
   description: { en: "Long grain rice", ar: "أرز طويل الحبة" },
   price: 1500,
+  salePrice: null,
   stock: 20,
   lowStockThreshold: 10,
   images: [],
@@ -47,6 +48,7 @@ const product: StorefrontProduct = {
   averageRating: null,
   reviewCount: 0,
   wishlistCount: 0,
+  createdAt: "2020-01-01T00:00:00.000Z",
 };
 
 function CheckoutStateProbe() {
@@ -125,10 +127,11 @@ describe("storefront ProductDetailPage", () => {
     });
     renderPage();
 
-    expect(await screen.findByText("4.5 (12)")).toBeInTheDocument();
     expect(
-      screen.getByLabelText("Average rating: 4.5 out of 5 · 12 reviews"),
+      await screen.findByLabelText("Average rating: 4.5 out of 5 · 12 reviews"),
     ).toBeInTheDocument();
+    expect(screen.getByText("4.5")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "12 reviews" })).toHaveAttribute("href", "#reviews");
   });
 
   it("shows a wishlist-count social-proof line when others have wishlisted it", async () => {
@@ -165,7 +168,9 @@ describe("storefront ProductDetailPage", () => {
     mockedGet.mockResolvedValueOnce({ data: { product: { ...product, stock: 0 } } });
     renderPage();
 
-    expect(await screen.findByText("Out of stock")).toBeInTheDocument();
+    // "Out of stock" renders twice — once as the gallery badge, once as the
+    // price panel's stock line.
+    expect(await screen.findAllByText("Out of stock")).toHaveLength(2);
     expect(screen.queryByText(/left!/)).not.toBeInTheDocument();
   });
 
@@ -392,6 +397,7 @@ describe("storefront ProductDetailPage", () => {
       name: { en: "Rice 10kg" },
       description: null,
       price: 2800,
+      salePrice: null,
       stock: 0,
       lowStockThreshold: 10,
       images: [],
@@ -402,6 +408,7 @@ describe("storefront ProductDetailPage", () => {
       averageRating: 3.5,
       reviewCount: 2,
       wishlistCount: 0,
+      createdAt: "2020-01-01T00:00:00.000Z",
     };
     mockedGet.mockResolvedValueOnce({ data: { product, relatedProducts: [sibling] } });
     renderPage();

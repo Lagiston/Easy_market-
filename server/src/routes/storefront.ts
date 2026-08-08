@@ -27,6 +27,7 @@ export const publicProductSelect = {
   name: true,
   description: true,
   price: true,
+  salePrice: true,
   stock: true,
   lowStockThreshold: true,
   images: true,
@@ -34,6 +35,7 @@ export const publicProductSelect = {
   size: true,
   color: true,
   category: { select: { id: true, name: true } },
+  createdAt: true,
 } as const;
 
 // Per-product review + wishlist summary for product cards — two grouped
@@ -102,7 +104,7 @@ storefrontRouter.get("/storefront/products", async (req, res) => {
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { search, categoryId, tag, minPrice, maxPrice, sort, page } = parsed.data;
+  const { search, categoryId, tag, minPrice, maxPrice, sort, availability, page } = parsed.data;
 
   // Tags are a plain string array (no JSON/text-search support on them), so a
   // substring match needs the candidate tag values resolved in JS first, then
@@ -154,6 +156,8 @@ storefrontRouter.get("/storefront/products", async (req, res) => {
           },
         }
       : {}),
+    ...(availability === "inStock" ? { stock: { gt: 0 } } : {}),
+    ...(availability === "onSale" ? { salePrice: { not: null } } : {}),
   };
 
   const [products, total] = await Promise.all([
@@ -212,6 +216,7 @@ export const publicReviewSelect = {
   id: true,
   authorName: true,
   rating: true,
+  headline: true,
   comment: true,
   verifiedPurchase: true,
   staffReply: true,
@@ -327,7 +332,7 @@ storefrontRouter.post<{ id: string }>("/storefront/products/:id/reviews", async 
       select: { id: true },
     })) !== null;
 
-  const { authorName, rating, comment } = parsed.data;
+  const { authorName, rating, headline, comment } = parsed.data;
   try {
     const review = await prisma.review.create({
       data: {
@@ -336,6 +341,7 @@ storefrontRouter.post<{ id: string }>("/storefront/products/:id/reviews", async 
         customerId,
         authorName,
         rating,
+        headline: headline ?? null,
         comment: comment ?? null,
         verifiedPurchase,
       },

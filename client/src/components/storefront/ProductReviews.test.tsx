@@ -93,7 +93,8 @@ describe("ProductReviews", () => {
     });
     expect(screen.getByText("Excellent quality")).toBeInTheDocument();
     expect(screen.getByText("Joseph")).toBeInTheDocument();
-    expect(screen.getByText(/4\.0 · 2 reviews/)).toBeInTheDocument();
+    expect(screen.getByText("4.0")).toBeInTheDocument();
+    expect(screen.getByText("2 reviews")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Rated 5 out of 5" })).toBeInTheDocument();
     // Only Amina's review is a verified purchase.
     expect(screen.getAllByText("Verified purchase")).toHaveLength(1);

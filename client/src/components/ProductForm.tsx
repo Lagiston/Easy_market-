@@ -80,6 +80,7 @@ export default function ProductForm({
             ar: product.description?.ar ?? "",
           },
           price: product.price,
+          salePrice: product.salePrice ?? "",
           stock: product.stock,
           lowStockThreshold: product.lowStockThreshold,
           categoryId: product.category.id,
@@ -92,6 +93,7 @@ export default function ProductForm({
           name: { en: "", ar: "" },
           description: { en: "", ar: "" },
           price: 0,
+          salePrice: "",
           stock: 0,
           lowStockThreshold: defaultLowStockThreshold,
           categoryId: "",
@@ -249,6 +251,21 @@ export default function ProductForm({
         />
         {errors.price && (
           <p className="text-sm text-destructive">{errors.price.message}</p>
+        )}
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="product-form-sale-price">Sale price (optional)</Label>
+        <Input
+          id="product-form-sale-price"
+          type="number"
+          min={0}
+          step={1}
+          placeholder="No sale"
+          aria-invalid={!!errors.salePrice}
+          {...register("salePrice", { valueAsNumber: true })}
+        />
+        {errors.salePrice && (
+          <p className="text-sm text-destructive">{errors.salePrice.message}</p>
         )}
       </div>
       <div className="grid gap-1.5">

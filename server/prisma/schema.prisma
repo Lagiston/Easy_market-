@@ -181,6 +181,15 @@ model Product {
   name              Json
   description       Json?
   price             Int
+  // Nullable discounted price — null means "not on sale". When set, the
+  // storefront shows this as the current price with `price` struck through
+  // beside it as the original. Same whole-number-Int convention as `price`
+  // (no cents), and deliberately not validated at the DB layer to be lower
+  // than `price` — the zod schema (core/src/schemas/product.ts) enforces
+  // that on write, matching how other cross-field invariants in this
+  // codebase (e.g. PromoBlock's ctaLabel/ctaUrl pair) are schema-level, not
+  // DB-constraint-level, checks.
+  salePrice         Int?
   stock             Int
   lowStockThreshold Int       @default(10)
   // Ordered list of "/api/uploads/products/<file>" URLs — first is the
@@ -469,6 +478,10 @@ model Review {
   customer   Customer? @relation(fields: [customerId], references: [id])
   authorName String
   rating     Int
+  // Optional short summary shown above the review body (e.g. "Great value
+  // for the price") — plain text, no length enforced at the DB layer (same
+  // as `comment`), validated by the zod schema (core/src/schemas/review.ts).
+  headline   String?
   comment    String?
   // Snapshot taken at creation (like OrderItem.productName): true when the
   // soft-attached customer had a non-cancelled order containing this product

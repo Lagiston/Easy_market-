@@ -16,6 +16,7 @@ export type ReviewRow = {
   id: string;
   authorName: string;
   rating: number;
+  headline: string | null;
   comment: string | null;
   verifiedPurchase: boolean;
   staffReply: string | null;
@@ -41,6 +42,7 @@ export default function ReviewsTable({
           <TableHead>Product</TableHead>
           <TableHead>Rating</TableHead>
           <TableHead>Author</TableHead>
+          <TableHead>Headline</TableHead>
           <TableHead>Comment</TableHead>
           <TableHead>Reply</TableHead>
           <TableHead>Date</TableHead>
@@ -53,7 +55,7 @@ export default function ReviewsTable({
         {reviews === null ? (
           Array.from({ length: 3 }, (_, i) => (
             <TableRow key={i}>
-              {Array.from({ length: 6 }, (_, j) => (
+              {Array.from({ length: 7 }, (_, j) => (
                 <TableCell key={j}>
                   <Skeleton className="h-3 w-20" />
                 </TableCell>
@@ -65,7 +67,7 @@ export default function ReviewsTable({
           ))
         ) : reviews.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+            <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
               No reviews yet.
             </TableCell>
           </TableRow>
@@ -84,6 +86,9 @@ export default function ReviewsTable({
                   {review.authorName}
                   {review.verifiedPurchase && <Badge variant="secondary">Verified</Badge>}
                 </div>
+              </TableCell>
+              <TableCell className="max-w-40 truncate text-foreground">
+                {review.headline ?? "—"}
               </TableCell>
               <TableCell className="max-w-64 truncate text-muted-foreground">
                 {review.comment ?? "—"}

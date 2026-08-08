@@ -92,7 +92,7 @@ test.describe("Product reviews", () => {
 
       await page.goto("/checkout");
       await page.getByLabel("Name").fill(customerName);
-      await page.getByLabel("Phone").fill("+255700555666");
+      await page.getByLabel("Phone", { exact: true }).fill("700555666");
       await page.getByLabel("Delivery or pickup").click();
       await page.getByRole("option", { name: "Pickup" }).click();
       await page.getByRole("button", { name: "Place order" }).click();
@@ -105,24 +105,28 @@ test.describe("Product reviews", () => {
       await page.goto(`/products/${productId}`);
       await expect(page.getByRole("heading", { name })).toBeVisible();
       const comment = `Great product! ${unique}`;
+      const headline = `Terrific find ${unique}`;
       await page.getByRole("button", { name: "Rate 4 stars" }).click();
+      await page.getByLabel("Headline (optional)").fill(headline);
       await page.getByLabel("Comment (optional)").fill(comment);
       await page.getByRole("button", { name: "Submit review" }).click();
 
       const reviewItem = page.getByText(comment).locator("..");
       await expect(reviewItem.getByText("Verified purchase")).toBeVisible();
       await expect(reviewItem.getByText(customerName)).toBeVisible();
+      await expect(reviewItem.getByText(headline)).toBeVisible();
 
-      // Real persistence: reload and the review (with badge) is still there.
+      // Real persistence: reload and the review (with badge + headline) is still there.
       await page.reload();
       const reloadedReviewItem = page.getByText(comment).locator("..");
       await expect(reloadedReviewItem.getByText("Verified purchase")).toBeVisible();
       await expect(reloadedReviewItem.getByText(customerName)).toBeVisible();
+      await expect(reloadedReviewItem.getByText(headline)).toBeVisible();
 
-      // Real DB check that verifiedPurchase was computed server-side.
+      // Real DB check that verifiedPurchase was computed server-side, and the headline saved.
       const persistedReview = await withDb((client) =>
         client.query(
-          `SELECT r."verifiedPurchase", r."customerId", c.email
+          `SELECT r."verifiedPurchase", r."customerId", r.headline, c.email
            FROM "review" r
            JOIN "customer" c ON c.id = r."customerId"
            WHERE r."productId" = $1 AND r.comment = $2`,
@@ -132,30 +136,40 @@ test.describe("Product reviews", () => {
       expect(persistedReview.rows).toHaveLength(1);
       expect(persistedReview.rows[0].verifiedPurchase).toBe(true);
       expect(persistedReview.rows[0].email).toBe(email);
+      expect(persistedReview.rows[0].headline).toBe(headline);
 
-      // Edit the review inline: change rating and comment.
+      // Edit the review inline: change rating, comment, and headline.
       const editedComment = `Updated review ${unique}`;
+      const editedHeadline = `Even better than I thought ${unique}`;
       await page.getByRole("button", { name: "Edit your review" }).click();
       const editForm = page.locator("form").filter({ hasText: "Save changes" });
       await editForm.getByRole("button", { name: "Rate 2 stars" }).click();
+      await editForm.getByLabel("Headline (optional)").fill(editedHeadline);
       await editForm.getByLabel("Comment (optional)").fill(editedComment);
       await editForm.getByRole("button", { name: "Save changes" }).click();
 
       await expect(page.getByText(editedComment)).toBeVisible();
       await expect(page.getByText(comment, { exact: true })).toHaveCount(0);
+      await expect(page.getByText(editedHeadline)).toBeVisible();
+      await expect(page.getByText(headline, { exact: true })).toHaveCount(0);
 
       // Persistence across reload after edit.
       await page.reload();
       await expect(page.getByText(editedComment)).toBeVisible();
       const editedReviewItem = page.getByText(editedComment).locator("..");
       await expect(editedReviewItem.getByText("Verified purchase")).toBeVisible();
+      await expect(editedReviewItem.getByText(editedHeadline)).toBeVisible();
 
       const persistedEdit = await withDb((client) =>
-        client.query('SELECT rating, comment FROM "review" WHERE "productId" = $1', [productId]),
+        client.query(
+          'SELECT rating, comment, headline FROM "review" WHERE "productId" = $1',
+          [productId],
+        ),
       );
       expect(persistedEdit.rows).toHaveLength(1);
       expect(persistedEdit.rows[0].rating).toBe(2);
       expect(persistedEdit.rows[0].comment).toBe(editedComment);
+      expect(persistedEdit.rows[0].headline).toBe(editedHeadline);
 
       // Delete via the confirmation dialog.
       await page.getByRole("button", { name: "Delete your review" }).click();
@@ -163,11 +177,11 @@ test.describe("Product reviews", () => {
       await page.getByRole("button", { name: "Delete", exact: true }).click();
 
       await expect(page.getByText(editedComment)).toHaveCount(0);
-      await expect(page.getByText("No reviews yet")).toBeVisible();
+      await expect(page.getByText("No reviews yet").first()).toBeVisible();
 
       // Reload confirms the delete really persisted, not just client state.
       await page.reload();
-      await expect(page.getByText("No reviews yet")).toBeVisible();
+      await expect(page.getByText("No reviews yet").first()).toBeVisible();
 
       const persistedDelete = await withDb((client) =>
         client.query('SELECT id FROM "review" WHERE "productId" = $1', [productId]),

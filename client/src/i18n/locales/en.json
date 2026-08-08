@@ -81,6 +81,9 @@
   },
   "products": {
     "title": "Products",
+    "subtitle": "Everything you need to look and feel your best, all in one place.",
+    "itemCount_one": "item",
+    "itemCount_other": "items",
     "filters": {
       "search": "Search",
       "searchPlaceholder": "Search products…",
@@ -89,12 +92,34 @@
       "allCategories": "All categories",
       "tag": "Tag",
       "allTags": "All tags",
+      "priceRange": "Price range",
       "minPrice": "Min price",
       "maxPrice": "Max price",
+      "minPricePlaceholder": "Min",
+      "maxPricePlaceholder": "Max",
+      "priceRangeBoth": "KSh {{min}} – {{max}}",
+      "priceRangeMinOnly": "KSh {{min}}+",
+      "priceRangeMaxOnly": "Up to KSh {{max}}",
+      "availability": "Availability",
+      "allAvailability": "All items",
+      "inStock": "In stock",
+      "onSale": "On sale",
       "sort": "Sort by",
       "newest": "Newest",
       "priceAsc": "Price: low to high",
-      "priceDesc": "Price: high to low"
+      "priceDesc": "Price: high to low",
+      "activeFilters_one": "{{count}} filter",
+      "activeFilters_other": "{{count}} filters",
+      "clearAll": "Clear all",
+      "removeFilter": "Remove filter: {{label}}"
+    },
+    "new": "New",
+    "notifyMe": "Notify me",
+    "saleBadge": "−{{percent}}%",
+    "stock": {
+      "inStock": "In stock",
+      "lowStock": "Low stock",
+      "soldOut": "Sold out"
     },
     "empty": "No products found.",
     "error": "Could not load products. Please try again.",
@@ -109,6 +134,12 @@
     "relatedTitle": "Related products",
     "wishlistCount_one": "{{count}} person has this in their wishlist",
     "wishlistCount_other": "{{count}} people have this in their wishlist",
+    "inStockReady": "In stock — ready to ship",
+    "perks": {
+      "delivery": { "title": "24–48hr delivery", "text": "Flat fee citywide" },
+      "payOnDelivery": { "title": "Pay on delivery", "text": "Cash accepted" },
+      "pickup": { "title": "Free pickup", "text": "At our store" }
+    },
     "variants": {
       "size": "Size",
       "color": "Color",
@@ -130,7 +161,9 @@
     "rateStars_one": "Rate {{count}} star",
     "rateStars_other": "Rate {{count}} stars",
     "name": "Name",
+    "headline": "Headline (optional)",
     "comment": "Comment (optional)",
+    "postedPubliclyNote": "Posted publicly with your name.",
     "submit": "Submit review",
     "submitting": "Submitting…",
     "success": "Thanks for your review!",

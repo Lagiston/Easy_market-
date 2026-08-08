@@ -166,4 +166,15 @@
   html {
     @apply font-sans;
     }
+  /* Hides native number-input spinners globally — they visually clash with
+     this app's custom select chevrons wherever a number input sits next to
+     one (e.g. the storefront price-range filter). */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 }

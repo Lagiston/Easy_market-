@@ -16,6 +16,7 @@ import {
 } from "@es-market/core";
 import { customerAuthClient } from "@/lib/customer-auth-client";
 import { translateFieldError } from "@/lib/zod-error-i18n";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,11 +29,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+import { Progress, ProgressIndicator, ProgressTrack } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -47,6 +48,7 @@ export type StorefrontReview = {
   id: string;
   authorName: string;
   rating: number;
+  headline: string | null;
   comment: string | null;
   verifiedPurchase: boolean;
   staffReply: string | null;
@@ -79,6 +81,12 @@ const SORT_LABEL_KEYS: Record<ReviewSort, string> = {
   lowest: "reviews.sortLowest",
 };
 
+const GLASS_PANEL_CLASS =
+  "rounded-[20px] border border-foreground/10 bg-card/60 backdrop-blur-xl reduced-transparency:bg-card reduced-transparency:backdrop-blur-none";
+
+const FORM_CONTROL_CLASS =
+  "rounded-xl border-foreground/10 bg-card/40 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16] reduced-transparency:bg-card";
+
 function StarRow({ rating, label }: { rating: number; label: string }) {
   return (
     <span role="img" aria-label={label} className="inline-flex gap-0.5">
@@ -86,9 +94,10 @@ function StarRow({ rating, label }: { rating: number; label: string }) {
         <Star
           key={star}
           aria-hidden
-          className={`size-4 ${
-            star <= rating ? "fill-primary text-primary" : "text-muted-foreground"
-          }`}
+          className={cn(
+            "size-4",
+            star <= rating ? "fill-[#facc15] text-[#facc15]" : "text-muted-foreground/30",
+          )}
         />
       ))}
     </span>
@@ -97,7 +106,9 @@ function StarRow({ rating, label }: { rating: number; label: string }) {
 
 // Shared interactive star picker for both the create form and the inline edit
 // form below — the read-only StarRow above is a different component since it
-// renders a decorative <span role="img">, not a set of buttons.
+// renders a decorative <span role="img">, not a set of buttons. Fills up to
+// the hovered star (falling back to the selected value when not hovering) so
+// the picker previews a rating before it's committed.
 function RatingPicker({
   value,
   onChange,
@@ -108,24 +119,30 @@ function RatingPicker({
   error: string | undefined;
 }) {
   const { t } = useTranslation();
+  const [hovered, setHovered] = useState(0);
+  const filledUpTo = hovered || value;
   return (
     <div className="grid gap-1.5">
-      <Label>{t("reviews.rating")}</Label>
-      <div className="flex gap-1">
+      <Label className="text-[11px] font-semibold tracking-[0.09em] text-muted-foreground uppercase">
+        {t("reviews.rating")}
+      </Label>
+      <div className="flex gap-1" onMouseLeave={() => setHovered(0)}>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             type="button"
             aria-label={t("reviews.rateStars", { count: star })}
             aria-pressed={star === value}
+            onMouseEnter={() => setHovered(star)}
             onClick={() => onChange(star)}
             className="p-0.5"
           >
             <Star
               aria-hidden
-              className={`size-6 ${
-                star <= value ? "fill-primary text-primary" : "text-muted-foreground"
-              }`}
+              className={cn(
+                "size-6 transition-colors",
+                star <= filledUpTo ? "fill-[#facc15] text-[#facc15]" : "fill-foreground/[0.13] text-transparent",
+              )}
             />
           </button>
         ))}
@@ -144,10 +161,22 @@ function CommentCounter({ value }: { value: string | undefined }) {
   const isOverLimit = length > REVIEW_COMMENT_MAX_LENGTH;
   return (
     <p
-      className={`text-end text-xs ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}
+      className={cn("text-end text-xs", isOverLimit ? "text-destructive" : "text-muted-foreground")}
     >
       {t("reviews.commentCount", { count: length, max: REVIEW_COMMENT_MAX_LENGTH })}
     </p>
+  );
+}
+
+function ReviewAvatar({ name }: { name: string }) {
+  const initial = name.trim().charAt(0).toUpperCase() || "?";
+  return (
+    <span
+      aria-hidden
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-sm font-bold text-white"
+    >
+      {initial}
+    </span>
   );
 }
 
@@ -178,13 +207,14 @@ function EditReviewForm({
     defaultValues: {
       authorName: review.authorName,
       rating: review.rating,
+      headline: review.headline ?? "",
       comment: review.comment ?? "",
     },
   });
   const selectedRating = watch("rating");
-  // z.preprocess makes the input-side type of `comment` unknown (same gotcha
-  // CLAUDE.md documents for …FormInput types generally) — watch()'s return
-  // follows suit, so it's cast back to what the field actually holds.
+  // z.preprocess makes the input-side type of `comment`/`headline` unknown
+  // (same gotcha CLAUDE.md documents for …FormInput types generally) —
+  // watch()'s return follows suit, so it's cast back to what the field holds.
   const commentValue = watch("comment") as string | undefined;
 
   const mutation = useMutation({
@@ -204,26 +234,43 @@ function EditReviewForm({
     <form
       noValidate
       onSubmit={handleSubmit((input) => mutation.mutate(input))}
-      className="grid gap-4"
+      className="grid gap-3.5"
     >
       <RatingPicker
         value={typeof selectedRating === "number" ? selectedRating : 0}
         onChange={(rating) => setValue("rating", rating, { shouldValidate: true })}
         error={translateFieldError(errors.rating?.message, t)}
       />
-      <div className="grid gap-1.5">
-        <Label htmlFor={`edit-review-name-${review.id}`}>{t("reviews.name")}</Label>
-        <Input
-          id={`edit-review-name-${review.id}`}
-          autoComplete="name"
-          aria-invalid={!!errors.authorName}
-          {...register("authorName")}
-        />
-        {errors.authorName && (
-          <p className="text-sm text-destructive">
-            {translateFieldError(errors.authorName.message, t)}
-          </p>
-        )}
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <Label htmlFor={`edit-review-name-${review.id}`}>{t("reviews.name")}</Label>
+          <Input
+            id={`edit-review-name-${review.id}`}
+            autoComplete="name"
+            aria-invalid={!!errors.authorName}
+            className={FORM_CONTROL_CLASS}
+            {...register("authorName")}
+          />
+          {errors.authorName && (
+            <p className="text-sm text-destructive">
+              {translateFieldError(errors.authorName.message, t)}
+            </p>
+          )}
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor={`edit-review-headline-${review.id}`}>{t("reviews.headline")}</Label>
+          <Input
+            id={`edit-review-headline-${review.id}`}
+            aria-invalid={!!errors.headline}
+            className={FORM_CONTROL_CLASS}
+            {...register("headline")}
+          />
+          {errors.headline && (
+            <p className="text-sm text-destructive">
+              {translateFieldError(errors.headline.message, t)}
+            </p>
+          )}
+        </div>
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor={`edit-review-comment-${review.id}`}>{t("reviews.comment")}</Label>
@@ -231,6 +278,7 @@ function EditReviewForm({
           id={`edit-review-comment-${review.id}`}
           rows={3}
           aria-invalid={!!errors.comment}
+          className={FORM_CONTROL_CLASS}
           {...register("comment")}
         />
         <CommentCounter value={commentValue} />
@@ -306,12 +354,12 @@ export default function ProductReviews({ productId }: { productId: string }) {
     resolver: zodResolver(createReviewSchema),
     // rating 0 = "not chosen yet" — fails the schema's min(1) on submit, so
     // the rating error shows without needing a separate required check.
-    defaultValues: { authorName: "", rating: 0, comment: "" },
+    defaultValues: { authorName: "", rating: 0, headline: "", comment: "" },
   });
   const selectedRating = watch("rating");
-  // z.preprocess makes the input-side type of `comment` unknown (same gotcha
-  // CLAUDE.md documents for …FormInput types generally) — watch()'s return
-  // follows suit, so it's cast back to what the field actually holds.
+  // z.preprocess makes the input-side type of `comment`/`headline` unknown
+  // (same gotcha CLAUDE.md documents for …FormInput types generally) —
+  // watch()'s return follows suit, so it's cast back to what the field holds.
   const commentValue = watch("comment") as string | undefined;
 
   // Prefills once the session resolves — doesn't overwrite anything the
@@ -342,55 +390,67 @@ export default function ProductReviews({ productId }: { productId: string }) {
   });
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold">{t("reviews.title")}</h2>
-        {summary && summary.averageRating !== null && (
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <StarRow
-              rating={Math.round(summary.averageRating)}
-              label={t("reviews.averageLabel", {
-                average: summary.averageRating.toFixed(1),
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(260px,340px)_1fr]">
+      <div className={cn(GLASS_PANEL_CLASS, "h-fit space-y-4 p-6 lg:sticky lg:top-6")}>
+        <h2 className="text-lg font-bold text-foreground">{t("reviews.title")}</h2>
+        {summary && summary.averageRating !== null ? (
+          <>
+            <div className="flex items-center gap-3">
+              <span className="text-[46px] leading-none font-black tracking-[-0.04em] text-foreground">
+                {summary.averageRating.toFixed(1)}
+              </span>
+              <div className="space-y-1">
+                <StarRow
+                  rating={Math.round(summary.averageRating)}
+                  label={t("reviews.averageLabel", {
+                    average: summary.averageRating.toFixed(1),
+                  })}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {t("reviews.count", { count: summary.total })}
+                </p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = summary.ratingCounts[star] ?? 0;
+                const percent = summary.total > 0 ? (count / summary.total) * 100 : 0;
+                return (
+                  <div
+                    key={star}
+                    className="grid grid-cols-[34px_1fr_26px] items-center gap-2.5 text-xs text-muted-foreground"
+                  >
+                    <span className="text-right">{star} ★</span>
+                    <Progress
+                      value={percent}
+                      aria-label={t("reviews.starDistribution", { star, count })}
+                      className="w-full"
+                    >
+                      <ProgressTrack className="h-1.5 bg-foreground/[0.07]">
+                        <ProgressIndicator className="bg-gradient-to-r from-emerald-500 to-emerald-400" />
+                      </ProgressTrack>
+                    </Progress>
+                    <span className="text-right">{count}</span>
+                  </div>
+                );
               })}
-            />
-            <span>
-              {summary.averageRating.toFixed(1)} ·{" "}
-              {t("reviews.count", { count: summary.total })}
-            </span>
-          </div>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">{t("reviews.empty")}</p>
         )}
       </div>
 
-      {summary && summary.averageRating !== null && (
-        <div className="max-w-xs space-y-1">
-          {[5, 4, 3, 2, 1].map((star) => {
-            const count = summary.ratingCounts[star] ?? 0;
-            const percent = summary.total > 0 ? (count / summary.total) * 100 : 0;
-            return (
-              <div key={star} className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="w-3 text-right">{star}</span>
-                <Star aria-hidden className="size-3 fill-primary text-primary" />
-                <Progress
-                  value={percent}
-                  aria-label={t("reviews.starDistribution", { star, count })}
-                  className="flex-1"
-                />
-                <span className="w-6 text-right">{count}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {summary && summary.total > 0 && (
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <Label htmlFor="review-sort" className="text-sm text-muted-foreground">
-              {t("reviews.sortLabel")}
-            </Label>
+      <div className="space-y-4">
+        {summary && summary.total > 0 && (
+          <div className="flex flex-wrap items-center gap-3">
             <Select value={sort} onValueChange={(value) => setSort(value as ReviewSort)}>
-              <SelectTrigger id="review-sort" className="min-w-40">
-                <SelectValue />
+              <SelectTrigger
+                id="review-sort"
+                aria-label={t("reviews.sortLabel")}
+                className={cn(FORM_CONTROL_CLASS, "min-w-40")}
+              >
+                <SelectValue>{t(SORT_LABEL_KEYS[sort])}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {REVIEW_SORTS.map((option) => (
@@ -400,177 +460,205 @@ export default function ProductReviews({ productId }: { productId: string }) {
                 ))}
               </SelectContent>
             </Select>
+            <Label
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-card/60 px-3.5 py-2 text-sm text-muted-foreground backdrop-blur-xl transition-colors has-data-checked:border-emerald-500 has-data-checked:bg-emerald-500/10 has-data-checked:text-foreground reduced-transparency:bg-card",
+              )}
+            >
+              <Checkbox
+                id="verified-only"
+                checked={verifiedOnly}
+                onCheckedChange={(checked) => setVerifiedOnly(checked === true)}
+              />
+              {t("reviews.verifiedOnly")}
+            </Label>
           </div>
-          <Label className="flex items-center gap-2 text-sm">
-            <Checkbox
-              id="verified-only"
-              checked={verifiedOnly}
-              onCheckedChange={(checked) => setVerifiedOnly(checked === true)}
-            />
-            {t("reviews.verifiedOnly")}
-          </Label>
-        </div>
-      )}
+        )}
 
-      {isPending ? (
-        <div className="space-y-2">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-        </div>
-      ) : error ? (
-        <p className="text-sm text-destructive">{t("reviews.error")}</p>
-      ) : reviews.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {/* Reviews exist overall but none match the current filter, vs. the
-              product having no reviews at all — different messages so a
-              verified-only filter doesn't look like "be the first". */}
-          {summary && summary.total > 0 ? t("reviews.noMatch") : t("reviews.empty")}
-        </p>
-      ) : (
-        <ul className="space-y-3">
-          {reviews.map((review) =>
-            editingReviewId === review.id ? (
-              <li key={review.id} className="rounded-md border p-4">
-                <EditReviewForm
-                  review={review}
-                  reviewsBaseKey={reviewsBaseKey}
-                  onCancel={() => setEditingReviewId(null)}
-                />
-              </li>
-            ) : (
-              <li key={review.id} className="rounded-md border p-4">
-                <div className="flex flex-wrap items-center gap-2">
+        {isPending ? (
+          <div className="space-y-2">
+            <Skeleton className="h-24 w-full rounded-2xl" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
+          </div>
+        ) : error ? (
+          <p className="text-sm text-destructive">{t("reviews.error")}</p>
+        ) : reviews.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {/* Reviews exist overall but none match the current filter, vs. the
+                product having no reviews at all — different messages so a
+                verified-only filter doesn't look like "be the first". */}
+            {summary && summary.total > 0 ? t("reviews.noMatch") : t("reviews.empty")}
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {reviews.map((review) =>
+              editingReviewId === review.id ? (
+                <li key={review.id} className={cn(GLASS_PANEL_CLASS, "rounded-2xl p-5")}>
+                  <EditReviewForm
+                    review={review}
+                    reviewsBaseKey={reviewsBaseKey}
+                    onCancel={() => setEditingReviewId(null)}
+                  />
+                </li>
+              ) : (
+                <li key={review.id} className={cn(GLASS_PANEL_CLASS, "rounded-2xl p-5")}>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <ReviewAvatar name={review.authorName} />
+                    <span className="text-sm font-semibold text-foreground">
+                      {review.authorName}
+                    </span>
+                    {review.verifiedPurchase && (
+                      <Badge className="border-emerald-600/30 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-400">
+                        <BadgeCheck aria-hidden className="size-3" />
+                        {t("reviews.verifiedPurchase")}
+                      </Badge>
+                    )}
+                    <span className="ms-auto text-xs text-muted-foreground">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </span>
+                    {review.isOwnReview && (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={t("reviews.editAria")}
+                          onClick={() => setEditingReviewId(review.id)}
+                        >
+                          <Pencil />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={t("reviews.deleteAria")}
+                          onClick={() => setDeletingReview(review)}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <StarRow
                     rating={review.rating}
                     label={t("reviews.ratingLabel", { rating: review.rating })}
                   />
-                  <span className="text-sm font-medium">{review.authorName}</span>
-                  {review.verifiedPurchase && (
-                    <Badge variant="secondary">
-                      <BadgeCheck aria-hidden className="size-3" />
-                      {t("reviews.verifiedPurchase")}
-                    </Badge>
+                  {review.headline && (
+                    <p className="mt-2 font-semibold text-foreground">{review.headline}</p>
                   )}
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </span>
-                  {review.isOwnReview && (
-                    <div className="ms-auto flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={t("reviews.editAria")}
-                        onClick={() => setEditingReviewId(review.id)}
-                      >
-                        <Pencil />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={t("reviews.deleteAria")}
-                        onClick={() => setDeletingReview(review)}
-                      >
-                        <Trash2 />
-                      </Button>
+                  {review.comment && (
+                    <p className="mt-1.5 text-[14.5px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                      {review.comment}
+                    </p>
+                  )}
+                  {review.staffReply && (
+                    <div className="mt-3 ms-6 rounded-md border-s-2 border-emerald-500 bg-muted/50 p-3">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {t("reviews.staffReplyLabel")}
+                      </p>
+                      <p className="mt-1 text-sm whitespace-pre-wrap">{review.staffReply}</p>
                     </div>
                   )}
-                </div>
-                {review.comment && (
-                  <p className="mt-2 text-sm whitespace-pre-wrap">{review.comment}</p>
-                )}
-                {review.staffReply && (
-                  <div className="mt-3 ms-6 rounded-md border-s-2 border-primary bg-muted/50 p-3">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      {t("reviews.staffReplyLabel")}
-                    </p>
-                    <p className="mt-1 text-sm whitespace-pre-wrap">{review.staffReply}</p>
-                  </div>
-                )}
-              </li>
-            ),
-          )}
-        </ul>
-      )}
+                </li>
+              ),
+            )}
+          </ul>
+        )}
 
-      {hasNextPage && (
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isFetchingNextPage}
-          onClick={() => void fetchNextPage()}
+        {hasNextPage && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isFetchingNextPage}
+            onClick={() => void fetchNextPage()}
+          >
+            {isFetchingNextPage ? t("reviews.loadingMore") : t("reviews.showMore")}
+          </Button>
+        )}
+
+        <AlertDialog
+          open={deletingReview !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              deleteMutation.reset();
+              setDeletingReview(null);
+            }
+          }}
         >
-          {isFetchingNextPage ? t("reviews.loadingMore") : t("reviews.showMore")}
-        </Button>
-      )}
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("reviews.deleteConfirmTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("reviews.deleteConfirmDescription")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {deleteMutation.isError && (
+              <p className="text-sm text-destructive">{t("reviews.deleteError")}</p>
+            )}
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("reviews.deleteCancelButton")}</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(deletingReview!.id)}
+              >
+                {deleteMutation.isPending
+                  ? t("reviews.saving")
+                  : t("reviews.deleteConfirmButton")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      <AlertDialog
-        open={deletingReview !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            deleteMutation.reset();
-            setDeletingReview(null);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("reviews.deleteConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("reviews.deleteConfirmDescription")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {deleteMutation.isError && (
-            <p className="text-sm text-destructive">{t("reviews.deleteError")}</p>
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("reviews.deleteCancelButton")}</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(deletingReview!.id)}
-            >
-              {deleteMutation.isPending
-                ? t("reviews.saving")
-                : t("reviews.deleteConfirmButton")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="mb-4 font-semibold">{t("reviews.formTitle")}</h3>
+        <Card className={cn(GLASS_PANEL_CLASS, "rounded-[20px] p-6")}>
+          <h3 className="mb-4 font-bold text-foreground">{t("reviews.formTitle")}</h3>
           <form
             noValidate
             onSubmit={handleSubmit((input) => mutation.mutate(input))}
-            className="grid gap-4"
+            className="grid gap-3.5"
           >
             <RatingPicker
               value={typeof selectedRating === "number" ? selectedRating : 0}
               onChange={(rating) => setValue("rating", rating, { shouldValidate: true })}
               error={translateFieldError(errors.rating?.message, t)}
             />
-            <div className="grid gap-1.5">
-              <Label htmlFor="review-name">{t("reviews.name")}</Label>
-              <Input
-                id="review-name"
-                autoComplete="name"
-                aria-invalid={!!errors.authorName}
-                {...register("authorName")}
-              />
-              {errors.authorName && (
-                <p className="text-sm text-destructive">
-                  {translateFieldError(errors.authorName.message, t)}
-                </p>
-              )}
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label htmlFor="review-name">{t("reviews.name")}</Label>
+                <Input
+                  id="review-name"
+                  autoComplete="name"
+                  aria-invalid={!!errors.authorName}
+                  className={FORM_CONTROL_CLASS}
+                  {...register("authorName")}
+                />
+                {errors.authorName && (
+                  <p className="text-sm text-destructive">
+                    {translateFieldError(errors.authorName.message, t)}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="review-headline">{t("reviews.headline")}</Label>
+                <Input
+                  id="review-headline"
+                  aria-invalid={!!errors.headline}
+                  className={FORM_CONTROL_CLASS}
+                  {...register("headline")}
+                />
+                {errors.headline && (
+                  <p className="text-sm text-destructive">
+                    {translateFieldError(errors.headline.message, t)}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="review-comment">{t("reviews.comment")}</Label>
               <Textarea
                 id="review-comment"
                 rows={3}
+                className={cn(FORM_CONTROL_CLASS, "min-h-24")}
                 aria-invalid={!!errors.comment}
                 {...register("comment")}
               />
@@ -589,14 +677,23 @@ export default function ProductReviews({ productId }: { productId: string }) {
               </p>
             )}
             {mutation.isSuccess && (
-              <p className="text-sm text-primary">{t("reviews.success")}</p>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                {t("reviews.success")}
+              </p>
             )}
-            <Button type="submit" disabled={mutation.isPending} className="justify-self-start">
-              {mutation.isPending ? t("reviews.submitting") : t("reviews.submit")}
-            </Button>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                type="submit"
+                disabled={mutation.isPending}
+                className="w-auto bg-emerald-500 text-[#07130c] hover:bg-emerald-400"
+              >
+                {mutation.isPending ? t("reviews.submitting") : t("reviews.submit")}
+              </Button>
+              <p className="text-xs text-muted-foreground">{t("reviews.postedPubliclyNote")}</p>
+            </div>
           </form>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
