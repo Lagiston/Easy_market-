@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
@@ -11,10 +12,71 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollFrameAnimation } from "@/components/storefront/ScrollFrameAnimation";
 
 const FEATURES = [
-  { key: "payOnDelivery", Icon: HandCoins },
-  { key: "delivery", Icon: Truck },
-  { key: "pickup", Icon: Store },
+  { key: "payOnDelivery", Icon: HandCoins, color: "#22c55e", href: "/checkout" },
+  { key: "delivery", Icon: Truck, color: "#3b82f6", href: "/order-status" },
+  // Matches --color-brand-orange (client/src/index.css) — a plain hex, not the
+  // CSS var itself, since this string also gets an alpha suffix appended
+  // below (e.g. `${color}55`), which only works on a hex literal.
+  { key: "pickup", Icon: Store, color: "#ff5a1f", href: "/contact" },
 ] as const;
+
+function FeatureCard({
+  feature,
+  t,
+}: {
+  feature: (typeof FEATURES)[number];
+  t: (key: string) => string;
+}) {
+  const { key, Icon, color, href } = feature;
+
+  const wrapperClassName =
+    "block h-full rounded-3xl outline-none transition-all duration-300 hover:-translate-y-1 shadow-[0_0_60px_-15px_var(--glow-color)] hover:shadow-[0_0_90px_-10px_var(--glow-color)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-white";
+  const wrapperStyle = { "--glow-color": color } as CSSProperties;
+
+  const cardContent = (
+    <Card className="ring-0 relative flex h-full min-h-[340px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-neutral-950 p-8">
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(120% 80% at 50% 115%, ${color}55 0%, transparent 70%)`,
+        }}
+      />
+      <div className="relative z-10 flex h-full flex-col">
+        <div
+          className="flex size-11 items-center justify-center rounded-xl border bg-white/10 backdrop-blur-sm"
+          style={{ borderColor: `${color}40` }}
+        >
+          <Icon aria-hidden className="size-5" style={{ color }} />
+        </div>
+        <h2 className="mt-6 text-2xl font-medium tracking-tight text-white">
+          {t(`home.features.${key}.title`)}
+        </h2>
+        <p className="mt-2 max-w-[30ch] text-sm leading-relaxed text-white/70">
+          {t(`home.features.${key}.text`)}
+        </p>
+        <span
+          aria-hidden
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-white"
+        >
+          {t(`home.features.${key}.link`)}
+          <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+        </span>
+      </div>
+    </Card>
+  );
+
+  return (
+    <Link
+      to={href}
+      aria-label={t(`home.features.${key}.title`)}
+      className={wrapperClassName}
+      style={wrapperStyle}
+    >
+      {cardContent}
+    </Link>
+  );
+}
 
 type PromoBlock = {
   id: string;
@@ -114,7 +176,11 @@ export default function HomePage() {
         }}
         outroChildren={
           <p className="font-dm-sans text-lg text-white/80 drop-shadow-lg md:text-xl">
-            {t("home.outroLine")}
+            {t("home.outroLinePart1")}
+            <span className="font-bold text-primary drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+              {t("home.outroLineHighlight")}
+            </span>
+            {t("home.outroLinePart2")}
           </p>
         }
       >
@@ -137,28 +203,30 @@ export default function HomePage() {
           </Link>
         </div>
       </ScrollFrameAnimation>
-      <div className="mx-auto max-w-5xl space-y-12">
-        {promoBlocks && promoBlocks.length > 0 && (
+      {promoBlocks && promoBlocks.length > 0 && (
+        <div className="mx-auto max-w-5xl px-6">
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {promoBlocks.map((promoBlock) => (
               <PromoBlockCard key={promoBlock.id} promoBlock={promoBlock} language={language} />
             ))}
           </section>
-        )}
-        <section className="grid gap-4 sm:grid-cols-3">
-          {FEATURES.map(({ key, Icon }) => (
-            <Card key={key}>
-              <CardContent className="space-y-2 p-6">
-                <Icon aria-hidden className="size-6 text-primary" />
-                <h2 className="font-medium">{t(`home.features.${key}.title`)}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {t(`home.features.${key}.text`)}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
-      </div>
+        </div>
+      )}
+      <section className="py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-4xl font-semibold tracking-tight text-foreground">
+            {t("home.features.heading")}
+          </h2>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            {t("home.features.subheading")}
+          </p>
+          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {FEATURES.map((feature) => (
+              <FeatureCard key={feature.key} feature={feature} t={t} />
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

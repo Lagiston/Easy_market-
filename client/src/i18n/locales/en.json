@@ -32,19 +32,26 @@
     "introBodyHighlight2": "one caring space",
     "introBodyPart3": ".",
     "introCta": "Discover the collection →",
-    "outroLine": "One brand. Every category. Infinite ways to express yourself.",
+    "outroLinePart1": "One brand. ",
+    "outroLineHighlight": "Every category.",
+    "outroLinePart2": " Infinite ways to express yourself.",
     "features": {
+      "heading": "How We Deliver",
+      "subheading": "Simple, flexible ways to get your order — pay in cash either way.",
       "payOnDelivery": {
         "title": "Pay on delivery",
-        "text": "No online payment needed — pay cash when your order arrives or when you pick it up."
+        "text": "No online payment needed — pay cash when your order arrives or when you pick it up.",
+        "link": "How it works →"
       },
       "delivery": {
         "title": "Fast city delivery",
-        "text": "Delivered within 24–48 hours anywhere in the city for a flat fee."
+        "text": "Delivered within 24–48 hours anywhere in the city for a flat fee.",
+        "link": "Check delivery →"
       },
       "pickup": {
         "title": "Free pickup",
-        "text": "Order online and pick up at our store for free."
+        "text": "Order online and pick up at our store for free.",
+        "link": "Find our store →"
       }
     }
   },

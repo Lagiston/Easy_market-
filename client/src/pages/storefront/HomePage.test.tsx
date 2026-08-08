@@ -54,6 +54,23 @@ describe("storefront HomePage", () => {
     expect(screen.getByText("Free pickup")).toBeInTheDocument();
   });
 
+  it("links each feature card to its destination page", async () => {
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "Pay on delivery" })).toHaveAttribute(
+      "href",
+      "/checkout",
+    );
+    expect(screen.getByRole("link", { name: "Fast city delivery" })).toHaveAttribute(
+      "href",
+      "/order-status",
+    );
+    expect(screen.getByRole("link", { name: "Free pickup" })).toHaveAttribute(
+      "href",
+      "/contact",
+    );
+  });
+
   it("renders translated content in Arabic", async () => {
     await i18n.changeLanguage("ar");
     renderPage();

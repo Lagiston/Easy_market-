@@ -17,17 +17,22 @@
   },
   "home": {
     "features": {
+      "heading": "Comment nous livrons",
+      "subheading": "Des façons simples et flexibles de recevoir votre commande — payez en espèces dans les deux cas.",
       "payOnDelivery": {
         "title": "Paiement à la livraison",
-        "text": "Aucun paiement en ligne — payez en espèces à la réception de votre commande ou lors du retrait."
+        "text": "Aucun paiement en ligne — payez en espèces à la réception de votre commande ou lors du retrait.",
+        "link": "Comment ça marche →"
       },
       "delivery": {
         "title": "Livraison rapide en ville",
-        "text": "Livré sous 24–48 h partout en ville pour un tarif fixe."
+        "text": "Livré sous 24–48 h partout en ville pour un tarif fixe.",
+        "link": "Vérifier la livraison →"
       },
       "pickup": {
         "title": "Retrait gratuit",
-        "text": "Commandez en ligne et retirez gratuitement en magasin."
+        "text": "Commandez en ligne et retirez gratuitement en magasin.",
+        "link": "Trouver notre magasin →"
       }
     }
   },

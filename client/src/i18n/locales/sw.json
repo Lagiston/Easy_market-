@@ -17,17 +17,22 @@
   },
   "home": {
     "features": {
+      "heading": "Jinsi Tunavyowasilisha",
+      "subheading": "Njia rahisi na rahisi kubadilika za kupata oda yako — lipa taslimu kwa njia yoyote.",
       "payOnDelivery": {
         "title": "Lipa ukipokea",
-        "text": "Hakuna malipo ya mtandaoni — lipa taslimu oda yako ikifika au unapoichukua."
+        "text": "Hakuna malipo ya mtandaoni — lipa taslimu oda yako ikifika au unapoichukua.",
+        "link": "Jinsi inavyofanya kazi →"
       },
       "delivery": {
         "title": "Uwasilishaji wa haraka mjini",
-        "text": "Inawasilishwa ndani ya saa 24–48 popote mjini kwa ada isiyobadilika."
+        "text": "Inawasilishwa ndani ya saa 24–48 popote mjini kwa ada isiyobadilika.",
+        "link": "Angalia uwasilishaji →"
       },
       "pickup": {
         "title": "Kuchukua bila malipo",
-        "text": "Agiza mtandaoni na uchukue dukani kwetu bila malipo."
+        "text": "Agiza mtandaoni na uchukue dukani kwetu bila malipo.",
+        "link": "Tafuta duka letu →"
       }
     }
   },
