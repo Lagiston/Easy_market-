@@ -53,6 +53,10 @@
         "text": "Order online and pick up at our store for free.",
         "link": "Find our store →"
       }
+    },
+    "videoSection": {
+      "tagline": "Made to be seen. Made for you.",
+      "cta": "Explore the collection"
     }
   },
   "contact": {

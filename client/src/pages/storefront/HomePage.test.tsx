@@ -71,6 +71,43 @@ describe("storefront HomePage", () => {
     );
   });
 
+  it("plays the background video muted, looped, and autoplaying, with a CTA linking to the product list", async () => {
+    renderPage();
+
+    const video = document.querySelector("video");
+    expect(video).toBeInTheDocument();
+    expect(video?.muted).toBe(true);
+    expect(video?.loop).toBe(true);
+    expect(video?.autoplay).toBe(true);
+    expect(screen.getByRole("link", { name: /explore the collection/i })).toHaveAttribute(
+      "href",
+      "/products",
+    );
+  });
+
+  it("does not autoplay the background video when prefers-reduced-motion is set", async () => {
+    const matchMediaSpy = vi.spyOn(window, "matchMedia").mockImplementation(
+      (query: string) =>
+        ({
+          matches: query === "(prefers-reduced-motion: reduce)",
+          media: query,
+          onchange: null,
+          addListener: () => {},
+          removeListener: () => {},
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => false,
+        }) as unknown as MediaQueryList,
+    );
+
+    renderPage();
+
+    const video = document.querySelector("video");
+    expect(video?.autoplay).toBe(false);
+
+    matchMediaSpy.mockRestore();
+  });
+
   it("renders translated content in Arabic", async () => {
     await i18n.changeLanguage("ar");
     renderPage();

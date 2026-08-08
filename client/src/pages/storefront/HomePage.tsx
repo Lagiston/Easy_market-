@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,19 @@ const FEATURES = [
   // below (e.g. `${color}55`), which only works on a hex literal.
   { key: "pickup", Icon: Store, color: "#ff5a1f", href: "/contact" },
 ] as const;
+
+// f_auto/q_auto let Cloudinary pick the best codec/quality for the
+// requesting browser; the mobile variant additionally caps the delivered
+// width (w_800,c_scale) so phones on metered connections don't pull the
+// same full-resolution file as desktop.
+const VIDEO_SECTION_SRC_MOBILE =
+  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto,w_800,c_scale/v1786219391/Cosmetics_dropping_into_bag_202608082258_d2xsig.mp4";
+const VIDEO_SECTION_SRC =
+  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto/v1786219391/Cosmetics_dropping_into_bag_202608082258_d2xsig.mp4";
+// Cloudinary auto-generates a first-frame thumbnail for any video asset at
+// the same delivery URL with the extension swapped to an image format.
+const VIDEO_SECTION_POSTER =
+  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto/v1786219391/Cosmetics_dropping_into_bag_202608082258_d2xsig.jpg";
 
 function FeatureCard({
   feature,
@@ -127,6 +140,11 @@ function PromoBlockCard({ promoBlock, language }: { promoBlock: PromoBlock; lang
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
+  const [prefersReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   const { data: promoBlocks } = useQuery({
     queryKey: ["storefront", "promo-blocks"],
@@ -225,6 +243,40 @@ export default function HomePage() {
               <FeatureCard key={feature.key} feature={feature} t={t} />
             ))}
           </div>
+        </div>
+      </section>
+      <section className="relative flex h-screen items-center justify-center overflow-hidden bg-neutral-950">
+        <video
+          className="absolute inset-0 size-full object-cover"
+          poster={VIDEO_SECTION_POSTER}
+          preload={prefersReducedMotion ? "metadata" : "auto"}
+          autoPlay={!prefersReducedMotion}
+          muted
+          loop
+          playsInline
+          aria-hidden
+        >
+          <source src={VIDEO_SECTION_SRC_MOBILE} media="(max-width: 767px)" type="video/mp4" />
+          <source src={VIDEO_SECTION_SRC} type="video/mp4" />
+        </video>
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50"
+        />
+        <div className="relative z-10 px-6 text-center">
+          <p className="font-dm-sans text-3xl font-bold text-white drop-shadow-lg md:text-5xl">
+            {t("home.videoSection.tagline")}
+          </p>
+          <Link
+            to="/products"
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "mt-6 rounded-full bg-primary font-bold text-white hover:bg-primary/90",
+            )}
+          >
+            {t("home.videoSection.cta")}
+            <ArrowRight data-icon="inline-end" className="rtl:rotate-180" />
+          </Link>
         </div>
       </section>
     </div>
