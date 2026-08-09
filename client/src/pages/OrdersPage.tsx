@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ORDER_STATUSES, type OrderStatus } from "@es-market/core";
@@ -23,7 +24,16 @@ function extractServerError(error: unknown, fallback: string) {
 
 export default function OrdersPage() {
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  // Read-once (like the storefront's own ?tag= deep-link pattern), not
+  // two-way synced — lets a dashboard KPI card land here pre-filtered
+  // without every later Tabs change round-tripping through the URL.
+  const [searchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">(() => {
+    const fromUrl = searchParams.get("status");
+    return fromUrl && (ORDER_STATUSES as readonly string[]).includes(fromUrl)
+      ? (fromUrl as OrderStatus)
+      : "all";
+  });
   const [cancellingUnreachableOrder, setCancellingUnreachableOrder] =
     useState<OrderRow | null>(null);
   const [cancellingOrder, setCancellingOrder] = useState<OrderRow | null>(null);

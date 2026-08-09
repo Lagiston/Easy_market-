@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SortingState } from "@tanstack/react-table";
@@ -32,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PRODUCTS_PAGE_SIZE } from "@es-market/core";
+import { PRODUCT_SORT_FIELDS, PRODUCTS_PAGE_SIZE } from "@es-market/core";
 
 type ReclassifyBatch = { total: number; since: string };
 
@@ -60,7 +61,20 @@ export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [editingProduct, setEditingProduct] = useState<ProductRow | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductRow | null>(null);
-  const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
+  // Read-once (like the storefront's own ?tag= deep-link pattern), not
+  // two-way synced — lets a dashboard KPI card land here pre-sorted (e.g. by
+  // stock ascending, to surface low-stock products first) without every
+  // later sort change round-tripping through the URL. There's no dedicated
+  // stock-status *filter* on this page (only sort), so this is the honest
+  // equivalent of a "low-stock" deep link rather than a fabricated filter.
+  const [searchParams] = useSearchParams();
+  const [sorting, setSorting] = useState<SortingState>(() => {
+    const sortBy = searchParams.get("sortBy");
+    const sortOrder = searchParams.get("sortOrder");
+    return sortBy && (PRODUCT_SORT_FIELDS as readonly string[]).includes(sortBy)
+      ? [{ id: sortBy, desc: sortOrder === "desc" }]
+      : [{ id: "createdAt", desc: true }];
+  });
   const [view, setView] = useState<"table" | "card">("table");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");

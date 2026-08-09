@@ -1,8 +1,10 @@
 import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
 import { MemoryRouter } from "react-router";
 import { renderWithQuery } from "@/test/render-with-query";
+import { Toaster } from "@/components/ui/sonner";
 import HomePage from "./HomePage";
 
 vi.mock("axios");
@@ -86,7 +88,7 @@ describe("HomePage", () => {
     );
 
     expect(await screen.findByText("Products")).toBeInTheDocument();
-    const productsTile = screen.getByText("Products").closest("[data-slot=card]")!;
+    const productsTile = screen.getByText("Products").closest("[data-slot=stat-card]")!;
     expect(await within(productsTile as HTMLElement).findByText("3")).toBeInTheDocument();
   });
 
@@ -132,6 +134,71 @@ describe("HomePage", () => {
     expect(await screen.findByText("Jane Doe")).toBeInTheDocument();
     expect(screen.getByText("ABC123")).toBeInTheDocument();
     expect(screen.getByText("2/3 calls")).toBeInTheDocument();
+  });
+
+  it("shows an error toast when confirming an order fails", async () => {
+    const user = userEvent.setup();
+    mockedUseSession.mockReturnValue(agentSession());
+    mockGet({
+      orders: [
+        {
+          id: "o1",
+          code: "ABC123",
+          status: "RECEIVED",
+          customerName: "Jane Doe",
+          callAttempts: 0,
+          createdAt: "2026-07-20T00:00:00.000Z",
+        },
+      ],
+    });
+    mockedAxios.post.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { data: { error: "Order already confirmed" } },
+    });
+    mockedAxios.isAxiosError.mockReturnValueOnce(true);
+
+    renderWithQuery(
+      <MemoryRouter>
+        <HomePage />
+        <Toaster />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Confirm" }));
+
+    expect(await screen.findByText("Order already confirmed")).toBeInTheDocument();
+  });
+
+  it("shows an error toast when claiming an inquiry fails", async () => {
+    const user = userEvent.setup();
+    mockedUseSession.mockReturnValue(agentSession());
+    mockGet({
+      openInquiries: [
+        {
+          id: "i1",
+          customerName: "Unassigned Customer",
+          assignedAgent: null,
+          escalatedAt: null,
+          status: "OPEN",
+        },
+      ],
+    });
+    mockedAxios.post.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { data: { error: "Inquiry already claimed" } },
+    });
+    mockedAxios.isAxiosError.mockReturnValueOnce(true);
+
+    renderWithQuery(
+      <MemoryRouter>
+        <HomePage />
+        <Toaster />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Claim" }));
+
+    expect(await screen.findByText("Inquiry already claimed")).toBeInTheDocument();
   });
 
   it("shows empty state when nothing needs attention", async () => {
@@ -218,7 +285,7 @@ describe("HomePage", () => {
     );
 
     expect(await screen.findByText("Low Stock Item")).toBeInTheDocument();
-    expect(screen.getByText("2/10")).toBeInTheDocument();
+    expect(screen.getByText("2 left")).toBeInTheDocument();
     expect(screen.queryByText("In Stock Item")).not.toBeInTheDocument();
     expect(screen.queryByText("Out Of Stock Item")).not.toBeInTheDocument();
   });
@@ -261,7 +328,7 @@ describe("HomePage", () => {
     expect(screen.getByText("by Unhappy Customer")).toBeInTheDocument();
     expect(screen.queryByText("Bad Bread")).not.toBeInTheDocument();
     expect(screen.queryByText("Great Rice")).not.toBeInTheDocument();
-    const statTile = screen.getByText("Reviews needing a reply").closest("[data-slot=card]")!;
+    const statTile = screen.getByText("Reviews needing a reply").closest("[data-slot=stat-card]")!;
     expect(await within(statTile as HTMLElement).findByText("1")).toBeInTheDocument();
   });
 

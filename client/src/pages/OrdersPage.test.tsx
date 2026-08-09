@@ -39,9 +39,9 @@ function order(overrides: Partial<OrderRow> = {}): OrderRow {
   };
 }
 
-function renderPage() {
+function renderPage(initialEntries: string[] = ["/"]) {
   return renderWithQuery(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <OrdersPage />
     </MemoryRouter>,
   );
@@ -96,6 +96,28 @@ describe("OrdersPage", () => {
         params: { status: OrderStatus.CONFIRMED },
       }),
     );
+  });
+
+  it("pre-filters by status from an incoming ?status= query param (dashboard deep link)", async () => {
+    mockedGet.mockResolvedValue({ data: { orders: [] } });
+    renderPage(["/?status=RECEIVED"]);
+
+    await screen.findByText("No orders yet.");
+    expect(mockedGet).toHaveBeenCalledWith("/api/orders", {
+      params: { status: OrderStatus.RECEIVED },
+    });
+    expect(screen.getByRole("tab", { name: "Received" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("ignores an invalid ?status= query param and falls back to all orders", async () => {
+    mockedGet.mockResolvedValue({ data: { orders: [] } });
+    renderPage(["/?status=NOT_A_REAL_STATUS"]);
+
+    await screen.findByText("No orders yet.");
+    expect(mockedGet).toHaveBeenCalledWith("/api/orders", { params: {} });
   });
 
   it("offers phone actions only on received orders", async () => {

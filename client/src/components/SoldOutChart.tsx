@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { BarChart3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export type SoldOutPoint = { date: string; soldOutCount: number | null };
@@ -22,15 +23,18 @@ export default function SoldOutChart({
   trackingStartDate: string | null;
   onDayClick?: (date: string) => void;
 }) {
-  if (series === null) return <Skeleton className="h-64 w-full" />;
+  if (series === null) return <Skeleton className="h-[180px] w-full" />;
 
   if (trackingStartDate === null) {
     return (
-      <p className="flex h-64 items-center justify-center text-center text-sm text-muted-foreground">
-        No data yet — the daily snapshot job hasn't recorded a sold-out count.
-        <br />
-        Check back after it's run at least once.
-      </p>
+      <div className="flex h-[180px] flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+        <BarChart3 aria-hidden className="size-6" />
+        <p>
+          No data yet — the daily snapshot job hasn't recorded a sold-out count.
+          <br />
+          Check back after it's run at least once.
+        </p>
+      </div>
     );
   }
 

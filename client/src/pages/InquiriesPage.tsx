@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { INQUIRY_STATUSES, type InquiryQueue, type InquiryStatus } from "@es-market/core";
@@ -34,8 +35,20 @@ function extractServerError(error: unknown, fallback: string) {
 
 export default function InquiriesPage() {
   const queryClient = useQueryClient();
-  const [queue, setQueue] = useState<InquiryQueue>("all");
-  const [statusFilter, setStatusFilter] = useState<InquiryStatus | "all">("all");
+  // Read-once (like the storefront's own ?tag= deep-link pattern), not
+  // two-way synced — lets a dashboard KPI card land here pre-filtered
+  // without every later Tabs/Select change round-tripping through the URL.
+  const [searchParams] = useSearchParams();
+  const [queue, setQueue] = useState<InquiryQueue>(() => {
+    const fromUrl = searchParams.get("queue");
+    return fromUrl && fromUrl in QUEUE_LABELS ? (fromUrl as InquiryQueue) : "all";
+  });
+  const [statusFilter, setStatusFilter] = useState<InquiryStatus | "all">(() => {
+    const fromUrl = searchParams.get("status");
+    return fromUrl && (INQUIRY_STATUSES as readonly string[]).includes(fromUrl)
+      ? (fromUrl as InquiryStatus)
+      : "all";
+  });
 
   const { data, isError } = useQuery({
     queryKey: ["inquiries", queue, statusFilter],

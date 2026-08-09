@@ -214,6 +214,34 @@ describe("ProductsPage", () => {
     );
   });
 
+  it("pre-sorts from incoming ?sortBy=/&sortOrder= query params (dashboard deep link)", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
+    renderWithQuery(
+      <MemoryRouter initialEntries={["/?sortBy=stock&sortOrder=asc"]}>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText("Rice 5kg");
+
+    expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
+      params: { sortBy: "stock", sortOrder: "asc", page: 1 },
+    });
+  });
+
+  it("ignores an invalid ?sortBy= query param and falls back to the default sort", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });
+    renderWithQuery(
+      <MemoryRouter initialEntries={["/?sortBy=notARealField&sortOrder=asc"]}>
+        <ProductsPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText("Rice 5kg");
+
+    expect(mockedAxios.get).toHaveBeenCalledWith("/api/products", {
+      params: { sortBy: "createdAt", sortOrder: "desc", page: 1 },
+    });
+  });
+
   it("debounces the search box and refetches with the search param", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     mockedAxios.get.mockResolvedValue({ data: { products, total: products.length } });

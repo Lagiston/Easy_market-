@@ -35,9 +35,9 @@ function inquiry(overrides: Partial<InquiryRow> = {}): InquiryRow {
   };
 }
 
-function renderPage() {
+function renderPage(initialEntries: string[] = ["/"]) {
   return renderWithQuery(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <InquiriesPage />
     </MemoryRouter>,
   );
@@ -104,6 +104,28 @@ describe("InquiriesPage", () => {
         params: { queue: "unassigned", status: InquiryStatus.RESOLVED },
       }),
     );
+  });
+
+  it("pre-filters by queue and status from incoming query params (dashboard deep link)", async () => {
+    mockedGet.mockResolvedValue({ data: { inquiries: [] } });
+    renderPage(["/?queue=unassigned&status=OPEN"]);
+
+    await screen.findByText("No inquiries yet.");
+    expect(mockedGet).toHaveBeenCalledWith("/api/inquiries", {
+      params: { queue: "unassigned", status: InquiryStatus.OPEN },
+    });
+    expect(screen.getByRole("tab", { name: "Unassigned" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("ignores invalid queue/status query params and falls back to defaults", async () => {
+    mockedGet.mockResolvedValue({ data: { inquiries: [] } });
+    renderPage(["/?queue=bogus&status=BOGUS"]);
+
+    await screen.findByText("No inquiries yet.");
+    expect(mockedGet).toHaveBeenCalledWith("/api/inquiries", { params: { queue: "all" } });
   });
 
   it("claims an unassigned inquiry and refetches", async () => {
