@@ -35,7 +35,7 @@ const CODE_RETRIES = 5;
 // change may still lack one) — skip silently rather than throw.
 function fireInquiryReplySms(inquiryId: string, phone: string | null, code: string, replyBody: string) {
   if (!phone) return;
-  void sendSms(phone, buildMessageReplySms({ code, replyBody })).catch((error) => {
+  void sendSms(phone, buildMessageReplySms({ code, replyBody }), { inquiryId }).catch((error) => {
     console.error("Inquiry-reply SMS failed:", error);
     Sentry.captureException(error, { extra: { inquiryId } });
   });
@@ -315,7 +315,10 @@ async function withResolvedSources<T extends { messages: { sourceKbArticleIds: s
 inquiriesRouter.get<{ id: string }>("/inquiries/:id", requireAuth, async (req, res) => {
   const inquiry = await prisma.inquiry.findUnique({
     where: { id: req.params.id },
-    include: inquiryWithMessagesInclude,
+    // smsLogs only on the single-inquiry detail route — staff-internal
+    // visibility into whether the customer was actually notified of a
+    // reply, same precedent as orders.ts's equivalent detail route.
+    include: { ...inquiryWithMessagesInclude, smsLogs: { orderBy: { createdAt: "desc" } } },
   });
   if (!inquiry) {
     res.status(404).json({ error: "Inquiry not found" });

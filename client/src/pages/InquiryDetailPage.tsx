@@ -24,6 +24,7 @@ import {
   type InquiryRow,
 } from "@/components/InquiriesTable";
 import InquiryStatusBadge from "@/components/InquiryStatusBadge";
+import SmsLogList from "@/components/SmsLogList";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -315,6 +316,13 @@ export default function InquiryDetailPage() {
                     </SelectContent>
                   </Select>
                 )}
+              </div>
+            )}
+
+            {inquiry.smsLogs && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">SMS notifications</h3>
+                <SmsLogList logs={inquiry.smsLogs} />
               </div>
             )}
 

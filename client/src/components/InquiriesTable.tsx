@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { Ban, CheckCircle2, RotateCcw, TriangleAlert, UserPlus } from "lucide-react";
 import { InquiryStatus, type InquiryChannel } from "@es-market/core";
 import InquiryStatusBadge from "@/components/InquiryStatusBadge";
+import type { SmsLogRow } from "@/components/SmsLogList";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -26,6 +27,10 @@ export type InquiryRow = {
   autoResolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Only present on the single-inquiry detail fetch (GET /inquiries/:id),
+  // not the list route — optional so the same InquiryRow type still fits
+  // list rows.
+  smsLogs?: SmsLogRow[];
 };
 
 export function canClaim(inquiry: InquiryRow) {

@@ -8,6 +8,7 @@ import {
 } from "@es-market/core";
 import { useStoreSettings } from "@/lib/settings-context";
 import OrderStatusBadge from "@/components/OrderStatusBadge";
+import type { SmsLogRow } from "@/components/SmsLogList";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -35,6 +36,9 @@ export type OrderRow = {
   subtotal: number;
   total: number;
   items: { id: string; productName: LocalizedName; unitPrice: number; quantity: number }[];
+  // Only present on the single-order detail fetch (GET /orders/:id), not
+  // the list route — optional so the same OrderRow type still fits list rows.
+  smsLogs?: SmsLogRow[];
 };
 
 export function canGoOutForDelivery(order: OrderRow) {

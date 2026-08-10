@@ -286,6 +286,7 @@ model Order {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   items           OrderItem[]
+  smsLogs         SmsLog[]
 
   @@index([customerId])
   @@map("order")
@@ -375,6 +376,7 @@ model Inquiry {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   messages        Message[]
+  smsLogs         SmsLog[]
 
   @@index([assignedAgentId])
   @@index([status])
@@ -587,4 +589,38 @@ model ProductReclassifyBatch {
   expiresAt DateTime
 
   @@map("product_reclassify_batch")
+}
+
+// SKIPPED means credentials weren't configured (server/src/lib/sms.ts's
+// no-op path) — a deliberate third state, distinct from FAILED, so staff
+// can tell "nothing was even attempted" apart from "attempted and errored".
+enum SmsLogStatus {
+  SENT
+  FAILED
+  SKIPPED
+}
+
+// One row per sendSms() call (server/src/lib/sms.ts), regardless of
+// outcome — gives staff visibility into whether a customer was actually
+// notified, since every status-transition/reply SMS is fire-and-forget
+// from the caller's perspective. orderId/inquiryId are both nullable and
+// mutually-not-exclusive-by-schema (exactly one is set in practice, per
+// which of the 6 templates fired) rather than a polymorphic single column,
+// matching this codebase's existing precedent of plain nullable FKs over
+// a discriminated-union column (e.g. Inquiry.aiProductId).
+model SmsLog {
+  id        String        @id
+  to        String
+  message   String
+  status    SmsLogStatus
+  error     String?
+  orderId   String?
+  order     Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inquiryId String?
+  inquiry   Inquiry?      @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@index([orderId])
+  @@index([inquiryId])
+  @@map("sms_log")
 }

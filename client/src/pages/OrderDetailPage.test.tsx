@@ -71,6 +71,33 @@ describe("OrderDetailPage", () => {
     expect(screen.getByText("4000")).toBeInTheDocument();
   });
 
+  it("shows SMS notification history when the detail route includes it", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        order: order({
+          smsLogs: [
+            {
+              id: "sms1",
+              to: "+255712345678",
+              message: "Halatu: order ABCD2345 confirmed. Total KSh 4000, pay on delivery.",
+              status: "SENT",
+              error: null,
+              createdAt: "2026-07-18T13:00:00.000Z",
+            },
+          ],
+        }),
+      },
+    });
+    renderPage();
+
+    await screen.findByText("ABCD2345");
+    expect(screen.getByText("SMS notifications")).toBeInTheDocument();
+    expect(
+      screen.getByText("Halatu: order ABCD2345 confirmed. Total KSh 4000, pay on delivery."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Sent")).toBeInTheDocument();
+  });
+
   it("shows the cancel reason on a cancelled order and offers no actions", async () => {
     mockedGet.mockResolvedValueOnce({
       data: {

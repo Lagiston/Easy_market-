@@ -1,5 +1,8 @@
+import { randomUUID } from "node:crypto";
 import AfricasTalking from "africastalking";
 import * as Sentry from "@sentry/node";
+import { prisma } from "./prisma";
+import { SmsLogStatus } from "../generated/prisma/client";
 
 // This module exposes exactly 6 fixed transactional SMS templates, wired to
 // specific order/inquiry lifecycle events (see orders.ts/inquiries.ts). There
@@ -39,16 +42,80 @@ if (!client) {
   );
 }
 
-export async function sendSms(to: string, message: string): Promise<void> {
+// Africa's Talking validates `to` via libphonenumber and expects a real
+// international-format number — customerPhone is only loosely validated at
+// checkout/contact-form time (e.g. a customer typing "0712345678" with no
+// country code passes createOrderSchema/createInquirySchema's regex just
+// fine), so this normalizes Tanzania-style local numbers to +255 E.164
+// before every send. Falls back to the input unchanged for anything that
+// doesn't match a recognizable shape, letting Africa's Talking's own
+// validation be the final word rather than silently mangling an
+// already-valid number from another country.
+export function toE164(phone: string): string {
+  const digits = phone.replace(/[^\d+]/g, "");
+  if (digits.startsWith("+")) return digits;
+  if (digits.startsWith("255") && digits.length === 12) return `+${digits}`;
+  if (digits.startsWith("0") && digits.length === 10) return `+255${digits.slice(1)}`;
+  if (digits.length === 9) return `+255${digits}`;
+  return phone;
+}
+
+// Logs every send attempt regardless of outcome (including the no-op/SKIPPED
+// path) — gives staff visibility into whether a customer was actually
+// notified, since every call site below fires this and moves on without
+// waiting to find out. A logging failure must never mask the real
+// send outcome, so this is always called from a try/catch that swallows.
+async function logSms(entry: {
+  to: string;
+  message: string;
+  status: SmsLogStatus;
+  error: string | null;
+  orderId?: string;
+  inquiryId?: string;
+}) {
+  try {
+    await prisma.smsLog.create({
+      data: {
+        id: randomUUID(),
+        to: entry.to,
+        message: entry.message,
+        status: entry.status,
+        error: entry.error,
+        orderId: entry.orderId ?? null,
+        inquiryId: entry.inquiryId ?? null,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to write SmsLog row:", error);
+    Sentry.captureException(error);
+  }
+}
+
+export async function sendSms(
+  to: string,
+  message: string,
+  context?: { orderId?: string; inquiryId?: string },
+): Promise<void> {
+  const normalizedTo = toE164(to);
+
   if (!client) {
-    console.log(`SMS skipped (no provider configured) — would send to ${to}: ${message}`);
+    console.log(`SMS skipped (no provider configured) — would send to ${normalizedTo}: ${message}`);
+    await logSms({ to: normalizedTo, message, status: SmsLogStatus.SKIPPED, error: null, ...context });
     return;
   }
   try {
-    await client.send({ to, message, ...(senderId ? { from: senderId } : {}) });
+    await client.send({ to: normalizedTo, message, ...(senderId ? { from: senderId } : {}) });
+    await logSms({ to: normalizedTo, message, status: SmsLogStatus.SENT, error: null, ...context });
   } catch (error) {
     console.error("SMS send failed:", error);
-    Sentry.captureException(error, { extra: { to } });
+    Sentry.captureException(error, { extra: { to: normalizedTo } });
+    await logSms({
+      to: normalizedTo,
+      message,
+      status: SmsLogStatus.FAILED,
+      error: error instanceof Error ? error.message : String(error),
+      ...context,
+    });
     throw new SmsIntegrationError("SMS send failed", error);
   }
 }

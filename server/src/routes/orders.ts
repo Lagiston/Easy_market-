@@ -248,7 +248,10 @@ ordersRouter.get("/orders", requireAuth, async (req, res) => {
 ordersRouter.get<{ id: string }>("/orders/:id", requireAuth, async (req, res) => {
   const order = await prisma.order.findUnique({
     where: { id: req.params.id },
-    include: orderWithItems,
+    // smsLogs only on the single-order detail route, not the list or any
+    // public/customer route — staff-internal visibility into whether the
+    // customer was actually notified, not something to expose more widely.
+    include: { ...orderWithItems, smsLogs: { orderBy: { createdAt: "desc" } } },
   });
   if (!order) {
     res.status(404).json({ error: "Order not found" });
@@ -284,7 +287,7 @@ async function respondWithOrder(res: Response, id: string) {
 // HTTP response for a successful status transition. Logged the same way
 // classifyInquiry's fire-and-forget AI call is in inquiries.ts.
 function fireOrderSms(orderId: string, phone: string, message: string) {
-  void sendSms(phone, message).catch((error) => {
+  void sendSms(phone, message, { orderId }).catch((error) => {
     console.error("Order status SMS failed:", error);
     Sentry.captureException(error, { extra: { orderId } });
   });
@@ -376,6 +379,7 @@ ordersRouter.post<{ id: string }>("/orders/:id/notify-delayed", requireAuth, asy
     await sendSms(
       order.customerPhone,
       buildDelayedSms({ code: order.code, contactPhone: settings.contactPhone }),
+      { orderId: id },
     );
     res.json({ sent: true });
   } catch (error) {

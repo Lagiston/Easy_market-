@@ -32,6 +32,14 @@ type Overrides = {
     draftStatus?: "PENDING" | "SENT_UNEDITED" | "SENT_EDITED" | "DISCARDED" | "AUTO_RESOLVED" | null;
     sources?: { id: string; title: string }[];
   }[];
+  smsLogs?: {
+    id: string;
+    to: string;
+    message: string;
+    status: "SENT" | "FAILED" | "SKIPPED";
+    error: string | null;
+    createdAt: string;
+  }[];
 };
 
 function inquiry(overrides: Overrides = {}) {
@@ -98,6 +106,34 @@ describe("InquiryDetailPage", () => {
     expect(screen.getByText("jane@example.com")).toBeInTheDocument();
     expect(screen.getByText("0712345678")).toBeInTheDocument();
     expect(screen.getByText("Do you have rice in stock?")).toBeInTheDocument();
+  });
+
+  it("shows SMS notification history when the detail route includes it", async () => {
+    mockDetail(
+      inquiry({
+        smsLogs: [
+          {
+            id: "sms1",
+            to: "+255712345678",
+            message: "Halatu: we've replied to your message MSG4K2P9. Read it: halatu.co.tz/t/MSG4K2P9",
+            status: "FAILED",
+            error: "Invalid phone number",
+            createdAt: "2026-07-18T13:30:00.000Z",
+          },
+        ],
+      }),
+    );
+    renderPage();
+
+    await screen.findByText("Jane Doe");
+    expect(screen.getByText("SMS notifications")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Halatu: we've replied to your message MSG4K2P9. Read it: halatu.co.tz/t/MSG4K2P9",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Failed")).toBeInTheDocument();
+    expect(screen.getByText("Invalid phone number")).toBeInTheDocument();
   });
 
   it("shows the agent name under staff messages", async () => {

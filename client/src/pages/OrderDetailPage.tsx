@@ -12,6 +12,7 @@ import {
 } from "@/components/OrdersTable";
 import { useStoreSettings } from "@/lib/settings-context";
 import OrderStatusBadge, { CANCEL_REASON_LABELS } from "@/components/OrderStatusBadge";
+import SmsLogList from "@/components/SmsLogList";
 import CancelOrderDialog from "./CancelOrderDialog";
 import CancelUnreachableOrderDialog from "./CancelUnreachableOrderDialog";
 import { Button } from "@/components/ui/button";
@@ -202,6 +203,12 @@ export default function OrderDetailPage() {
                 <DetailRow label="Total" value={String(order.total)} />
               </dl>
             </div>
+            {order.smsLogs && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">SMS notifications</h3>
+                <SmsLogList logs={order.smsLogs} />
+              </div>
+            )}
             {serverError && <p className="text-sm text-destructive">{serverError}</p>}
             {notifyDelayedMutation.isSuccess && (
               <p className="text-sm text-muted-foreground">Delayed notice sent.</p>
