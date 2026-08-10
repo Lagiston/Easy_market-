@@ -31,6 +31,11 @@ type CartContextValue = {
   addItem: (product: Omit<CartItem, "quantity">, quantity?: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
+  // Re-inserts a previously removed item at its original position — powers
+  // CartPage.tsx's undo bar, where "moved to the end" would read as a bug
+  // (the item visibly jumping down the list) rather than a true undo.
+  // No-ops if the item is already back (e.g. a fast double-click on Undo).
+  restoreItem: (item: CartItem, index: number) => void;
   clearCart: () => void;
 };
 
@@ -107,6 +112,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }),
       removeItem: (productId) =>
         setItems((current) => current.filter((item) => item.productId !== productId)),
+      restoreItem: (item, index) =>
+        setItems((current) => {
+          if (current.some((existing) => existing.productId === item.productId)) return current;
+          const next = [...current];
+          next.splice(Math.min(index, next.length), 0, item);
+          return next;
+        }),
       clearCart: () => setItems([]),
     };
   }, [items]);

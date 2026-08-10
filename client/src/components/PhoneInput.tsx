@@ -21,6 +21,7 @@ type PhoneInputProps = {
   onBlur?: () => void;
   "aria-invalid"?: boolean;
   autoComplete?: string;
+  placeholder?: string;
   // Let a permanently-dark page (e.g. CheckoutPage.tsx) override the default
   // widths/styling on the country Select and the number Input, same override
   // convention as Money's prefixClassName.
@@ -38,6 +39,7 @@ export function PhoneInput({
   onBlur,
   "aria-invalid": ariaInvalid,
   autoComplete,
+  placeholder,
   selectClassName,
   inputClassName,
 }: PhoneInputProps) {
@@ -78,6 +80,7 @@ export function PhoneInput({
         id={id}
         type="tel"
         autoComplete={autoComplete}
+        placeholder={placeholder}
         aria-invalid={ariaInvalid}
         value={localNumber}
         onChange={(event) => combine(countryCode, event.target.value.replace(/[^0-9\s-]/g, ""))}

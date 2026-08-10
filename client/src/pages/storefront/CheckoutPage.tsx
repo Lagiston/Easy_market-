@@ -95,8 +95,14 @@ function computeOpenStatus(now: Date): OpenStatus {
   };
 }
 
+// placeholder:text-muted-foreground (shadcn Input/Textarea's own default)
+// follows the site's light/dark theme toggle, not this permanently-dark
+// page shell — on a light-toggled visit it resolves to a gray meant for a
+// white background, barely legible against bg-white/[0.04]. Overridden here
+// with a literal dark-safe gray, same "forced-dark page needs a literal
+// override, not a theme token" precedent as Money's prefixClassName.
 const CONTROL_CLASS =
-  "h-[46px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]";
+  "h-[46px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]";
 const MONEY_PREFIX_CLASS = "text-[0.66em] font-semibold text-neutral-500";
 
 export default function CheckoutPage() {
@@ -325,6 +331,7 @@ export default function CheckoutPage() {
                       <PhoneInput
                         id="checkout-phone"
                         autoComplete="tel"
+                        placeholder={t("checkout.phonePlaceholder")}
                         aria-invalid={!!errors.customerPhone}
                         value={field.value}
                         onChange={field.onChange}
@@ -434,7 +441,7 @@ export default function CheckoutPage() {
                         id="checkout-notes"
                         rows={3}
                         placeholder={t("checkout.notesPlaceholder")}
-                        className="min-h-[90px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]"
+                        className="min-h-[90px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]"
                         {...register("deliveryNotes")}
                       />
                     </div>
@@ -500,7 +507,7 @@ export default function CheckoutPage() {
                         id="checkout-pickup-notes"
                         rows={3}
                         placeholder={t("checkout.pickupNotesPlaceholder")}
-                        className="min-h-[90px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]"
+                        className="min-h-[90px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]"
                         {...register("deliveryNotes")}
                       />
                     </div>

@@ -160,21 +160,19 @@ ordersRouter.post("/storefront/orders", async (req, res) => {
         });
       });
 
-      res.status(201).json({
-        order: {
-          code: order.code,
-          status: order.status,
-          fulfillmentType: order.fulfillmentType,
-          subtotal,
-          deliveryFee,
-          total: subtotal + deliveryFee,
-          items: order.items.map((item) => ({
-            productName: item.productName,
-            unitPrice: item.unitPrice,
-            quantity: item.quantity,
-          })),
-        },
+      // Re-fetch with the shape serializePublicOrder expects (product images
+      // for the thumbnail) rather than hand-building a second, narrower
+      // response object — an earlier inline version omitted
+      // address/customerName/createdAt/updatedAt entirely, which silently
+      // broke the checkout page's "save this address to my profile"
+      // write-back (order.address came back undefined) and would have done
+      // the same to any other consumer relying on serializePublicOrder's
+      // documented response shape.
+      const orderWithImages = await prisma.order.findUniqueOrThrow({
+        where: { id: order.id },
+        include: orderWithItems,
       });
+      res.status(201).json({ order: serializePublicOrder(orderWithImages) });
       return;
     } catch (err) {
       if (err instanceof InsufficientStockError) {

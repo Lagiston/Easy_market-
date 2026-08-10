@@ -73,7 +73,9 @@ async function signUpCustomer(
 
 // Sets the customer's saved mobile + address via the real /account/profile
 // form (not a direct DB write), so this spec exercises the same Better Auth
-// updateUser round trip the checkout write-back itself uses.
+// updateUser round trip the checkout write-back itself uses. The
+// area/street/landmark rebuild of the Checkout page left this page and its
+// single "Address" field untouched.
 async function setInitialProfileAddress(
   page: Page,
   { mobile, address }: { mobile: string; address: string },
@@ -91,8 +93,28 @@ async function addProductToCart(page: Page, productId: string, name: string) {
   await page.getByRole("button", { name: "Add to cart" }).click();
 }
 
+// Mirrors checkoutFieldsSchema's toAddress transform (core/src/schemas/
+// order.ts) so tests can compute the exact canonical string the server will
+// return as order.address, without duplicating the join logic by hand at
+// each call site.
+function joinAddress({
+  area,
+  street,
+  landmark,
+  deliveryNotes,
+}: {
+  area: string;
+  street?: string;
+  landmark: string;
+  deliveryNotes?: string;
+}): string {
+  return `${area}${street ? `, ${street}` : ""} — Landmark: ${landmark}${
+    deliveryNotes ? `. Notes: ${deliveryNotes}` : ""
+  }`;
+}
+
 test.describe("Checkout — save address to profile", () => {
-  test("prefills name, phone, and address from the signed-in customer's saved profile", async ({
+  test("prefills name and phone from the signed-in customer's saved profile", async ({
     page,
   }) => {
     const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -112,18 +134,25 @@ test.describe("Checkout — save address to profile", () => {
       await addProductToCart(page, productId, name);
 
       await page.goto("/checkout");
-      await expect(page.getByLabel("Delivery or pickup")).toContainText("Delivery");
+      await expect(page.getByRole("button", { name: "Delivery" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
 
-      await expect(page.getByLabel("Name")).toHaveValue(customerName);
-      await expect(page.getByLabel("Phone", { exact: true })).toHaveValue("700555666");
-      await expect(page.getByLabel("Address", { exact: true })).toHaveValue("10 Profile Street");
+      // Address prefill was deliberately dropped as part of the
+      // area/street/landmark rebuild — the new fields have no saved flat
+      // address string to split back into. Only name/phone still prefill.
+      await expect(page.getByLabel(/Full name/)).toHaveValue(customerName);
+      await expect(page.getByLabel(/^Phone \*$/)).toHaveValue("700555666");
+      await expect(page.getByLabel(/Area \/ ward/)).toHaveValue("");
+      await expect(page.getByLabel(/Nearest landmark/)).toHaveValue("");
     } finally {
       await cleanupProduct(productId);
       await cleanupCustomer(email);
     }
   });
 
-  test("checking 'save to profile' persists the edited checkout address after a real order", async ({
+  test("checking 'save to profile' persists the server-computed checkout address after a real order", async ({
     page,
   }) => {
     const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -133,7 +162,13 @@ test.describe("Checkout — save address to profile", () => {
     const password = "customer-password-123";
     const customerName = "E2E Save Address Customer";
     const originalAddress = "20 Original Road";
-    const editedAddress = "42 Edited Avenue";
+    const checkoutFields = {
+      area: "Masaki",
+      street: "Haile Selassie Road",
+      landmark: "Opposite the yacht club",
+      deliveryNotes: "Call on arrival",
+    };
+    const expectedJoinedAddress = joinAddress(checkoutFields);
 
     try {
       await signUpCustomer(page, { name: customerName, email, password });
@@ -145,38 +180,65 @@ test.describe("Checkout — save address to profile", () => {
       await addProductToCart(page, productId, name);
 
       await page.goto("/checkout");
-      await expect(page.getByLabel("Address", { exact: true })).toHaveValue(originalAddress);
+      await expect(page.getByRole("button", { name: "Delivery" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
 
-      const addressField = page.getByLabel("Address", { exact: true });
-      await addressField.fill(editedAddress);
+      await page.getByLabel(/Area \/ ward/).fill(checkoutFields.area);
+      await page.getByLabel("Street / building").fill(checkoutFields.street);
+      await page.getByLabel(/Nearest landmark/).fill(checkoutFields.landmark);
+      await page.getByLabel("Delivery notes").fill(checkoutFields.deliveryNotes);
+
       await page
         .getByRole("checkbox", { name: "Save this address to my profile" })
         .check();
 
-      await page.getByRole("button", { name: "Place order" }).click();
+      // The save-to-profile write-back is a second, best-effort request
+      // fired (not awaited) from the order mutation's onSuccess, after the
+      // confirmation navigation has already started — wait for the actual
+      // update-user response so the DB write is guaranteed to have landed
+      // before this test checks for it, rather than racing it.
+      const updateUserResponse = page.waitForResponse((res) =>
+        res.url().includes("/api/customer-auth/update-user"),
+      );
+      await page.getByRole("button", { name: /Place order/ }).click();
 
       await expect(page).toHaveURL("/checkout/confirmation");
       await expect(
         page.getByRole("heading", { name: "Thank you for your order!" }),
       ).toBeVisible();
+      await updateUserResponse;
 
-      // Real persistence: reload the profile page and confirm the *edited*
-      // address (not the original) was written back via the real
-      // updateUser -> Prisma round trip.
+      // Real persistence: reload the profile page and confirm the
+      // server-computed joined address (not the original profile address)
+      // was written back via the real updateUser -> Prisma round trip.
       await page.goto("/account/profile");
-      await expect(page.getByLabel("Address", { exact: true })).toHaveValue(editedAddress);
+      await expect(page.getByLabel("Address", { exact: true })).toHaveValue(
+        expectedJoinedAddress,
+      );
 
       const persisted = await withDb((client) =>
         client.query('SELECT address FROM "customer" WHERE email = $1', [email]),
       );
-      expect(persisted.rows[0].address).toBe(editedAddress);
+      expect(persisted.rows[0].address).toBe(expectedJoinedAddress);
+
+      const order = await withDb((client) =>
+        client.query(
+          `SELECT o.address FROM "order" o
+           JOIN "order_item" i ON i."orderId" = o.id
+           WHERE i."productId" = $1`,
+          [productId],
+        ),
+      );
+      expect(order.rows[0].address).toBe(expectedJoinedAddress);
     } finally {
       await cleanupProduct(productId);
       await cleanupCustomer(email);
     }
   });
 
-  test("leaving 'save to profile' unchecked does not persist the edited checkout address", async ({
+  test("leaving 'save to profile' unchecked does not persist the checkout address", async ({
     page,
   }) => {
     const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -186,7 +248,11 @@ test.describe("Checkout — save address to profile", () => {
     const password = "customer-password-123";
     const customerName = "E2E No Save Customer";
     const originalAddress = "30 Untouched Street";
-    const attemptedAddress = "99 Never Saved Way";
+    const checkoutFields = {
+      area: "Mikocheni",
+      landmark: "Near the roundabout",
+    };
+    const expectedJoinedAddress = joinAddress(checkoutFields);
 
     try {
       await signUpCustomer(page, { name: customerName, email, password });
@@ -198,23 +264,28 @@ test.describe("Checkout — save address to profile", () => {
       await addProductToCart(page, productId, name);
 
       await page.goto("/checkout");
-      await expect(page.getByLabel("Address", { exact: true })).toHaveValue(originalAddress);
+      await expect(page.getByRole("button", { name: "Delivery" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
 
-      await page.getByLabel("Address", { exact: true }).fill(attemptedAddress);
+      await page.getByLabel(/Area \/ ward/).fill(checkoutFields.area);
+      await page.getByLabel(/Nearest landmark/).fill(checkoutFields.landmark);
+
       // Leave "Save this address to my profile" unchecked (default state).
       await expect(
         page.getByRole("checkbox", { name: "Save this address to my profile" }),
       ).not.toBeChecked();
 
-      await page.getByRole("button", { name: "Place order" }).click();
+      await page.getByRole("button", { name: /Place order/ }).click();
 
       await expect(page).toHaveURL("/checkout/confirmation");
       await expect(
         page.getByRole("heading", { name: "Thank you for your order!" }),
       ).toBeVisible();
 
-      // The order itself used the edited address, but the profile was never
-      // written back to.
+      // The order itself used the submitted address, but the profile was
+      // never written back to.
       await page.goto("/account/profile");
       await expect(page.getByLabel("Address", { exact: true })).toHaveValue(originalAddress);
 
@@ -231,7 +302,7 @@ test.describe("Checkout — save address to profile", () => {
           [productId],
         ),
       );
-      expect(order.rows[0].address).toBe(attemptedAddress);
+      expect(order.rows[0].address).toBe(expectedJoinedAddress);
     } finally {
       await cleanupProduct(productId);
       await cleanupCustomer(email);
