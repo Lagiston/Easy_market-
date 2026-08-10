@@ -184,6 +184,45 @@ test.describe("Staff phone-confirmation flow", () => {
   });
 });
 
+test.describe("Notify customer of delay", () => {
+  test("appears for a confirmed order, sends without changing status, and is absent for a received order", async ({
+    page,
+  }) => {
+    const seeded = await seedReceivedOrder({ stockAfterOrder: 4, quantity: 1 });
+    const { code } = seeded;
+
+    try {
+      await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+      await page.goto(`/admin/orders/${seeded.orderId}`);
+
+      // RECEIVED: no delay-notice action yet.
+      await expect(page.getByText("Received", { exact: true })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Notify customer of delay" }),
+      ).toBeHidden();
+
+      await page.getByRole("button", { name: "Confirm order" }).click();
+      await expect(page.getByText("Confirmed", { exact: true })).toBeVisible();
+
+      const notifyButton = page.getByRole("button", { name: "Notify customer of delay" });
+      await expect(notifyButton).toBeVisible();
+      await notifyButton.click();
+
+      await expect(page.getByText("Delayed notice sent.")).toBeVisible();
+      // Status is unchanged — this action never transitions the order, even
+      // when SMS is unset in this environment (sendSms no-ops safely).
+      await expect(page.getByText("Confirmed", { exact: true })).toBeVisible();
+
+      const persisted = await withDb((client) =>
+        client.query('SELECT status FROM "order" WHERE id = $1', [seeded.orderId]),
+      );
+      expect(persisted.rows[0].status).toBe("CONFIRMED");
+    } finally {
+      await cleanupOrder(seeded);
+    }
+  });
+});
+
 test.describe("Order lifecycle", () => {
   test("delivery order runs the full lifecycle: confirm → out for delivery → complete, and the detail page shows COMPLETED", async ({
     page,

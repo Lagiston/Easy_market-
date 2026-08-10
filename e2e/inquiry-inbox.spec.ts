@@ -38,6 +38,8 @@ test.describe("Inquiry inbox (staff)", () => {
         data: {
           customerName,
           customerEmail: email,
+          customerPhone: "+255700123456",
+          topic: "PRODUCT_QUESTION",
           message: initialMessage,
         },
       });
@@ -46,7 +48,16 @@ test.describe("Inquiry inbox (staff)", () => {
 
       await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
 
-      await page.getByRole("link", { name: "Inquiries" }).click();
+      // Scope to the nav landmark, not `exact: true` — the nav link's own
+      // accessible name grows an "N inquiries need attention" badge suffix
+      // whenever the attention count is nonzero (as it now genuinely can be,
+      // since this seeded inquiry has valid topic/customerPhone and shows up
+      // unassigned/open), and the dashboard's "Open inquiries"/"Escalated
+      // inquiries" stat-card links also contain "Inquiries" as a substring.
+      await page
+        .getByRole("navigation")
+        .getByRole("link", { name: /^Inquiries/ })
+        .click();
       await expect(page).toHaveURL("/admin/inquiries");
 
       // Unassigned tab is deterministic regardless of other seeded/leftover data.
@@ -73,7 +84,12 @@ test.describe("Inquiry inbox (staff)", () => {
       await expect(page.getByText(initialMessage)).toBeVisible();
       await expect(page.getByLabel("Assigned to")).toContainText("E2E Admin");
 
-      const replyBox = page.getByRole("textbox", { name: "Reply" });
+      // The fire-and-forget AI classification/drafting pipeline (server/src/lib/inquiry-classification.ts,
+      // inquiry-draft.ts) now genuinely runs against this seeded inquiry since it has a
+      // valid topic/customerPhone, and may have already produced a pending AI_DRAFT with
+      // its own "Draft reply" textarea by the time this page loads — match the staff
+      // reply box by its exact accessible name so it isn't ambiguous with that one.
+      const replyBox = page.getByRole("textbox", { name: "Reply", exact: true });
       await replyBox.fill(replyMessage);
       await page.getByRole("button", { name: "Send reply" }).click();
 

@@ -34,6 +34,9 @@ test.describe("Contact form", () => {
       await page.goto("/contact");
       await expect(page.getByRole("heading", { name: "Contact us" })).toBeVisible();
 
+      await page.getByRole("combobox", { name: /what's this about/i }).click();
+      await page.getByRole("option", { name: "Product question" }).click();
+
       await page.getByLabel("Name").fill(name);
       await page.getByLabel("Email").fill(email);
       await page.getByLabel("Phone").fill(phone);
@@ -41,19 +44,16 @@ test.describe("Contact form", () => {
 
       await page.getByRole("button", { name: "Send message" }).click();
 
-      await expect(
-        page.getByText("Thanks — we'll get back to you soon."),
-      ).toBeVisible();
-
-      // Form was reset after success.
-      await expect(page.getByLabel("Name")).toHaveValue("");
-      await expect(page.getByLabel("Message")).toHaveValue("");
+      // The form unmounts on success and is replaced by a success card — it
+      // isn't reset in place, so the old fields no longer exist at all.
+      await expect(page.getByRole("heading", { name: "Message sent" })).toBeVisible();
+      await expect(page.getByLabel("Name")).not.toBeVisible();
 
       // Real persistence: the inquiry and its first customer message exist,
       // created via the real POST /api/storefront/inquiries round trip.
       const persisted = await withDb((client) =>
         client.query(
-          `SELECT i.channel, i.status, i."customerName", i."customerEmail", i."customerPhone",
+          `SELECT i.channel, i.status, i.topic, i."customerName", i."customerEmail", i."customerPhone",
                   m.sender, m.body
            FROM "inquiry" i
            JOIN "message" m ON m."inquiryId" = i.id
@@ -65,6 +65,7 @@ test.describe("Contact form", () => {
       const row = persisted.rows[0];
       expect(row.channel).toBe("WEBSITE");
       expect(row.status).toBe("OPEN");
+      expect(row.topic).toBe("PRODUCT_QUESTION");
       expect(row.customerName).toBe(name);
       expect(row.customerEmail).toBe(email);
       expect(row.customerPhone).toBe(phone);

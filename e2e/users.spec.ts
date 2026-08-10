@@ -47,7 +47,6 @@ test.describe("User list (ADMIN)", () => {
     // Table headers
     await expect(page.getByRole("columnheader", { name: "User" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Role" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Verified" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Joined" })).toBeVisible();
 
     // Seeded admin row: name, email, Admin badge, avatar initials
@@ -104,7 +103,6 @@ test.describe("User list access control", () => {
 
     await page.goto("/admin/users");
     await expect(page).toHaveURL("/admin");
-    await expect(page.getByRole("columnheader", { name: "Verified" })).not.toBeVisible();
   });
 
   test("unauthenticated visit to /admin/users redirects to /admin/login", async ({ page }) => {

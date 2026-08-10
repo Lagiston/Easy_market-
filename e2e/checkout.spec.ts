@@ -117,21 +117,41 @@ test.describe("Guest checkout", () => {
       // The cart was cleared — no count badge on the cart icon anymore.
       await expect(cartLink).not.toContainText("2");
 
-      // Public order-status lookup: the code from the confirmation page plus
-      // the checkout phone resolves to the order, end to end.
-      await page.getByRole("link", { name: "Order status", exact: true }).click();
-      await expect(page).toHaveURL("/order-status");
+      // Public order lookup on the merged /track page: the code from the
+      // confirmation page plus the checkout phone resolves to the order, end
+      // to end. "Track" no longer has a nav link (deep-link-only page now),
+      // so this navigates directly. Order mode is the default, so no toggle
+      // click is needed.
+      await page.goto("/track");
       await page.getByLabel("Order code").fill(code!);
-      await page.getByLabel("Phone").fill("+255700123456");
+      await page.getByLabel("Phone number").fill("+255700123456");
       await page.getByRole("button", { name: "Check status" }).click();
-      await expect(
-        page.getByText("Received — awaiting phone confirmation"),
-      ).toBeVisible();
       await expect(page.getByText(code!, { exact: true })).toBeVisible();
-      await expect(page.getByText(`${name} × 2`)).toBeVisible();
+      // "Order received" appears in both the status chip and the first
+      // timeline step, so use .first() to avoid a strict-mode violation.
+      await expect(page.getByText("Order received").first()).toBeVisible();
+      await expect(page.getByText(name)).toBeVisible();
+      await expect(page.getByText("Qty 2")).toBeVisible();
       await expect(
         page.getByText("Total", { exact: true }).locator(".."),
       ).toContainText(String(price * 2));
+
+      // Short SMS-friendly deep link (/t/:code): prefills the code
+      // (uppercased), auto-detects order mode, focuses the phone field, and
+      // — critically — shows nothing until the phone is confirmed. This is a
+      // real end-to-end round trip through a freshly-placed order, not the
+      // mocked-axios coverage in TrackPage.test.tsx.
+      await page.goto(`/t/${code!.toLowerCase()}`);
+      await expect(page.getByLabel("Order code")).toHaveValue(code!);
+      await expect(page.getByLabel("Phone number")).toBeFocused();
+      // No order data leaks before the phone is confirmed.
+      await expect(page.getByText(code!, { exact: true })).not.toBeVisible();
+      await expect(page.getByText(name)).not.toBeVisible();
+
+      await page.getByLabel("Phone number").fill("+255700123456");
+      await page.getByRole("button", { name: "Check status" }).click();
+      await expect(page.getByText(code!, { exact: true })).toBeVisible();
+      await expect(page.getByText(name)).toBeVisible();
 
       // Real persistence: the order row exists with a snapshot item, and the
       // product's stock was atomically decremented by the ordered quantity.

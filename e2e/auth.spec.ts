@@ -79,7 +79,7 @@ test.describe("Login flow", () => {
   test("valid ADMIN credentials redirect home and establish a session", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
 
-    await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
     const response = await page.request.get("/api/me");
     expect(response.status()).toBe(200);
@@ -91,8 +91,9 @@ test.describe("Login flow", () => {
   test("valid AGENT credentials redirect home and establish a session", async ({ page }) => {
     await loginAs(page, TEST_AGENT_EMAIL, TEST_AGENT_PASSWORD);
 
-    await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
-
+    // HomePage.tsx renders no content at all for a non-admin user (its entire
+    // body is gated behind isAdmin) — loginAs() already asserts the /admin
+    // redirect, and the /api/me check below confirms the session.
     const response = await page.request.get("/api/me");
     expect(response.status()).toBe(200);
     const body = await response.json();
@@ -120,7 +121,7 @@ test.describe("Authenticated session", () => {
     await page.reload();
 
     await expect(page).toHaveURL("/admin");
-    await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
   });
 
   test("navigating to /admin/login while already authenticated redirects home", async ({ page }) => {
