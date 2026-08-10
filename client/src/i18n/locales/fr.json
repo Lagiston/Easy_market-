@@ -3,8 +3,6 @@
   "nav": {
     "home": "Accueil",
     "products": "Produits",
-    "orderStatus": "Suivi de commande",
-    "inquiryStatus": "Suivi de message",
     "contact": "Contact",
     "signIn": "Se connecter",
     "theme": "Changer de thème",
@@ -39,22 +37,48 @@
   "contact": {
     "title": "Contactez-nous",
     "subtitle": "Nous serons ravis de vous aider — contactez-nous par l'un de ces moyens.",
+    "whatsapp": "Discuter sur WhatsApp",
+    "call": "Appelez-nous",
     "phone": "Téléphone",
+    "phoneHint": "Appuyez pour appeler — Lun–Sam, 8h00–20h00",
     "email": "E-mail",
-    "address": "Adresse",
-    "hours": "Horaires d'ouverture",
-    "hoursValue": "Lun–Sam : 8h00–20h00, Dim : 9h00–14h00",
+    "emailHint": "Nous répondons sous 24 heures",
+    "address": "Magasin & retrait",
+    "addressHint": "Retrait gratuit pour les commandes en ligne",
+    "hoursTitle": "Horaires d'ouverture",
+    "openNow": "Ouvert maintenant · ferme à {{time}}",
+    "closedNow": "Fermé · ouvre à {{time}}",
+    "hoursMonSat": "Lun–Sam",
+    "hoursMonSatTime": "8h00–20h00",
+    "hoursSun": "Dim",
+    "hoursSunTime": "9h00–14h00",
+    "getDirections": "Obtenir l'itinéraire",
+    "followUs": "Suivez-nous",
     "formTitle": "Envoyez-nous un message",
     "responseTime": "Nous répondons généralement sous 24 heures.",
+    "topicLabel": "De quoi s'agit-il ?",
+    "topicPlaceholder": "Choisissez un sujet",
+    "topicOrderIssue": "Problème de commande ou de livraison",
+    "topicProductQuestion": "Question sur un produit",
+    "topicReturnsRefund": "Retour ou remboursement",
+    "topicWholesaleBulk": "Demande de gros",
+    "topicOther": "Autre chose",
     "name": "Nom",
+    "phonePlaceholder": "+255 7XX XXX XXX",
+    "optionalLabel": "(facultatif)",
+    "emailOptionalHint": "Ajoutez-en une si vous préférez une réponse par e-mail.",
     "message": "Message",
+    "messagePlaceholder": "Dites-nous ce dont vous avez besoin — indiquez votre numéro de commande si vous en avez un.",
     "messageCount": "{{count}} / {{max}}",
     "send": "Envoyer le message",
     "sending": "Envoi…",
-    "success": "Merci — nous vous répondrons bientôt.",
+    "successTitle": "Message envoyé",
+    "successDetail": "Attendez une réponse sous 24 heures, ou contactez-nous sur WhatsApp si c'est urgent.",
+    "privacyNote": "Nous n'utilisons vos coordonnées que pour vous répondre. Jamais de marketing.",
     "error": "Impossible d'envoyer votre message. Veuillez réessayer.",
-    "referenceCodeLabel": "Votre code de référence",
-    "referenceCodeHint": "Conservez-le — vous pouvez vérifier le statut de votre message à tout moment avec ce code et votre e-mail."
+    "messageCodeLabel": "Votre code de message",
+    "messageCodeHint": "Conservez-le — vous pouvez vérifier le statut de votre message à tout moment avec ce code et le numéro de téléphone indiqué ci-dessus.",
+    "trackMessage": "Suivre ce message"
   },
   "products": {
     "title": "Produits",
@@ -113,9 +137,18 @@
     "wishlistCount_other": "{{count}} personnes ont ajouté ce produit à leur liste de souhaits",
     "inStockReady": "En stock — prêt à expédier",
     "perks": {
-      "delivery": { "title": "Livraison 24–48 h", "text": "Tarif fixe en ville" },
-      "payOnDelivery": { "title": "Paiement à la livraison", "text": "Espèces acceptées" },
-      "pickup": { "title": "Retrait gratuit", "text": "Dans notre magasin" }
+      "delivery": {
+        "title": "Livraison 24–48 h",
+        "text": "Tarif fixe en ville"
+      },
+      "payOnDelivery": {
+        "title": "Paiement à la livraison",
+        "text": "Espèces acceptées"
+      },
+      "pickup": {
+        "title": "Retrait gratuit",
+        "text": "Dans notre magasin"
+      }
     },
     "variants": {
       "size": "Taille",
@@ -217,38 +250,6 @@
     "trackOrder": "Vérifier l'état de la commande",
     "continueShopping": "Continuer vos achats"
   },
-  "orderStatus": {
-    "title": "Suivre votre commande",
-    "subtitle": "Saisissez votre code de commande et le numéro de téléphone utilisé.",
-    "code": "Code de commande",
-    "phone": "Téléphone",
-    "check": "Vérifier l'état",
-    "checking": "Vérification…",
-    "notFound": "Aucune commande trouvée pour ce code et ce numéro de téléphone.",
-    "error": "Impossible de vérifier l'état de la commande. Veuillez réessayer.",
-    "statuses": {
-      "received": "Reçue — en attente de confirmation téléphonique",
-      "confirmed": "Confirmée",
-      "outForDelivery": "En cours de livraison",
-      "completed": "Terminée",
-      "cancelled": "Annulée"
-    }
-  },
-  "inquiryStatus": {
-    "title": "Vérifier le statut de votre message",
-    "subtitle": "Saisissez votre code de référence et l'e-mail que vous avez utilisé pour nous contacter.",
-    "code": "Code de référence",
-    "email": "E-mail",
-    "check": "Vérifier l'état",
-    "checking": "Vérification…",
-    "notFound": "Aucun message trouvé pour ce code et cet e-mail.",
-    "error": "Impossible de vérifier l'état du message. Veuillez réessayer.",
-    "statuses": {
-      "open": "Ouvert",
-      "resolved": "Résolu",
-      "closed": "Fermé"
-    }
-  },
   "footer": {
     "copyright": "© {{year}} Halatu. Tous droits réservés.",
     "nav": "Navigation du pied de page"
@@ -273,7 +274,12 @@
     "nameMax": "Le nom doit comporter au plus 100 caractères",
     "reviewRating": "Choisissez une note de 1 à 5 étoiles",
     "commentMax": "Le commentaire doit comporter au plus 1000 caractères",
-    "regionMax": "La région doit comporter 100 caractères ou moins"
+    "regionMax": "La région doit comporter 100 caractères ou moins",
+    "topic": "Sélectionnez le sujet de votre message",
+    "contactMessageMax": "Le message ne doit pas dépasser 1000 caractères",
+    "orderLookupCodeLength": "Les codes de commande comportent 8 caractères — vérifiez le SMS que nous vous avons envoyé.",
+    "inquiryLookupCodeLength": "Les codes de message comportent 8 caractères — vérifiez le SMS que nous vous avons envoyé.",
+    "lookupPhoneFormat": "Saisissez le numéro de téléphone complet que vous avez utilisé."
   },
   "chat": {
     "open": "Ouvrir le chat",
@@ -370,5 +376,76 @@
     "nav": "Liste de souhaits",
     "navCount_one": "Liste de souhaits, {{count}} article",
     "navCount_other": "Liste de souhaits, {{count}} articles"
+  },
+  "track": {
+    "title": "Suivi",
+    "toggleOrder": "Ma commande",
+    "toggleMessage": "Mon message",
+    "phone": "Numéro de téléphone",
+    "phonePlaceholder": "+255 7XX XXX XXX",
+    "phoneHint": "Le même numéro que vous avez utilisé.",
+    "check": "Vérifier l'état",
+    "checking": "Vérification…",
+    "error": "Impossible de vérifier l'état. Veuillez réessayer.",
+    "fallbackPrompt": "Code perdu, ou quelque chose semble incorrect ?",
+    "chatWithUs": "Discuter avec nous",
+    "trackAnother": "Suivre autre chose",
+    "qty": "Qté {{count}}",
+    "order": {
+      "subtitle": "Vérifiez où en est votre commande — saisissez votre code de commande et numéro de téléphone.",
+      "label": "Code de commande",
+      "placeholder": "9TWMY5ZN",
+      "hint": "8 caractères, lettres et chiffres — envoyé par SMS lors de votre commande. Exemple : 9TWMY5ZN",
+      "errorTitle": "Nous n'avons pas trouvé cette commande",
+      "notFound": "Aucune commande ne correspond à ce code et ce numéro de téléphone. Vérifiez les deux, ou discutez avec nous.",
+      "orderLabel": "COMMANDE",
+      "statuses": {
+        "received": "Commande reçue",
+        "confirmed": "Confirmée",
+        "outForDelivery": "En cours de livraison",
+        "completed": "Livrée",
+        "cancelled": "Annulée"
+      },
+      "timeline": {
+        "received": "Commande reçue",
+        "confirmed": "Confirmée par téléphone",
+        "outForDelivery": "En cours de livraison",
+        "delivered": "Livrée"
+      },
+      "eta": {
+        "title": "Votre livreur est en route",
+        "detail": "Il vous appellera au {{phone}} à son arrivée."
+      },
+      "deliveryMethod": {
+        "delivery": "Livraison — paiement à la réception",
+        "pickup": "Retrait en magasin — paiement sur place",
+        "cashNote": "Paiement en espèces accepté",
+        "collectNote": "À récupérer dans notre magasin"
+      },
+      "cancelledNotice": "Cette commande a été annulée."
+    },
+    "message": {
+      "subtitle": "Vérifiez si nous avons lu et répondu à votre message — saisissez votre code de message et numéro de téléphone.",
+      "label": "Code de message",
+      "placeholder": "MSG4K2P9",
+      "hint": "8 caractères, commençant par MSG — envoyé par SMS lorsque vous nous avez écrit.",
+      "errorTitle": "Nous n'avons pas trouvé ce message",
+      "notFound": "Aucun message ne correspond à ce code et ce numéro de téléphone. Vérifiez les deux, ou discutez avec nous.",
+      "messageLabel": "MESSAGE",
+      "statuses": {
+        "open": "Ouvert",
+        "resolved": "Répondu",
+        "closed": "Fermé"
+      },
+      "timeline": {
+        "received": "Message reçu",
+        "assigned": "Assigné à l'équipe",
+        "replied": "Répondu — en attente de votre réponse",
+        "closed": "Fermé"
+      },
+      "you": "Vous",
+      "team": "Halatu"
+    },
+    "confirmPhoneSubtitle": "Confirmez votre numéro de téléphone pour voir le dernier statut."
   }
 }

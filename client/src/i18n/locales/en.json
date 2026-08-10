@@ -3,8 +3,6 @@
   "nav": {
     "home": "Home",
     "products": "Products",
-    "orderStatus": "Order status",
-    "inquiryStatus": "Message status",
     "contact": "Contact",
     "signIn": "Sign in",
     "theme": "Toggle theme",
@@ -62,22 +60,48 @@
   "contact": {
     "title": "Contact us",
     "subtitle": "We're happy to help — reach us any of these ways.",
+    "whatsapp": "Chat on WhatsApp",
+    "call": "Call us",
     "phone": "Phone",
+    "phoneHint": "Tap to call — Mon–Sat, 8:00–20:00",
     "email": "Email",
-    "address": "Address",
-    "hours": "Opening hours",
-    "hoursValue": "Mon–Sat: 8:00–20:00, Sun: 9:00–14:00",
+    "emailHint": "We reply within 24 hours",
+    "address": "Store & pickup",
+    "addressHint": "Free pickup for online orders",
+    "hoursTitle": "Opening hours",
+    "openNow": "Open now · closes {{time}}",
+    "closedNow": "Closed · opens {{time}}",
+    "hoursMonSat": "Mon–Sat",
+    "hoursMonSatTime": "8:00–20:00",
+    "hoursSun": "Sun",
+    "hoursSunTime": "9:00–14:00",
+    "getDirections": "Get directions",
+    "followUs": "Follow us",
     "formTitle": "Send us a message",
     "responseTime": "We usually reply within 24 hours.",
+    "topicLabel": "What's this about?",
+    "topicPlaceholder": "Select a topic",
+    "topicOrderIssue": "Order issue or delivery",
+    "topicProductQuestion": "Product question",
+    "topicReturnsRefund": "Returns or refund",
+    "topicWholesaleBulk": "Wholesale or bulk enquiry",
+    "topicOther": "Something else",
     "name": "Name",
+    "phonePlaceholder": "+255 7XX XXX XXX",
+    "optionalLabel": "(optional)",
+    "emailOptionalHint": "Add one if you'd rather we replied by email.",
     "message": "Message",
+    "messagePlaceholder": "Tell us what you need — include your order number if you have one.",
     "messageCount": "{{count}} / {{max}}",
     "send": "Send message",
     "sending": "Sending…",
-    "success": "Thanks — we'll get back to you soon.",
+    "successTitle": "Message sent",
+    "successDetail": "Expect a reply within 24 hours, or reach us on WhatsApp if it's urgent.",
+    "privacyNote": "We only use your details to reply. No marketing, ever.",
     "error": "Could not send your message. Please try again.",
-    "referenceCodeLabel": "Your reference code",
-    "referenceCodeHint": "Save this — you can check your message's status anytime with this code and your email."
+    "messageCodeLabel": "Your message code",
+    "messageCodeHint": "Save this — you can check your message's status anytime with this code and the phone number you gave above.",
+    "trackMessage": "Track this message"
   },
   "products": {
     "title": "Products",
@@ -136,9 +160,18 @@
     "wishlistCount_other": "{{count}} people have this in their wishlist",
     "inStockReady": "In stock — ready to ship",
     "perks": {
-      "delivery": { "title": "24–48hr delivery", "text": "Flat fee citywide" },
-      "payOnDelivery": { "title": "Pay on delivery", "text": "Cash accepted" },
-      "pickup": { "title": "Free pickup", "text": "At our store" }
+      "delivery": {
+        "title": "24–48hr delivery",
+        "text": "Flat fee citywide"
+      },
+      "payOnDelivery": {
+        "title": "Pay on delivery",
+        "text": "Cash accepted"
+      },
+      "pickup": {
+        "title": "Free pickup",
+        "text": "At our store"
+      }
     },
     "variants": {
       "size": "Size",
@@ -240,38 +273,6 @@
     "trackOrder": "Check order status",
     "continueShopping": "Continue shopping"
   },
-  "orderStatus": {
-    "title": "Track your order",
-    "subtitle": "Enter your order code and the phone number you ordered with.",
-    "code": "Order code",
-    "phone": "Phone",
-    "check": "Check status",
-    "checking": "Checking…",
-    "notFound": "No order found for this code and phone number.",
-    "error": "Could not check the order status. Please try again.",
-    "statuses": {
-      "received": "Received — awaiting phone confirmation",
-      "confirmed": "Confirmed",
-      "outForDelivery": "Out for delivery",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
-    }
-  },
-  "inquiryStatus": {
-    "title": "Check your message status",
-    "subtitle": "Enter your reference code and the email you contacted us with.",
-    "code": "Reference code",
-    "email": "Email",
-    "check": "Check status",
-    "checking": "Checking…",
-    "notFound": "No message found for this code and email.",
-    "error": "Could not check the message status. Please try again.",
-    "statuses": {
-      "open": "Open",
-      "resolved": "Resolved",
-      "closed": "Closed"
-    }
-  },
   "footer": {
     "copyright": "© {{year}} Halatu. All rights reserved.",
     "nav": "Footer navigation"
@@ -296,7 +297,12 @@
     "nameMax": "Name must be 100 characters or fewer",
     "reviewRating": "Choose a rating from 1 to 5 stars",
     "commentMax": "Comment must be 1000 characters or fewer",
-    "regionMax": "Region must be 100 characters or fewer"
+    "regionMax": "Region must be 100 characters or fewer",
+    "topic": "Select what this is about",
+    "contactMessageMax": "Message must be 1000 characters or fewer",
+    "orderLookupCodeLength": "Order codes are 8 characters — check the SMS we sent you.",
+    "inquiryLookupCodeLength": "Message codes are 8 characters — check the SMS we sent you.",
+    "lookupPhoneFormat": "Enter the full phone number you used."
   },
   "chat": {
     "open": "Open chat",
@@ -393,5 +399,76 @@
     "nav": "Wishlist",
     "navCount_one": "Wishlist, {{count}} item",
     "navCount_other": "Wishlist, {{count}} items"
+  },
+  "track": {
+    "title": "Track",
+    "toggleOrder": "My order",
+    "toggleMessage": "My message",
+    "phone": "Phone number",
+    "phonePlaceholder": "+255 7XX XXX XXX",
+    "phoneHint": "The same number you used.",
+    "check": "Check status",
+    "checking": "Checking…",
+    "error": "Could not check the status. Please try again.",
+    "fallbackPrompt": "Lost your code, or something doesn't look right?",
+    "chatWithUs": "Chat with us",
+    "trackAnother": "Track something else",
+    "qty": "Qty {{count}}",
+    "order": {
+      "subtitle": "Check where your order is — enter your order code and phone number.",
+      "label": "Order code",
+      "placeholder": "9TWMY5ZN",
+      "hint": "8 characters, letters and numbers — sent to you by SMS when you ordered. Example: 9TWMY5ZN",
+      "errorTitle": "We couldn't find that order",
+      "notFound": "No order matches that code and phone number. Double-check both, or start a chat with us.",
+      "orderLabel": "ORDER",
+      "statuses": {
+        "received": "Order received",
+        "confirmed": "Confirmed",
+        "outForDelivery": "Out for delivery",
+        "completed": "Delivered",
+        "cancelled": "Cancelled"
+      },
+      "timeline": {
+        "received": "Order received",
+        "confirmed": "Confirmed by phone",
+        "outForDelivery": "Out for delivery",
+        "delivered": "Delivered"
+      },
+      "eta": {
+        "title": "Your rider is on the way",
+        "detail": "They'll call you on {{phone}} when they arrive."
+      },
+      "deliveryMethod": {
+        "delivery": "Delivery — pay on arrival",
+        "pickup": "Pickup — pay in store",
+        "cashNote": "Cash accepted",
+        "collectNote": "Collect from our store"
+      },
+      "cancelledNotice": "This order was cancelled."
+    },
+    "message": {
+      "subtitle": "See whether we've read and replied to your message — enter your message code and phone number.",
+      "label": "Message code",
+      "placeholder": "MSG4K2P9",
+      "hint": "8 characters, starting with MSG — sent to you by SMS when you messaged us.",
+      "errorTitle": "We couldn't find that message",
+      "notFound": "No message matches that code and phone number. Double-check both, or start a chat with us.",
+      "messageLabel": "MESSAGE",
+      "statuses": {
+        "open": "Open",
+        "resolved": "Replied",
+        "closed": "Closed"
+      },
+      "timeline": {
+        "received": "Message received",
+        "assigned": "Assigned to the team",
+        "replied": "Replied — waiting on you",
+        "closed": "Closed"
+      },
+      "you": "You",
+      "team": "Halatu"
+    },
+    "confirmPhoneSubtitle": "Confirm your phone number to see the latest status."
   }
 }

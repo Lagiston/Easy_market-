@@ -3,8 +3,6 @@
   "nav": {
     "home": "Nyumbani",
     "products": "Bidhaa",
-    "orderStatus": "Hali ya oda",
-    "inquiryStatus": "Hali ya ujumbe",
     "contact": "Wasiliana",
     "signIn": "Ingia",
     "theme": "Badilisha mandhari",
@@ -39,22 +37,48 @@
   "contact": {
     "title": "Wasiliana nasi",
     "subtitle": "Tunafurahi kukusaidia — tufikie kwa njia yoyote kati ya hizi.",
+    "whatsapp": "Ongea kwenye WhatsApp",
+    "call": "Piga simu",
     "phone": "Simu",
+    "phoneHint": "Gusa kupiga simu — Jumatatu–Jumamosi, 8:00–20:00",
     "email": "Barua pepe",
-    "address": "Anwani",
-    "hours": "Saa za kazi",
-    "hoursValue": "Jumatatu–Jumamosi: 8:00–20:00, Jumapili: 9:00–14:00",
+    "emailHint": "Tunajibu ndani ya saa 24",
+    "address": "Duka na kuchukua bidhaa",
+    "addressHint": "Kuchukua bure kwa maagizo ya mtandaoni",
+    "hoursTitle": "Saa za kazi",
+    "openNow": "Wazi sasa · inafunga saa {{time}}",
+    "closedNow": "Imefungwa · inafunguka saa {{time}}",
+    "hoursMonSat": "Jumatatu–Jumamosi",
+    "hoursMonSatTime": "8:00–20:00",
+    "hoursSun": "Jumapili",
+    "hoursSunTime": "9:00–14:00",
+    "getDirections": "Pata mwelekeo",
+    "followUs": "Tufuate",
     "formTitle": "Tutumie ujumbe",
     "responseTime": "Kwa kawaida tunajibu ndani ya saa 24.",
+    "topicLabel": "Ujumbe huu unahusu nini?",
+    "topicPlaceholder": "Chagua mada",
+    "topicOrderIssue": "Tatizo la agizo au uwasilishaji",
+    "topicProductQuestion": "Swali kuhusu bidhaa",
+    "topicReturnsRefund": "Kurudisha au kurejeshewa fedha",
+    "topicWholesaleBulk": "Ombi la jumla",
+    "topicOther": "Jambo lingine",
     "name": "Jina",
+    "phonePlaceholder": "+255 7XX XXX XXX",
+    "optionalLabel": "(hiari)",
+    "emailOptionalHint": "Ongeza moja ikiwa ungependa tukujibu kwa barua pepe.",
     "message": "Ujumbe",
+    "messagePlaceholder": "Tuambie unachohitaji — jumuisha nambari ya agizo lako ikiwa unayo.",
     "messageCount": "{{count}} / {{max}}",
     "send": "Tuma ujumbe",
     "sending": "Inatuma…",
-    "success": "Asante — tutawasiliana nawe hivi karibuni.",
+    "successTitle": "Ujumbe umetumwa",
+    "successDetail": "Tarajia jibu ndani ya saa 24, au tufikie kwenye WhatsApp ikiwa ni jambo la haraka.",
+    "privacyNote": "Tunatumia taarifa zako kukujibu tu. Hakuna matangazo, kamwe.",
     "error": "Imeshindwa kutuma ujumbe wako. Tafadhali jaribu tena.",
-    "referenceCodeLabel": "Nambari yako ya kumbukumbu",
-    "referenceCodeHint": "Hifadhi hii — unaweza kuangalia hali ya ujumbe wako wakati wowote kwa nambari hii na barua pepe yako."
+    "messageCodeLabel": "Msimbo wa ujumbe wako",
+    "messageCodeHint": "Hifadhi hii — unaweza kuangalia hali ya ujumbe wako wakati wowote kwa msimbo huu na namba ya simu uliyoweka hapo juu.",
+    "trackMessage": "Fuatilia ujumbe huu"
   },
   "products": {
     "title": "Bidhaa",
@@ -113,9 +137,18 @@
     "wishlistCount_other": "Watu {{count}} wana bidhaa hii kwenye orodha zao za matakwa",
     "inStockReady": "Ipo stoo — tayari kutumwa",
     "perks": {
-      "delivery": { "title": "Uwasilishaji saa 24–48", "text": "Ada isiyobadilika jijini" },
-      "payOnDelivery": { "title": "Lipa ukipokea", "text": "Taslimu inakubalika" },
-      "pickup": { "title": "Kuchukua bila malipo", "text": "Kutoka dukani kwetu" }
+      "delivery": {
+        "title": "Uwasilishaji saa 24–48",
+        "text": "Ada isiyobadilika jijini"
+      },
+      "payOnDelivery": {
+        "title": "Lipa ukipokea",
+        "text": "Taslimu inakubalika"
+      },
+      "pickup": {
+        "title": "Kuchukua bila malipo",
+        "text": "Kutoka dukani kwetu"
+      }
     },
     "variants": {
       "size": "Ukubwa",
@@ -217,38 +250,6 @@
     "trackOrder": "Angalia hali ya oda",
     "continueShopping": "Endelea kununua"
   },
-  "orderStatus": {
-    "title": "Fuatilia oda yako",
-    "subtitle": "Weka msimbo wa oda na namba ya simu uliyotumia kuagiza.",
-    "code": "Msimbo wa oda",
-    "phone": "Simu",
-    "check": "Angalia hali",
-    "checking": "Inaangalia…",
-    "notFound": "Hakuna oda iliyopatikana kwa msimbo huu na namba hii ya simu.",
-    "error": "Imeshindwa kuangalia hali ya oda. Tafadhali jaribu tena.",
-    "statuses": {
-      "received": "Imepokelewa — inasubiri uthibitisho kwa simu",
-      "confirmed": "Imethibitishwa",
-      "outForDelivery": "Inasafirishwa",
-      "completed": "Imekamilika",
-      "cancelled": "Imeghairiwa"
-    }
-  },
-  "inquiryStatus": {
-    "title": "Angalia hali ya ujumbe wako",
-    "subtitle": "Weka nambari yako ya kumbukumbu na barua pepe uliyotumia kuwasiliana nasi.",
-    "code": "Nambari ya kumbukumbu",
-    "email": "Barua pepe",
-    "check": "Angalia hali",
-    "checking": "Inaangalia…",
-    "notFound": "Hakuna ujumbe uliopatikana kwa nambari hii na barua pepe hii.",
-    "error": "Imeshindwa kuangalia hali ya ujumbe. Tafadhali jaribu tena.",
-    "statuses": {
-      "open": "Wazi",
-      "resolved": "Umetatuliwa",
-      "closed": "Umefungwa"
-    }
-  },
   "footer": {
     "copyright": "© {{year}} Halatu. Haki zote zimehifadhiwa.",
     "nav": "Urambazaji wa kijachini"
@@ -273,7 +274,12 @@
     "nameMax": "Jina lisizidi herufi 100",
     "reviewRating": "Chagua ukadiriaji wa nyota 1 hadi 5",
     "commentMax": "Maoni yasizidi herufi 1000",
-    "regionMax": "Mkoa usizidi herufi 100"
+    "regionMax": "Mkoa usizidi herufi 100",
+    "topic": "Chagua ujumbe huu unahusu nini",
+    "contactMessageMax": "Ujumbe usizidi herufi 1000",
+    "orderLookupCodeLength": "Misimbo ya oda ina herufi 8 — kagua SMS tuliyokutumia.",
+    "inquiryLookupCodeLength": "Misimbo ya ujumbe ina herufi 8 — kagua SMS tuliyokutumia.",
+    "lookupPhoneFormat": "Weka namba kamili ya simu uliyotumia."
   },
   "chat": {
     "open": "Fungua mazungumzo",
@@ -370,5 +376,76 @@
     "nav": "Orodha ya matakwa",
     "navCount_one": "Orodha ya matakwa, bidhaa {{count}}",
     "navCount_other": "Orodha ya matakwa, bidhaa {{count}}"
+  },
+  "track": {
+    "title": "Fuatilia",
+    "toggleOrder": "Oda yangu",
+    "toggleMessage": "Ujumbe wangu",
+    "phone": "Namba ya simu",
+    "phonePlaceholder": "+255 7XX XXX XXX",
+    "phoneHint": "Namba uliyotumia.",
+    "check": "Angalia hali",
+    "checking": "Inaangalia…",
+    "error": "Imeshindwa kuangalia hali. Tafadhali jaribu tena.",
+    "fallbackPrompt": "Umepoteza msimbo wako, au kuna jambo halionekani sawa?",
+    "chatWithUs": "Ongea nasi",
+    "trackAnother": "Fuatilia kingine",
+    "qty": "Idadi {{count}}",
+    "order": {
+      "subtitle": "Angalia oda yako ilipo — weka msimbo wa oda na namba ya simu.",
+      "label": "Msimbo wa oda",
+      "placeholder": "9TWMY5ZN",
+      "hint": "Herufi 8, herufi na namba — ulitumiwa kwa SMS ulipoagiza. Mfano: 9TWMY5ZN",
+      "errorTitle": "Hatukupata oda hiyo",
+      "notFound": "Hakuna oda inayolingana na msimbo huu na namba hii ya simu. Kagua vyote viwili, au anza mazungumzo nasi.",
+      "orderLabel": "ODA",
+      "statuses": {
+        "received": "Oda imepokelewa",
+        "confirmed": "Imethibitishwa",
+        "outForDelivery": "Inasafirishwa",
+        "completed": "Imefikishwa",
+        "cancelled": "Imeghairiwa"
+      },
+      "timeline": {
+        "received": "Oda imepokelewa",
+        "confirmed": "Imethibitishwa kwa simu",
+        "outForDelivery": "Inasafirishwa",
+        "delivered": "Imefikishwa"
+      },
+      "eta": {
+        "title": "Rider wetu yuko njiani",
+        "detail": "Atakupigia simu kwa {{phone}} akifika."
+      },
+      "deliveryMethod": {
+        "delivery": "Uwasilishaji — lipa ukipokea",
+        "pickup": "Kuchukua dukani — lipa dukani",
+        "cashNote": "Malipo ya fedha taslimu yanakubalika",
+        "collectNote": "Chukua kutoka duka letu"
+      },
+      "cancelledNotice": "Oda hii ilighairiwa."
+    },
+    "message": {
+      "subtitle": "Angalia kama tumesoma na kujibu ujumbe wako — weka msimbo wa ujumbe na namba ya simu.",
+      "label": "Msimbo wa ujumbe",
+      "placeholder": "MSG4K2P9",
+      "hint": "Herufi 8, zinazoanza na MSG — ulitumiwa kwa SMS ulipotuma ujumbe.",
+      "errorTitle": "Hatukupata ujumbe huo",
+      "notFound": "Hakuna ujumbe unaolingana na msimbo huu na namba hii ya simu. Kagua vyote viwili, au anza mazungumzo nasi.",
+      "messageLabel": "UJUMBE",
+      "statuses": {
+        "open": "Wazi",
+        "resolved": "Imejibiwa",
+        "closed": "Imefungwa"
+      },
+      "timeline": {
+        "received": "Ujumbe umepokelewa",
+        "assigned": "Umepangiwa timu",
+        "replied": "Imejibiwa — inakusubiri",
+        "closed": "Imefungwa"
+      },
+      "you": "Wewe",
+      "team": "Halatu"
+    },
+    "confirmPhoneSubtitle": "Thibitisha namba yako ya simu ili kuona hali ya hivi karibuni."
   }
 }

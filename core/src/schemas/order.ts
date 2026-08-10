@@ -69,15 +69,32 @@ export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;
 export const LOOKUP_CODE_ERROR = "Order code is required";
 export const LOOKUP_PHONE_ERROR = "Phone number is required";
 
+// Stricter, more specific messages for the storefront Track page's order
+// mode only — order-code.ts always generates exactly 8 characters, and a
+// real checkout phone always has at least 9 digits. Kept as separate
+// constants from LOOKUP_CODE_ERROR/LOOKUP_PHONE_ERROR above, which
+// linkGuestOrdersSchema below still uses with its deliberately lenient
+// "non-empty" validation (matching an already-placed order, not validating
+// a new phone's format). The phone message is deliberately generic ("...you
+// used", not "...at checkout") since inquiry.ts's own lookup schema reuses
+// this exact text for its own phone field — the Track page shares one phone
+// field across both order/message modes, see inquiry.ts's LOOKUP_PHONE_FORMAT_ERROR.
+export const LOOKUP_CODE_LENGTH_ERROR =
+  "Order codes are 8 characters — check the SMS we sent you.";
+export const LOOKUP_PHONE_FORMAT_ERROR = "Enter the full phone number you used.";
+
 // Customer status lookup: order code + the phone the order was placed with
 // (non-enumerable — both must match).
 export const orderLookupSchema = z.object({
   code: z
     .string(LOOKUP_CODE_ERROR)
     .trim()
-    .min(1, LOOKUP_CODE_ERROR)
+    .length(8, LOOKUP_CODE_LENGTH_ERROR)
     .transform((value) => value.toUpperCase()),
-  phone: z.string(LOOKUP_PHONE_ERROR).trim().min(1, LOOKUP_PHONE_ERROR),
+  phone: z
+    .string(LOOKUP_PHONE_ERROR)
+    .trim()
+    .refine((value) => value.replace(/\D/g, "").length >= 9, LOOKUP_PHONE_FORMAT_ERROR),
 });
 
 export type OrderLookupInput = z.infer<typeof orderLookupSchema>;

@@ -8,6 +8,7 @@ import { ArrowLeft, Send } from "lucide-react";
 import {
   addMessageSchema,
   InquiryStatus,
+  InquiryTopic,
   MessageSender,
   DraftStatus,
   Role,
@@ -71,6 +72,17 @@ const LANGUAGE_LABELS: Record<Language, string> = {
   ar: "Arabic",
   sw: "Swahili",
   fr: "French",
+};
+
+// English labels for the storefront contact form's "What's this about?"
+// select (InquiryTopic from @es-market/core) — staff UI isn't translated,
+// same precedent as LANGUAGE_LABELS above. Older inquiries have no topic.
+const INQUIRY_TOPIC_LABELS: Record<InquiryTopic, string> = {
+  [InquiryTopic.ORDER_ISSUE]: "Order issue or delivery",
+  [InquiryTopic.PRODUCT_QUESTION]: "Product question",
+  [InquiryTopic.RETURNS_REFUND]: "Returns or refund",
+  [InquiryTopic.WHOLESALE_BULK]: "Wholesale or bulk enquiry",
+  [InquiryTopic.OTHER]: "Something else",
 };
 
 function extractServerError(error: unknown, fallback: string) {
@@ -233,8 +245,12 @@ export default function InquiryDetailPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <dl className="divide-y">
-              <DetailRow label="Email" value={inquiry.customerEmail} />
+              <DetailRow label="Email" value={inquiry.customerEmail ?? "—"} />
               <DetailRow label="Phone" value={inquiry.customerPhone ?? "—"} />
+              <DetailRow
+                label="Topic"
+                value={inquiry.topic ? INQUIRY_TOPIC_LABELS[inquiry.topic as InquiryTopic] : "—"}
+              />
               <DetailRow label="Updated" value={new Date(inquiry.updatedAt).toLocaleString()} />
             </dl>
 

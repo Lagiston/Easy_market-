@@ -38,7 +38,7 @@ export default function OrderConfirmationPage() {
         <p className="text-sm text-muted-foreground">{t("confirmation.yourCode")}</p>
         <p className="text-3xl font-semibold tracking-widest">{order.code}</p>
         <p className="text-sm text-muted-foreground">{t("confirmation.keepCode")}</p>
-        <Link to="/order-status" className="text-sm text-primary underline-offset-4 hover:underline">
+        <Link to="/track" className="text-sm text-primary underline-offset-4 hover:underline">
           {t("confirmation.trackOrder")}
         </Link>
       </div>

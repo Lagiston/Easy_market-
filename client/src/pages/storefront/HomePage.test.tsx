@@ -63,7 +63,7 @@ describe("storefront HomePage", () => {
     );
     expect(screen.getByRole("link", { name: "Fast city delivery" })).toHaveAttribute(
       "href",
-      "/order-status",
+      "/track",
     );
     expect(screen.getByRole("link", { name: "Free pickup" })).toHaveAttribute(
       "href",

@@ -1,12 +1,20 @@
 import { randomUUID } from "node:crypto";
 import { Router, type Response } from "express";
 import { fromNodeHeaders } from "better-auth/node";
+import * as Sentry from "@sentry/node";
 import { FulfillmentType, OrderStatus, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { generateOrderCode } from "../lib/order-code";
 import { computeDeliveryFee, getSettings } from "../lib/settings";
 import { requireAuth } from "../middleware/require-auth";
 import { customerAuth } from "../lib/customer-auth";
+import {
+  sendSms,
+  buildOrderConfirmedSms,
+  buildOutForDeliverySms,
+  buildDeliveredSms,
+  buildDelayedSms,
+} from "../lib/sms";
 import {
   cancelOrderSchema,
   orderListQuerySchema,
@@ -29,12 +37,26 @@ function englishName(value: Prisma.JsonValue): string {
 // wraps the transaction rather than the create.
 const CODE_RETRIES = 5;
 
-export const orderWithItems = { items: true } as const;
+// Items include the product's images (just that one column) so
+// serializePublicOrder can attach a current thumbnail — the FK is required
+// and Product rows are only ever soft-deleted, never hard-deleted, so
+// item.product always resolves even for a since-deleted/edited product
+// (the thumbnail may then reflect the product's current image, not
+// necessarily what shipped — same "history must show what was charged, not
+// necessarily what it looked like" tradeoff already accepted for
+// productName/unitPrice's own snapshot-vs-live split).
+export const orderWithItems = {
+  items: { include: { product: { select: { images: true } } } },
+} as const;
 
-// Guest/customer-safe order shape — omits customerName/customerPhone/address/
-// customerId (internal-only fields; see serializeOrder below for the staff
-// version that includes them). Shared by the guest lookup route and the
-// signed-in customer's order-history list, which return an identical shape.
+// Guest/customer-safe order shape — omits customerPhone/customerId
+// (internal-only fields; see serializeOrder below for the staff version that
+// includes them). Shared by the order-create response, the guest lookup
+// route, and the signed-in customer's order-history list — all three are
+// always the customer looking at their own order, so customerName/address
+// are safe to include (unlike customerPhone, neither is used as a lookup
+// credential, and the lookup route already gates on an exact phone match
+// before any of this is ever serialized — see orders.ts's /lookup route).
 export function serializePublicOrder(
   order: Prisma.OrderGetPayload<{ include: typeof orderWithItems }>,
 ) {
@@ -46,7 +68,10 @@ export function serializePublicOrder(
     code: order.code,
     status: order.status,
     fulfillmentType: order.fulfillmentType,
+    customerName: order.customerName,
+    address: order.address,
     createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
     subtotal,
     deliveryFee: order.deliveryFee,
     total: subtotal + order.deliveryFee,
@@ -54,6 +79,7 @@ export function serializePublicOrder(
       productName: item.productName,
       unitPrice: item.unitPrice,
       quantity: item.quantity,
+      imageUrl: item.product.images[0] ?? null,
     })),
   };
 }
@@ -242,12 +268,26 @@ async function rejectMissingOrConflict(res: Response, id: string, conflictMessag
   res.status(409).json({ error: conflictMessage });
 }
 
+// Returns the serialized order so callers that need to act on it afterward
+// (e.g. firing a status-change SMS) can, without a second DB round-trip.
 async function respondWithOrder(res: Response, id: string) {
   const order = await prisma.order.findUniqueOrThrow({
     where: { id },
     include: orderWithItems,
   });
-  res.json({ order: serializeOrder(order) });
+  const serialized = serializeOrder(order);
+  res.json({ order: serialized });
+  return serialized;
+}
+
+// Fire-and-forget — an SMS failure must never affect the (already-sent)
+// HTTP response for a successful status transition. Logged the same way
+// classifyInquiry's fire-and-forget AI call is in inquiries.ts.
+function fireOrderSms(orderId: string, phone: string, message: string) {
+  void sendSms(phone, message).catch((error) => {
+    console.error("Order status SMS failed:", error);
+    Sentry.captureException(error, { extra: { orderId } });
+  });
 }
 
 // Records a failed confirmation call on a received order.
@@ -275,7 +315,8 @@ ordersRouter.post<{ id: string }>("/orders/:id/confirm", requireAuth, async (req
     await rejectMissingOrConflict(res, id, "Only received orders can be confirmed");
     return;
   }
-  await respondWithOrder(res, id);
+  const order = await respondWithOrder(res, id);
+  fireOrderSms(id, order.customerPhone, buildOrderConfirmedSms({ code: order.code, total: order.total }));
 });
 
 // Marks a confirmed delivery order as dispatched. Pickup orders skip this step.
@@ -293,7 +334,8 @@ ordersRouter.post<{ id: string }>("/orders/:id/out-for-delivery", requireAuth, a
     await rejectMissingOrConflict(res, id, "Only confirmed delivery orders can go out for delivery");
     return;
   }
-  await respondWithOrder(res, id);
+  const order = await respondWithOrder(res, id);
+  fireOrderSms(id, order.customerPhone, buildOutForDeliverySms({ code: order.code, total: order.total }));
 });
 
 // Completes an order: delivery once dispatched, pickup straight from confirmed.
@@ -313,7 +355,34 @@ ordersRouter.post<{ id: string }>("/orders/:id/complete", requireAuth, async (re
     await rejectMissingOrConflict(res, id, "Order is not ready to be completed");
     return;
   }
-  await respondWithOrder(res, id);
+  const order = await respondWithOrder(res, id);
+  fireOrderSms(id, order.customerPhone, buildDeliveredSms({ code: order.code }));
+});
+
+// Staff-triggered "delayed" notice — does not change Order.status (there is
+// no DELAYED value in OrderStatus by design; the order stays wherever it
+// currently is). Fire-and-forget elsewhere would leave staff with no signal
+// that the SMS actually went out, so this route awaits sendSms and reports
+// success/failure for the admin UI to show.
+ordersRouter.post<{ id: string }>("/orders/:id/notify-delayed", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const order = await prisma.order.findUnique({ where: { id } });
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+  const settings = await getSettings();
+  try {
+    await sendSms(
+      order.customerPhone,
+      buildDelayedSms({ code: order.code, contactPhone: settings.contactPhone }),
+    );
+    res.json({ sent: true });
+  } catch (error) {
+    console.error("Delayed-order SMS failed:", error);
+    Sentry.captureException(error, { extra: { orderId: id } });
+    res.status(502).json({ sent: false, error: "Could not send the delayed notice" });
+  }
 });
 
 // Cancels a not-yet-dispatched order and restores the items' stock.

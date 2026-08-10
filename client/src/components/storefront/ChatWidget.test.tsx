@@ -61,6 +61,7 @@ describe("storefront ChatWidget", () => {
 
     await userEvent.type(screen.getByLabelText("Name"), "Jane Doe");
     await userEvent.type(screen.getByLabelText("Email"), "jane@example.com");
+    await userEvent.type(screen.getByLabelText("Phone"), "+255 700 111 222");
     await userEvent.type(screen.getByLabelText("Message"), "Do you have rice in stock?");
     await userEvent.click(screen.getByRole("button", { name: "Start chat" }));
 
@@ -83,6 +84,7 @@ describe("storefront ChatWidget", () => {
 
     await userEvent.type(screen.getByLabelText("الاسم"), "Jane Doe");
     await userEvent.type(screen.getByLabelText("البريد الإلكتروني"), "jane@example.com");
+    await userEvent.type(screen.getByLabelText("الهاتف"), "+255 700 111 222");
     await userEvent.type(screen.getByLabelText("الرسالة"), "Do you have rice in stock?");
     await userEvent.click(screen.getByRole("button", { name: "بدء المحادثة" }));
 

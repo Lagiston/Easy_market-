@@ -73,10 +73,44 @@ export const MESSAGE_ERROR = "Message must be at least 10 characters";
 export const MESSAGE_MAX_LENGTH = 2000;
 export const MESSAGE_MAX_ERROR = `Message must be ${MESSAGE_MAX_LENGTH} characters or fewer`;
 
+// Stricter cap for the initial storefront contact-form message only — a
+// separate constant from MESSAGE_MAX_LENGTH (which addMessageSchema below,
+// the chat widget's follow-up replies, still uses at 2000) so tightening the
+// first-contact form doesn't also shrink an unrelated follow-up flow.
+export const CONTACT_MESSAGE_MAX_LENGTH = 1000;
+export const CONTACT_MESSAGE_MAX_ERROR = `Message must be ${CONTACT_MESSAGE_MAX_LENGTH} characters or fewer`;
+
+export const TOPIC_ERROR = "Select what this is about";
+
+// Customer-picked topic on the storefront contact form's "What's this
+// about?" select — plain strings validated against a fixed list (matching
+// the `language`/`aiUrgency` precedent), not a Prisma enum.
+export const InquiryTopic = {
+  ORDER_ISSUE: "ORDER_ISSUE",
+  PRODUCT_QUESTION: "PRODUCT_QUESTION",
+  RETURNS_REFUND: "RETURNS_REFUND",
+  WHOLESALE_BULK: "WHOLESALE_BULK",
+  OTHER: "OTHER",
+} as const;
+
+export type InquiryTopic = (typeof InquiryTopic)[keyof typeof InquiryTopic];
+
+export const INQUIRY_TOPICS = [
+  InquiryTopic.ORDER_ISSUE,
+  InquiryTopic.PRODUCT_QUESTION,
+  InquiryTopic.RETURNS_REFUND,
+  InquiryTopic.WHOLESALE_BULK,
+  InquiryTopic.OTHER,
+] as const;
+
 // Contact/support form on the storefront → creates an Inquiry plus its first
 // (CUSTOMER-sent) Message. Channel isn't a form field — the route always
-// creates these as InquiryChannel.WEBSITE.
+// creates these as InquiryChannel.WEBSITE. Phone is required and email
+// optional (the opposite of a typical web form) — for this market a
+// callable number matters more than an email address; email is still
+// validated as a real address when the customer does provide one.
 export const createInquirySchema = z.object({
+  topic: z.enum(INQUIRY_TOPICS, TOPIC_ERROR),
   customerName: z
     .string(CUSTOMER_NAME_ERROR)
     .trim()
@@ -84,20 +118,20 @@ export const createInquirySchema = z.object({
     .transform(sanitizeText)
     // Sanitizing markup-only input can empty the value after the min check.
     .refine((value) => value.length >= 2, CUSTOMER_NAME_ERROR),
-  customerEmail: z.string(EMAIL_ERROR).trim().toLowerCase().pipe(z.email(EMAIL_ERROR)),
-  customerPhone: z.preprocess(
+  customerEmail: z.preprocess(
     (value) => (value === "" ? undefined : value),
-    z
-      .string()
-      .trim()
-      .regex(/^\+?[0-9][0-9\s-]{6,17}$/, PHONE_ERROR)
-      .optional(),
+    z.string().trim().toLowerCase().pipe(z.email(EMAIL_ERROR)).optional(),
   ),
+  customerPhone: z
+    .string(PHONE_ERROR)
+    .trim()
+    .regex(/^\+?[0-9][0-9\s-]{7,17}$/, PHONE_ERROR)
+    .refine((value) => value.replace(/\D/g, "").length >= 9, PHONE_ERROR),
   message: z
     .string(MESSAGE_ERROR)
     .trim()
     .min(10, MESSAGE_ERROR)
-    .max(MESSAGE_MAX_LENGTH, MESSAGE_MAX_ERROR)
+    .max(CONTACT_MESSAGE_MAX_LENGTH, CONTACT_MESSAGE_MAX_ERROR)
     .transform(sanitizeText)
     .refine((value) => value.length >= 10, MESSAGE_ERROR),
   // The customer's UI language at submission time — defaulted (not required)
@@ -111,17 +145,33 @@ export type CreateInquiryInput = z.infer<typeof createInquirySchema>;
 export type CreateInquiryFormInput = z.input<typeof createInquirySchema>;
 
 export const LOOKUP_CODE_ERROR = "Inquiry code is required";
+export const LOOKUP_PHONE_ERROR = "Phone number is required";
 
-// Guest status lookup: inquiry code + the email the inquiry was submitted
+// Stricter, more specific messages for the storefront Track page's message
+// mode — mirrors order.ts's own LOOKUP_CODE_LENGTH_ERROR/LOOKUP_PHONE_FORMAT_ERROR
+// exactly (inquiry codes are also always 8 characters, generateInquiryCode.ts).
+// The phone message's text is deliberately identical to order.ts's own
+// LOOKUP_PHONE_FORMAT_ERROR — the Track page shares one phone field across
+// both modes, so both schemas' phone errors read the same to the customer.
+export const LOOKUP_CODE_LENGTH_ERROR =
+  "Message codes are 8 characters — check the SMS we sent you.";
+export const LOOKUP_PHONE_FORMAT_ERROR = "Enter the full phone number you used.";
+
+// Guest status lookup: inquiry code + the phone the inquiry was submitted
 // with (non-enumerable — both must match), mirroring order.ts's
-// orderLookupSchema (code + phone).
+// orderLookupSchema. Was code + email until createInquirySchema made phone
+// required and email optional (see above) — phone is now the reliable
+// identifier for both.
 export const inquiryLookupSchema = z.object({
   code: z
     .string(LOOKUP_CODE_ERROR)
     .trim()
-    .min(1, LOOKUP_CODE_ERROR)
+    .length(8, LOOKUP_CODE_LENGTH_ERROR)
     .transform((value) => value.toUpperCase()),
-  email: z.string(EMAIL_ERROR).trim().toLowerCase().pipe(z.email(EMAIL_ERROR)),
+  phone: z
+    .string(LOOKUP_PHONE_ERROR)
+    .trim()
+    .refine((value) => value.replace(/\D/g, "").length >= 9, LOOKUP_PHONE_FORMAT_ERROR),
 });
 
 export type InquiryLookupInput = z.infer<typeof inquiryLookupSchema>;

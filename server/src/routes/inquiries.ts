@@ -13,6 +13,8 @@ import { prisma } from "../lib/prisma";
 import { generateInquiryCode } from "../lib/inquiry-code";
 import { requireAuth } from "../middleware/require-auth";
 import { classifyInquiry } from "../lib/inquiry-classification";
+import { normalizePhone } from "./orders";
+import { sendSms, buildMessageReplySms } from "../lib/sms";
 import {
   addMessageSchema,
   assignInquirySchema,
@@ -27,13 +29,25 @@ export const inquiriesRouter = Router();
 
 const CODE_RETRIES = 5;
 
+// Fire-and-forget — an SMS failure must never affect the (already-sent) HTTP
+// response for a successful reply. customerPhone is nullable (guest-only,
+// email-submitted inquiries predating createInquirySchema's phone-required
+// change may still lack one) — skip silently rather than throw.
+function fireInquiryReplySms(inquiryId: string, phone: string | null, code: string, replyBody: string) {
+  if (!phone) return;
+  void sendSms(phone, buildMessageReplySms({ code, replyBody })).catch((error) => {
+    console.error("Inquiry-reply SMS failed:", error);
+    Sentry.captureException(error, { extra: { inquiryId } });
+  });
+}
+
 inquiriesRouter.post("/storefront/inquiries", async (req, res) => {
   const parsed = createInquirySchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { customerName, customerEmail, customerPhone, message, language } = parsed.data;
+  const { topic, customerName, customerEmail, customerPhone, message, language } = parsed.data;
 
   for (let attempt = 0; attempt < CODE_RETRIES; attempt++) {
     const code = generateInquiryCode();
@@ -43,9 +57,10 @@ inquiriesRouter.post("/storefront/inquiries", async (req, res) => {
           id: randomUUID(),
           code,
           channel: InquiryChannel.WEBSITE,
+          topic,
           customerName,
-          customerEmail,
-          customerPhone: customerPhone ?? null,
+          customerEmail: customerEmail ?? null,
+          customerPhone,
           language,
           messages: {
             create: [{ id: randomUUID(), sender: MessageSender.CUSTOMER, body: message }],
@@ -72,23 +87,57 @@ inquiriesRouter.post("/storefront/inquiries", async (req, res) => {
   res.status(500).json({ error: "Could not generate an inquiry code, please try again" });
 });
 
-// Guest status lookup by inquiry code + email (non-enumerable — both must
-// match), mirroring orders.ts's /storefront/orders/lookup. Must be registered
-// before the /storefront/inquiries/:id route below, otherwise Express would
-// match "lookup" itself as the :id param.
+// A guest (chat widget or Track page) must never see an AI_DRAFT message
+// that hasn't actually been sent — a PENDING draft is unreviewed, and a
+// DISCARDED one was never sent at all. AUTO_RESOLVED is the one AI_DRAFT
+// case that was genuinely sent with no staff review, by design (see
+// inquiry-auto-resolve.ts) — matches the exact "customer actually saw"
+// rule dashboard-metrics.ts's avgFirstResponseMinutes already uses. This
+// was previously unfiltered on both guest routes below — a real, if
+// narrow, leak of unapproved AI drafts to the chat widget/Track page,
+// caught while building the merged Track page's message-mode result.
+function isGuestVisibleMessage(message: { sender: MessageSender; draftStatus: DraftStatus | null }) {
+  return (
+    message.sender !== MessageSender.AI_DRAFT || message.draftStatus === DraftStatus.AUTO_RESOLVED
+  );
+}
+
+function serializeGuestMessages(
+  messages: {
+    sender: MessageSender;
+    draftStatus: DraftStatus | null;
+    id: string;
+    body: string;
+    createdAt: Date;
+  }[],
+) {
+  return messages.filter(isGuestVisibleMessage).map((m) => ({
+    id: m.id,
+    sender: m.sender,
+    body: m.body,
+    createdAt: m.createdAt,
+  }));
+}
+
+// Guest status lookup by inquiry code + phone (non-enumerable — both must
+// match), mirroring orders.ts's /storefront/orders/lookup. Was code + email
+// until createInquirySchema made phone required and email optional — phone
+// is now the reliable identifier for both. Must be registered before the
+// /storefront/inquiries/:id route below, otherwise Express would match
+// "lookup" itself as the :id param.
 inquiriesRouter.get("/storefront/inquiries/lookup", async (req, res) => {
   const parsed = inquiryLookupSchema.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.issues[0]!.message });
     return;
   }
-  const { code, email } = parsed.data;
+  const { code, phone } = parsed.data;
 
   const inquiry = await prisma.inquiry.findUnique({
     where: { code },
     include: { messages: { orderBy: { createdAt: "asc" } } },
   });
-  if (!inquiry || inquiry.customerEmail.toLowerCase() !== email) {
+  if (!inquiry || !inquiry.customerPhone || normalizePhone(inquiry.customerPhone) !== normalizePhone(phone)) {
     res.status(404).json({ error: "Inquiry not found" });
     return;
   }
@@ -98,12 +147,15 @@ inquiriesRouter.get("/storefront/inquiries/lookup", async (req, res) => {
       id: inquiry.id,
       code: inquiry.code,
       status: inquiry.status,
-      messages: inquiry.messages.map((m) => ({
-        id: m.id,
-        sender: m.sender,
-        body: m.body,
-        createdAt: m.createdAt,
-      })),
+      customerName: inquiry.customerName,
+      createdAt: inquiry.createdAt,
+      // Derived boolean, not the raw assignedAgentId — same "no customer
+      // fields/staff identity leak" precedent as the rest of this route.
+      // autoResolvedAt counts as "assigned" too: the inquiry is being
+      // handled either way, the Track page's timeline doesn't distinguish
+      // a human from the auto-resolve flow.
+      assigned: inquiry.assignedAgentId !== null || inquiry.autoResolvedAt !== null,
+      messages: serializeGuestMessages(inquiry.messages),
     },
   });
 });
@@ -125,12 +177,7 @@ inquiriesRouter.get("/storefront/inquiries/:id", async (req, res) => {
     inquiry: {
       id: inquiry.id,
       status: inquiry.status,
-      messages: inquiry.messages.map((m) => ({
-        id: m.id,
-        sender: m.sender,
-        body: m.body,
-        createdAt: m.createdAt,
-      })),
+      messages: serializeGuestMessages(inquiry.messages),
     },
   });
 });
@@ -388,6 +435,7 @@ inquiriesRouter.post<{ id: string }>("/inquiries/:id/messages", requireAuth, asy
   await prisma.inquiry.update({ where: { id: inquiry.id }, data: { updatedAt: new Date() } });
 
   res.status(201).json({ message });
+  fireInquiryReplySms(inquiry.id, inquiry.customerPhone, inquiry.code, parsed.data.message);
 });
 
 // Approve an AI_DRAFT message: mints a new STAFF message with the (possibly
@@ -446,6 +494,7 @@ inquiriesRouter.post<{ id: string; messageId: string }>(
     await prisma.inquiry.update({ where: { id }, data: { updatedAt: new Date() } });
 
     await respondWithInquiryThread(res, id);
+    fireInquiryReplySms(inquiry.id, inquiry.customerPhone, inquiry.code, parsed.data.message);
   },
 );
 

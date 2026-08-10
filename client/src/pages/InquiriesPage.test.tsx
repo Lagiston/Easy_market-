@@ -26,6 +26,7 @@ function inquiry(overrides: Partial<InquiryRow> = {}): InquiryRow {
     customerName: "Jane Doe",
     customerEmail: "jane@example.com",
     customerPhone: null,
+    topic: null,
     assignedAgent: null,
     escalatedAt: null,
     autoResolvedAt: null,

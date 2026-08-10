@@ -13,7 +13,7 @@ import { ScrollFrameAnimation } from "@/components/storefront/ScrollFrameAnimati
 
 const FEATURES = [
   { key: "payOnDelivery", Icon: HandCoins, color: "#22c55e", href: "/checkout" },
-  { key: "delivery", Icon: Truck, color: "#3b82f6", href: "/order-status" },
+  { key: "delivery", Icon: Truck, color: "#3b82f6", href: "/track" },
   // Matches --color-brand-orange (client/src/index.css) — a plain hex, not the
   // CSS var itself, since this string also gets an alpha suffix appended
   // below (e.g. `${color}55`), which only works on a hex literal.

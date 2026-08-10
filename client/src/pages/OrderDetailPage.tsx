@@ -81,6 +81,12 @@ export default function OrderDetailPage() {
     mutationFn: () => axios.post(`/api/orders/${id}/complete`),
     onSuccess: invalidateOrders,
   });
+  // No invalidateOrders — this route never changes Order.status, so there's
+  // nothing on the order itself to refetch, unlike the 4 status-transition
+  // mutations above.
+  const notifyDelayedMutation = useMutation({
+    mutationFn: () => axios.post<{ sent: boolean }>(`/api/orders/${id}/notify-delayed`),
+  });
 
   const serverError = logCallMutation.isError
     ? extractServerError(logCallMutation.error, "Could not log the call. Please try again.")
@@ -96,12 +102,18 @@ export default function OrderDetailPage() {
               completeMutation.error,
               "Could not complete the order. Please try again.",
             )
-          : null;
+          : notifyDelayedMutation.isError
+            ? extractServerError(
+                notifyDelayedMutation.error,
+                "Could not send the delayed notice. Please try again.",
+              )
+            : null;
 
   const actionsPending =
     logCallMutation.isPending ||
     confirmMutation.isPending ||
     outForDeliveryMutation.isPending ||
+    notifyDelayedMutation.isPending ||
     completeMutation.isPending;
 
   const notFound = isAxiosError(error) && error.response?.status === 404;
@@ -191,6 +203,9 @@ export default function OrderDetailPage() {
               </dl>
             </div>
             {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+            {notifyDelayedMutation.isSuccess && (
+              <p className="text-sm text-muted-foreground">Delayed notice sent.</p>
+            )}
             <div className="flex flex-wrap gap-2">
               {order.status === OrderStatus.RECEIVED && (
                 <>
@@ -224,6 +239,16 @@ export default function OrderDetailPage() {
               {canComplete(order) && (
                 <Button disabled={actionsPending} onClick={() => completeMutation.mutate()}>
                   Complete order
+                </Button>
+              )}
+              {(order.status === OrderStatus.CONFIRMED ||
+                order.status === OrderStatus.OUT_FOR_DELIVERY) && (
+                <Button
+                  variant="outline"
+                  disabled={actionsPending}
+                  onClick={() => notifyDelayedMutation.mutate()}
+                >
+                  Notify customer of delay
                 </Button>
               )}
               {canCancel(order) && (

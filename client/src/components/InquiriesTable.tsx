@@ -18,8 +18,9 @@ export type InquiryRow = {
   channel: InquiryChannel;
   status: InquiryStatus;
   customerName: string;
-  customerEmail: string;
+  customerEmail: string | null;
   customerPhone: string | null;
+  topic: string | null;
   assignedAgent: { id: string; name: string } | null;
   escalatedAt: string | null;
   autoResolvedAt: string | null;
@@ -111,7 +112,7 @@ export default function InquiriesTable({
                     />
                   )}
                 </div>
-                <div className="text-muted-foreground">{inquiry.customerEmail}</div>
+                <div className="text-muted-foreground">{inquiry.customerEmail ?? "—"}</div>
               </TableCell>
               <TableCell>
                 <InquiryStatusBadge status={inquiry.status} />

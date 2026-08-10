@@ -62,6 +62,15 @@ describe("SiteHeader", () => {
     ).toBe(true);
   });
 
+  it("no longer shows a Track link anywhere — order/message tracking is deep-link only now", async () => {
+    renderHeader();
+    expect(screen.queryByRole("link", { name: "Track" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+    await screen.findByRole("dialog");
+    expect(screen.queryByRole("link", { name: "Track" })).not.toBeInTheDocument();
+  });
+
   it("keeps the mobile sheet open after toggling the theme", async () => {
     renderHeader();
     await userEvent.click(screen.getByRole("button", { name: "Menu" }));

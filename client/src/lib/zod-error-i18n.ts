@@ -2,6 +2,8 @@ import type { TFunction } from "i18next";
 import {
   ORDER_LOOKUP_CODE_ERROR,
   ORDER_LOOKUP_PHONE_ERROR,
+  ORDER_LOOKUP_CODE_LENGTH_ERROR,
+  ORDER_LOOKUP_PHONE_FORMAT_ERROR,
   ORDER_CUSTOMER_NAME_ERROR,
   ORDER_PHONE_ERROR,
   ORDER_ADDRESS_ERROR,
@@ -13,7 +15,12 @@ import {
   INQUIRY_PHONE_ERROR,
   INQUIRY_MESSAGE_ERROR,
   INQUIRY_MESSAGE_MAX_ERROR,
+  CONTACT_MESSAGE_MAX_ERROR,
+  INQUIRY_TOPIC_ERROR,
   INQUIRY_LOOKUP_CODE_ERROR,
+  INQUIRY_LOOKUP_PHONE_ERROR,
+  INQUIRY_LOOKUP_CODE_LENGTH_ERROR,
+  INQUIRY_LOOKUP_PHONE_FORMAT_ERROR,
   CUSTOMER_NAME_MIN_ERROR,
   CUSTOMER_EMAIL_ERROR,
   CUSTOMER_PASSWORD_ERROR,
@@ -37,6 +44,14 @@ import {
 const ZOD_MESSAGE_TO_I18N_KEY: Record<string, string> = Object.fromEntries([
   [ORDER_LOOKUP_CODE_ERROR, "validation.orderLookupCode"],
   [ORDER_LOOKUP_PHONE_ERROR, "validation.orderLookupPhone"],
+  [ORDER_LOOKUP_CODE_LENGTH_ERROR, "validation.orderLookupCodeLength"],
+  // Shared by both order and inquiry lookup — the Track page's phone field
+  // is common to both modes, so both schemas' phone-format text is
+  // identical (see order.ts/inquiry.ts's own LOOKUP_PHONE_FORMAT_ERROR).
+  [ORDER_LOOKUP_PHONE_FORMAT_ERROR, "validation.lookupPhoneFormat"],
+  [INQUIRY_LOOKUP_PHONE_FORMAT_ERROR, "validation.lookupPhoneFormat"],
+  [INQUIRY_LOOKUP_PHONE_ERROR, "validation.orderLookupPhone"],
+  [INQUIRY_LOOKUP_CODE_LENGTH_ERROR, "validation.inquiryLookupCodeLength"],
   [ORDER_CUSTOMER_NAME_ERROR, "validation.customerName"],
   [ORDER_PHONE_ERROR, "validation.phone"],
   [ORDER_ADDRESS_ERROR, "validation.address"],
@@ -48,6 +63,8 @@ const ZOD_MESSAGE_TO_I18N_KEY: Record<string, string> = Object.fromEntries([
   [INQUIRY_PHONE_ERROR, "validation.phone"],
   [INQUIRY_MESSAGE_ERROR, "validation.message"],
   [INQUIRY_MESSAGE_MAX_ERROR, "validation.messageMax"],
+  [CONTACT_MESSAGE_MAX_ERROR, "validation.contactMessageMax"],
+  [INQUIRY_TOPIC_ERROR, "validation.topic"],
   [INQUIRY_LOOKUP_CODE_ERROR, "validation.inquiryLookupCode"],
   [CUSTOMER_NAME_MIN_ERROR, "validation.accountName"],
   [CUSTOMER_EMAIL_ERROR, "validation.email"],

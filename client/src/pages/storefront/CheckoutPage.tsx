@@ -35,10 +35,25 @@ export type PlacedOrder = {
   code: string;
   status: string;
   fulfillmentType: FulfillmentType;
+  // Optional — always present in a real API response (serializePublicOrder,
+  // server/src/routes/orders.ts), but left optional here rather than
+  // required so pre-existing test fixtures built before these fields
+  // existed don't need updating just to satisfy the type.
+  customerName?: string;
+  address?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   subtotal: number;
   deliveryFee: number;
   total: number;
-  items: { productName: { en: string } & Record<string, string>; unitPrice: number; quantity: number }[];
+  items: {
+    productName: { en: string } & Record<string, string>;
+    unitPrice: number;
+    quantity: number;
+    // Optional for the same reason as customerName/address above — always
+    // present in a real response, but pre-existing test fixtures lack it.
+    imageUrl?: string | null;
+  }[];
 };
 
 export default function CheckoutPage() {

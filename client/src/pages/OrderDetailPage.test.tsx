@@ -134,6 +134,29 @@ describe("OrderDetailPage", () => {
     expect(await screen.findByText("Out for delivery")).toBeInTheDocument();
   });
 
+  it("does not show the delay notice button for a just-received order", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { order: order() } });
+    renderPage();
+
+    await screen.findByText("Received");
+    expect(
+      screen.queryByRole("button", { name: "Notify customer of delay" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("sends a delayed notice for a confirmed order without changing its status", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { order: order({ status: OrderStatus.CONFIRMED }) } });
+    mockedPost.mockResolvedValueOnce({ data: { sent: true } });
+    renderPage();
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Notify customer of delay" }),
+    );
+
+    expect(mockedPost).toHaveBeenCalledWith("/api/orders/o1/notify-delayed");
+    expect(await screen.findByText("Delayed notice sent.")).toBeInTheDocument();
+  });
+
   it("completes a confirmed pickup order", async () => {
     mockedGet
       .mockResolvedValueOnce({

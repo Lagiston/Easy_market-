@@ -331,8 +331,19 @@ model Inquiry {
   channel         InquiryChannel @default(WEBSITE)
   status          InquiryStatus  @default(OPEN)
   customerName    String
-  customerEmail   String
+  // Nullable — the contact form now requires a phone but only optionally
+  // collects email (this market treats a callable number as more reliable
+  // than an email address). Older rows and every guest lookup by email
+  // still work; a guest who didn't give an email just can't use that
+  // lookup path (see inquiryLookupSchema below), a known, accepted gap.
+  customerEmail   String?
   customerPhone   String?
+  // Customer-picked topic from the storefront contact form's "What's this
+  // about?" select (core's INQUIRY_TOPICS) — plain string, not a Prisma
+  // enum, same precedent as `language`/`aiTopic` below. Nullable since
+  // inquiries created before this field existed have no value, and the
+  // guest follow-up route (addMessageSchema) never sets it.
+  topic           String?
   // Bare code from core's LANGUAGES ("en"/"ar"/"sw"/"fr") — the customer's UI
   // language at submission time, not a Prisma enum (matches how LocalizedName
   // treats language as plain string keys rather than DB-enum-backed).

@@ -9,6 +9,7 @@ import {
   addMessageSchema,
   createInquirySchema,
   InquiryStatus,
+  InquiryTopic,
   MessageSender,
   type AddMessageFormInput,
   type CreateInquiryFormInput,
@@ -39,11 +40,28 @@ type Thread = {
 
 const POLL_INTERVAL_MS = 4000;
 
+// Lets other pages (e.g. TrackPage's "Chat with us" fallback) open the
+// widget without a real client-side dependency between unrelated pages —
+// same "small, explicit escape hatch" spirit as this codebase's other
+// window-scoped globals. Declared here since ChatWidget is the sole owner.
+declare global {
+  interface Window {
+    HalatuChat?: { open: () => void };
+  }
+}
+
 export default function ChatWidget() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [inquiryId, setInquiryId] = useState<string | null>(() => getStoredInquiryId());
+
+  useEffect(() => {
+    window.HalatuChat = { open: () => setOpen(true) };
+    return () => {
+      delete window.HalatuChat;
+    };
+  }, []);
 
   const threadQuery = useQuery({
     queryKey: ["inquiry-thread", inquiryId],
@@ -68,7 +86,16 @@ export default function ChatWidget() {
 
   const startForm = useForm<CreateInquiryFormInput>({
     resolver: zodResolver(createInquirySchema),
-    defaultValues: { customerName: "", customerEmail: "", customerPhone: "", message: "" },
+    // The chat widget has no topic selector of its own (that's a contact-page-
+    // only field) — OTHER is submitted silently so this shared schema's now-
+    // required `topic` doesn't block chat-started inquiries.
+    defaultValues: {
+      topic: InquiryTopic.OTHER,
+      customerName: "",
+      customerEmail: "",
+      customerPhone: "",
+      message: "",
+    },
   });
 
   const startMutation = useMutation({
