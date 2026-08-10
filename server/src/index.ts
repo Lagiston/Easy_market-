@@ -33,6 +33,7 @@ import { aiRouter } from "./routes/ai";
 import { startQueue } from "./lib/queue";
 import { registerProductClassificationWorker } from "./lib/product-classification-job";
 import { registerProductStockSnapshotWorker } from "./lib/product-stock-snapshot-job";
+import { registerSmsLogRetentionWorker } from "./lib/sms-log-retention-job";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -111,6 +112,7 @@ Sentry.setupExpressErrorHandler(app);
 await startQueue();
 await registerProductClassificationWorker();
 await registerProductStockSnapshotWorker();
+await registerSmsLogRetentionWorker();
 
 app.listen(port, () => {
   console.log(`Halatu server listening on http://localhost:${port}`);

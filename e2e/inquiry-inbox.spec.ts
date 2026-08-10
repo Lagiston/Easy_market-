@@ -13,6 +13,26 @@ async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
   }
 }
 
+// The staff-reply route's SMS is fire-and-forget (server/src/routes/inquiries.ts's
+// fireInquiryReplySms), so the SmsLog row may not exist yet the instant the
+// reply's HTTP response returns — poll briefly rather than asserting immediately.
+async function pollInquirySmsLogRow(
+  inquiryId: string,
+  { timeoutMs = 5000, intervalMs = 200 } = {},
+): Promise<{ to: string; status: string } | null> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const found = await withDb((client) =>
+      client.query('SELECT "to", status FROM "sms_log" WHERE "inquiryId" = $1 LIMIT 1', [
+        inquiryId,
+      ]),
+    );
+    if (found.rows.length > 0) return found.rows[0];
+    if (Date.now() >= deadline) return null;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
 // Hard-deletes the inquiry (its messages cascade), matching e2e/inquiries.spec.ts's
 // cleanup style — no future entity references an Inquiry.
 async function cleanupInquiry(email: string) {
@@ -93,8 +113,28 @@ test.describe("Inquiry inbox (staff)", () => {
       await replyBox.fill(replyMessage);
       await page.getByRole("button", { name: "Send reply" }).click();
 
-      await expect(page.getByText(replyMessage)).toBeVisible();
+      // Exact match: once the SMS notifications section (below) also renders
+      // a "Halatu: reply to <code>: <replyMessage>" row, a substring match on
+      // just replyMessage becomes ambiguous between the thread bubble and
+      // that SMS log entry's message preview.
+      await expect(page.getByText(replyMessage, { exact: true })).toBeVisible();
       await expect(replyBox).toHaveValue("");
+
+      // The reply also fires an SMS notification (fire-and-forget) — verify
+      // the log row lands in the DB, normalized to E.164 from the seeded
+      // "+255700123456" (already E.164 here, so this also confirms toE164()
+      // is a no-op on an already-normalized number), then that the detail
+      // page's SMS notifications section reflects it once reloaded/refetched.
+      const smsRow = await pollInquirySmsLogRow(inquiry.id);
+      expect(smsRow).not.toBeNull();
+      expect(smsRow!.status).toBe("SKIPPED");
+      expect(smsRow!.to).toBe("+255700123456");
+
+      await page.reload();
+      await expect(page.getByRole("heading", { name: "SMS notifications" })).toBeVisible();
+      await expect(
+        page.getByText("Not sent (no SMS provider configured)").first(),
+      ).toBeVisible();
 
       await page.getByRole("button", { name: "Resolve" }).click();
       await expect(page.getByText("Resolved", { exact: true })).toBeVisible();

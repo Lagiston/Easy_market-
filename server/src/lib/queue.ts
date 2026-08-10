@@ -7,6 +7,7 @@ import { requiredEnv } from "./env";
 // schema, so it's unaffected by the tsvector migration-drift gotcha).
 export const CLASSIFY_PRODUCT_QUEUE = "classify-product";
 export const PRODUCT_STOCK_SNAPSHOT_QUEUE = "product-stock-snapshot";
+export const SMS_LOG_RETENTION_QUEUE = "sms-log-retention";
 
 export const boss = new PgBoss({ connectionString: requiredEnv("DATABASE_URL") });
 
@@ -26,6 +27,14 @@ export async function startQueue() {
     retryBackoff: true,
     retryDelay: 5,
   });
+  await boss.createQueue(SMS_LOG_RETENTION_QUEUE, {
+    retryLimit: 2,
+    retryBackoff: true,
+    retryDelay: 5,
+  });
   // Daily snapshot of the sold-out product count, just after midnight UTC.
   await boss.schedule(PRODUCT_STOCK_SNAPSHOT_QUEUE, "5 0 * * *", {}, { tz: "UTC" });
+  // Daily SmsLog prune, offset from the snapshot job above so they don't
+  // contend for the same moment.
+  await boss.schedule(SMS_LOG_RETENTION_QUEUE, "15 0 * * *", {}, { tz: "UTC" });
 }

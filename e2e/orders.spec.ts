@@ -32,10 +32,12 @@ async function seedReceivedOrder({
   stockAfterOrder,
   quantity,
   fulfillmentType = "PICKUP",
+  customerPhone = "+255700999888",
 }: {
   stockAfterOrder: number;
   quantity: number;
   fulfillmentType?: "PICKUP" | "DELIVERY";
+  customerPhone?: string;
 }) {
   return withDb(async (client) => {
     const category = await client.query(
@@ -57,13 +59,14 @@ async function seedReceivedOrder({
     await client.query(
       `INSERT INTO "order"
          (id, code, status, "fulfillmentType", "customerName", "customerPhone", address, "deliveryFee", "updatedAt")
-       VALUES ($1, $2, 'RECEIVED', $3, 'E2E Customer', '+255700999888', $4, $5, now())`,
+       VALUES ($1, $2, 'RECEIVED', $3, 'E2E Customer', $6, $4, $5, now())`,
       [
         orderId,
         code,
         fulfillmentType,
         fulfillmentType === "DELIVERY" ? "123 E2E Street" : null,
         fulfillmentType === "DELIVERY" ? 50 : 0,
+        customerPhone,
       ],
     );
     await client.query(
@@ -73,6 +76,26 @@ async function seedReceivedOrder({
     );
     return { orderId, code, productId };
   });
+}
+
+// sendSms() is fire-and-forget from most call sites (confirm/out-for-delivery/
+// complete), so the SmsLog row may not exist yet the instant the HTTP
+// response returns — poll briefly rather than asserting immediately.
+async function pollSmsLogRow(
+  where: { orderId?: string; inquiryId?: string },
+  { timeoutMs = 5000, intervalMs = 200 } = {},
+): Promise<{ to: string; status: string } | null> {
+  const column = where.orderId ? "orderId" : "inquiryId";
+  const value = where.orderId ?? where.inquiryId;
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const found = await withDb((client) =>
+      client.query(`SELECT "to", status FROM "sms_log" WHERE "${column}" = $1 LIMIT 1`, [value]),
+    );
+    if (found.rows.length > 0) return found.rows[0];
+    if (Date.now() >= deadline) return null;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
 }
 
 // Order first (its items reference the product and cascade with it), then the product.
@@ -217,6 +240,60 @@ test.describe("Notify customer of delay", () => {
         client.query('SELECT status FROM "order" WHERE id = $1', [seeded.orderId]),
       );
       expect(persisted.rows[0].status).toBe("CONFIRMED");
+
+      // notify-delayed awaits sendSms server-side (unlike confirm's own
+      // fire-and-forget SMS), so the log row is guaranteed to exist by the
+      // time the "Delayed notice sent." success text renders — no polling
+      // needed here. The detail page's SMS section isn't invalidated by this
+      // mutation though, so a reload is required to see it.
+      await page.reload();
+      await expect(page.getByRole("heading", { name: "SMS notifications" })).toBeVisible();
+      await expect(
+        page.getByText("Not sent (no SMS provider configured)").first(),
+      ).toBeVisible();
+    } finally {
+      await cleanupOrder(seeded);
+    }
+  });
+});
+
+test.describe("SMS notification logging", () => {
+  test("confirming an order logs an SmsLog row with the phone normalized to E.164, shown as unsent (no SMS provider configured)", async ({
+    page,
+  }) => {
+    // Local-format phone (no country code) — checks that sendSms's toE164()
+    // normalization is actually what gets persisted, not the raw input.
+    const seeded = await seedReceivedOrder({
+      stockAfterOrder: 4,
+      quantity: 1,
+      customerPhone: "0712345678",
+    });
+
+    try {
+      await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
+      await page.goto(`/admin/orders/${seeded.orderId}`);
+
+      await expect(page.getByText("Received", { exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Confirm order" }).click();
+      await expect(page.getByText("Confirmed", { exact: true })).toBeVisible();
+
+      // The confirmation SMS is fire-and-forget server-side, so poll the DB
+      // rather than asserting the row exists the instant the UI updates.
+      const row = await pollSmsLogRow({ orderId: seeded.orderId });
+      expect(row).not.toBeNull();
+      expect(row!.status).toBe("SKIPPED");
+      // "0712345678" -> "+255712345678": leading 0 replaced with the +255
+      // country code, per toE164()'s local-number branch.
+      expect(row!.to).toBe("+255712345678");
+
+      // Confirmed a real DB write; now confirm the UI (a fresh detail-page
+      // load, since the invalidated ["orders", id] query may have refetched
+      // before the fire-and-forget write above landed) reflects it too.
+      await page.reload();
+      await expect(page.getByRole("heading", { name: "SMS notifications" })).toBeVisible();
+      await expect(
+        page.getByText("Not sent (no SMS provider configured)").first(),
+      ).toBeVisible();
     } finally {
       await cleanupOrder(seeded);
     }
