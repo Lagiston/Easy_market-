@@ -115,7 +115,7 @@ describe("storefront ProductDetailPage", () => {
     expect(await screen.findByText("Rice 5kg")).toBeInTheDocument();
     expect(mockedGet).toHaveBeenCalledWith("/api/storefront/products/p1");
     expect(screen.getByText("Groceries")).toBeInTheDocument();
-    expect(screen.getByText("1500")).toBeInTheDocument();
+    expect(screen.getByText("1,500")).toBeInTheDocument();
     expect(screen.getByText("Long grain rice")).toBeInTheDocument();
     // In stock → no out-of-stock badge
     expect(screen.queryByText("Out of stock")).not.toBeInTheDocument();

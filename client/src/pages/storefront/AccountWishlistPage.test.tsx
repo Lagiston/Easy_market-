@@ -76,7 +76,7 @@ describe("AccountWishlistPage", () => {
     renderPage();
 
     expect(await screen.findByText("Rice 5kg")).toBeInTheDocument();
-    expect(screen.getByText("1500")).toBeInTheDocument();
+    expect(screen.getByText("1,500")).toBeInTheDocument();
     expect(mockedAxios.get).toHaveBeenCalledWith("/api/customer/wishlist");
   });
 
@@ -257,8 +257,8 @@ describe("AccountWishlistPage", () => {
     expect(
       screen.getByText("1 of your wishlisted items dropped in price!"),
     ).toBeInTheDocument();
-    expect(screen.getByText("1500")).toHaveClass("line-through");
-    expect(screen.getByText("1200")).toBeInTheDocument();
+    expect(screen.getByText("1,500")).toHaveClass("line-through");
+    expect(screen.getByText("1,200")).toBeInTheDocument();
   });
 
   it("pluralizes the price-drop banner for multiple items", async () => {
@@ -290,6 +290,6 @@ describe("AccountWishlistPage", () => {
     await screen.findByText("Rice 5kg");
     expect(screen.queryByText("Price drop")).not.toBeInTheDocument();
     expect(screen.queryByText(/dropped in price!/)).not.toBeInTheDocument();
-    expect(screen.getByText("1500")).not.toHaveClass("line-through");
+    expect(screen.getByText("1,500")).not.toHaveClass("line-through");
   });
 });

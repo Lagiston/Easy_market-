@@ -109,7 +109,7 @@ describe("storefront TrackPage", () => {
     expect(screen.getByText("Out for delivery")).toBeInTheDocument();
     expect(screen.getByText("Delivered")).toBeInTheDocument();
     expect(screen.getByText("Rice 5kg")).toBeInTheDocument();
-    expect(screen.getByText("3200")).toBeInTheDocument();
+    expect(screen.getByText("3,200")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Track something else" })).toBeInTheDocument();
   });
 

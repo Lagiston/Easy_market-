@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { CircleCheck } from "lucide-react";
 import { FulfillmentType } from "@es-market/core";
 import { localize } from "@/lib/localize";
+import { Money } from "@/components/Money";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { PlacedOrder } from "./CheckoutPage";
@@ -51,24 +52,30 @@ export default function OrderConfirmationPage() {
                 <span className="min-w-0 truncate">
                   {localize(item.productName, language)} × {item.quantity}
                 </span>
-                <span className="tabular-nums">{item.unitPrice * item.quantity}</span>
+                <span className="tabular-nums">
+                  <Money amount={item.unitPrice * item.quantity} />
+                </span>
               </li>
             ))}
           </ul>
           <div className="space-y-1 border-t pt-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-              <span className="tabular-nums">{order.subtotal}</span>
+              <span className="tabular-nums">
+                <Money amount={order.subtotal} />
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t("checkout.deliveryFee")}</span>
               <span className="tabular-nums">
-                {order.deliveryFee === 0 ? t("checkout.free") : order.deliveryFee}
+                {order.deliveryFee === 0 ? t("checkout.free") : <Money amount={order.deliveryFee} />}
               </span>
             </div>
             <div className="flex justify-between pt-1 text-base font-semibold">
               <span>{t("checkout.total")}</span>
-              <span className="tabular-nums">{order.total}</span>
+              <span className="tabular-nums">
+                <Money amount={order.total} />
+              </span>
             </div>
           </div>
         </CardContent>

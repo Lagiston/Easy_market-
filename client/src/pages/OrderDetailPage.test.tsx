@@ -67,8 +67,8 @@ describe("OrderDetailPage", () => {
     expect(screen.getByText("Received")).toBeInTheDocument();
     expect(screen.getByText("Rice 5kg")).toBeInTheDocument();
     // 3800 is both the line total and the subtotal.
-    expect(screen.getAllByText("3800")).toHaveLength(2);
-    expect(screen.getByText("4000")).toBeInTheDocument();
+    expect(screen.getAllByText("3,800")).toHaveLength(2);
+    expect(screen.getByText("4,000")).toBeInTheDocument();
   });
 
   it("shows SMS notification history when the detail route includes it", async () => {
@@ -79,7 +79,7 @@ describe("OrderDetailPage", () => {
             {
               id: "sms1",
               to: "+255712345678",
-              message: "Halatu: order ABCD2345 confirmed. Total KSh 4000, pay on delivery.",
+              message: "Halatu: order ABCD2345 confirmed. Total TSh 4000, pay on delivery.",
               status: "SENT",
               error: null,
               createdAt: "2026-07-18T13:00:00.000Z",
@@ -93,7 +93,7 @@ describe("OrderDetailPage", () => {
     await screen.findByText("ABCD2345");
     expect(screen.getByText("SMS notifications")).toBeInTheDocument();
     expect(
-      screen.getByText("Halatu: order ABCD2345 confirmed. Total KSh 4000, pay on delivery."),
+      screen.getByText("Halatu: order ABCD2345 confirmed. Total TSh 4000, pay on delivery."),
     ).toBeInTheDocument();
     expect(screen.getByText("Sent")).toBeInTheDocument();
   });

@@ -168,7 +168,7 @@ describe("storefront ProductsPage", () => {
     expect(screen.getByText("Orange Juice")).toBeInTheDocument();
     // "Groceries" appears twice — once as a category chip, once on the card
     expect(screen.getAllByText("Groceries").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("1500")).toBeInTheDocument();
+    expect(screen.getByText("1,500")).toBeInTheDocument();
     // Only the zero-stock product gets the badge
     expect(screen.getAllByText("Out of stock")).toHaveLength(1);
     expect(lastProductsParams()).toEqual({ sort: "newest", page: 1 });
@@ -483,7 +483,7 @@ describe("storefront ProductsPage", () => {
 
     expect(screen.getByText("2 filters")).toBeInTheDocument();
     expect(screen.getByText("rice")).toBeInTheDocument();
-    expect(screen.getByText("KSh 100 – 2000")).toBeInTheDocument();
+    expect(screen.getByText("TSh 100 – 2000")).toBeInTheDocument();
 
     // Removing the search pill clears only the search filter
     await user.click(screen.getByRole("button", { name: "Remove filter: rice" }));

@@ -39,10 +39,10 @@ describe("storefront OrderConfirmationPage", () => {
 
     expect(screen.getByText("ABCD2345")).toBeInTheDocument();
     expect(screen.getByText("Rice 5kg × 2")).toBeInTheDocument();
-    expect(screen.getByText("3000")).toBeInTheDocument(); // 1500×2 line total
-    expect(screen.getByText("3800")).toBeInTheDocument();
+    expect(screen.getByText("3,000")).toBeInTheDocument(); // 1500×2 line total
+    expect(screen.getByText("3,800")).toBeInTheDocument();
     expect(screen.getByText("200")).toBeInTheDocument();
-    expect(screen.getByText("4000")).toBeInTheDocument();
+    expect(screen.getByText("4,000")).toBeInTheDocument();
     expect(
       screen.getByText("We'll call you shortly to confirm your order."),
     ).toBeInTheDocument();

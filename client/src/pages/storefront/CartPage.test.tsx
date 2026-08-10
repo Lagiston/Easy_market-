@@ -70,11 +70,11 @@ describe("storefront CartPage", () => {
     );
     expect(screen.getByText("Sunflower Oil")).toBeInTheDocument();
     // Line totals: 1500×2 and 800×3
-    expect(screen.getByText("3000")).toBeInTheDocument();
-    expect(screen.getByText("2400")).toBeInTheDocument();
+    expect(screen.getByText("3,000")).toBeInTheDocument();
+    expect(screen.getByText("2,400")).toBeInTheDocument();
     // Subtotal: 3000 + 2400
     expect(screen.getByText("Subtotal")).toBeInTheDocument();
-    expect(screen.getByText("5400")).toBeInTheDocument();
+    expect(screen.getByText("5,400")).toBeInTheDocument();
   });
 
   it("increments the quantity and persists it", async () => {
@@ -85,7 +85,7 @@ describe("storefront CartPage", () => {
       screen.getByRole("button", { name: "Increase quantity of Rice 5kg" }),
     );
 
-    expect(screen.getByText("4500")).toBeInTheDocument(); // 1500×3
+    expect(screen.getByText("4,500")).toBeInTheDocument(); // 1500×3
     expect(storedCart().find((item) => item.productId === "p1")?.quantity).toBe(3);
   });
 

@@ -21,6 +21,11 @@ type PhoneInputProps = {
   onBlur?: () => void;
   "aria-invalid"?: boolean;
   autoComplete?: string;
+  // Let a permanently-dark page (e.g. CheckoutPage.tsx) override the default
+  // widths/styling on the country Select and the number Input, same override
+  // convention as Money's prefixClassName.
+  selectClassName?: string;
+  inputClassName?: string;
 };
 
 // Composes a country dial-code Select with a plain local-number Input,
@@ -33,6 +38,8 @@ export function PhoneInput({
   onBlur,
   "aria-invalid": ariaInvalid,
   autoComplete,
+  selectClassName,
+  inputClassName,
 }: PhoneInputProps) {
   const { t } = useTranslation();
   const { countryCode, localNumber } = value
@@ -53,7 +60,7 @@ export function PhoneInput({
         <SelectTrigger
           id={`${id}-country`}
           aria-label={t("checkout.phoneCountry")}
-          className="shrink-0"
+          className={selectClassName ?? "shrink-0"}
         >
           <SelectValue>
             {() => findPhoneCountry(countryCode).dialCode}
@@ -75,7 +82,7 @@ export function PhoneInput({
         value={localNumber}
         onChange={(event) => combine(countryCode, event.target.value.replace(/[^0-9\s-]/g, ""))}
         onBlur={onBlur}
-        className="flex-1"
+        className={inputClassName ?? "flex-1"}
       />
     </div>
   );

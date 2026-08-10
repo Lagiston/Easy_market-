@@ -30,6 +30,7 @@ import { translateFieldError } from "@/lib/zod-error-i18n";
 import { formatPhoneDisplay } from "@/lib/contact-links";
 import { setStoredInquiryId } from "@/lib/inquiry-session";
 import { cn } from "@/lib/utils";
+import { Money } from "@/components/Money";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,6 +116,12 @@ const MESSAGE_STATUS_LABEL_KEYS: Record<InquiryStatus, string> = {
 
 const CONTROL_CLASS =
   "h-12 rounded-[13px] border-white/[0.07] bg-white/[0.04] text-[15px] focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]";
+
+// This page forces a permanently-dark shell regardless of the site's actual
+// light/dark toggle — Money's default text-muted-foreground prefix would
+// resolve to a light-mode color here, so every amount on this page passes
+// this literal override instead.
+const MONEY_PREFIX_CLASS = "text-[0.66em] font-semibold text-neutral-500";
 
 type TimelineState = "completed" | "current" | "upcoming";
 
@@ -566,7 +573,7 @@ function OrderResultPanel({
                 </p>
               </div>
               <p className="shrink-0 text-sm font-semibold tabular-nums">
-                {item.unitPrice * item.quantity}
+                <Money amount={item.unitPrice * item.quantity} prefixClassName={MONEY_PREFIX_CLASS} />
               </p>
             </li>
           ))}
@@ -574,17 +581,25 @@ function OrderResultPanel({
         <div className="space-y-1.5 border-t border-white/[0.07] pt-4 text-sm">
           <div className="flex justify-between text-neutral-400">
             <span>{t("cart.subtotal")}</span>
-            <span className="tabular-nums">{order.subtotal}</span>
+            <span className="tabular-nums">
+              <Money amount={order.subtotal} prefixClassName={MONEY_PREFIX_CLASS} />
+            </span>
           </div>
           <div className="flex justify-between text-neutral-400">
             <span>{t("checkout.deliveryFee")}</span>
             <span className="tabular-nums">
-              {order.deliveryFee === 0 ? t("checkout.free") : order.deliveryFee}
+              {order.deliveryFee === 0 ? (
+                t("checkout.free")
+              ) : (
+                <Money amount={order.deliveryFee} prefixClassName={MONEY_PREFIX_CLASS} />
+              )}
             </span>
           </div>
           <div className="flex justify-between pt-1 text-[17px] font-extrabold text-white">
             <span>{t("checkout.total")}</span>
-            <span className="tabular-nums">{order.total}</span>
+            <span className="tabular-nums">
+              <Money amount={order.total} prefixClassName={MONEY_PREFIX_CLASS} />
+            </span>
           </div>
         </div>
       </div>

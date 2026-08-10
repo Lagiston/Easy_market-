@@ -116,10 +116,20 @@ export type LinkGuestOrdersInput = z.infer<typeof linkGuestOrdersSchema>;
 
 export const CUSTOMER_NAME_ERROR = "Name must be at least 2 characters";
 export const PHONE_ERROR = "A valid phone number is required";
-export const ADDRESS_ERROR = "Address is required for delivery";
+export const AREA_ERROR = "Area / ward is required for delivery";
+export const LANDMARK_ERROR = "Nearest landmark is required for delivery";
+export const DELIVERY_NOTES_MAX = 500;
 export const FULFILLMENT_ERROR = "Choose delivery or pickup";
 export const ITEMS_ERROR = "Order must contain at least one item";
 export const QUANTITY_ERROR = "Quantity must be a positive whole number";
+
+const optionalTextField = (max?: number) =>
+  z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    (max ? z.string().trim().max(max) : z.string().trim())
+      .transform(sanitizeText)
+      .optional(),
+  );
 
 const checkoutFieldsSchema = z.object({
   customerName: z
@@ -134,29 +144,42 @@ const checkoutFieldsSchema = z.object({
     .trim()
     .regex(/^\+?[0-9][0-9\s-]{6,17}$/, PHONE_ERROR),
   fulfillmentType: z.enum(FULFILLMENT_TYPES, FULFILLMENT_ERROR),
-  address: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z
-      .string()
-      .trim()
-      .min(1, ADDRESS_ERROR)
-      .transform(sanitizeText)
-      .refine((value) => value.length >= 1, ADDRESS_ERROR)
-      .optional(),
-  ),
+  area: optionalTextField(),
+  street: optionalTextField(),
+  landmark: optionalTextField(),
+  deliveryNotes: optionalTextField(DELIVERY_NOTES_MAX),
 });
 
-function requireAddressForDelivery(
-  value: { fulfillmentType: FulfillmentType; address?: string },
-  ctx: z.RefinementCtx,
-) {
-  if (value.fulfillmentType === FulfillmentType.DELIVERY && !value.address) {
-    ctx.addIssue({ code: "custom", path: ["address"], message: ADDRESS_ERROR });
+type CheckoutFields = z.infer<typeof checkoutFieldsSchema>;
+
+function requireDeliveryFields(value: CheckoutFields, ctx: z.RefinementCtx) {
+  if (value.fulfillmentType === FulfillmentType.DELIVERY) {
+    if (!value.area) ctx.addIssue({ code: "custom", path: ["area"], message: AREA_ERROR });
+    if (!value.landmark) {
+      ctx.addIssue({ code: "custom", path: ["landmark"], message: LANDMARK_ERROR });
+    }
   }
 }
 
+// Joins the structured delivery fields into the single address string the
+// rest of the app (server storage, admin order view, SMS templates) still
+// consumes — those call sites never needed to know the fields were ever
+// split, so nothing outside this file and CheckoutPage.tsx changes.
+function toAddress<T extends CheckoutFields>(value: T) {
+  const { area, street, landmark, deliveryNotes, ...rest } = value;
+  const address =
+    value.fulfillmentType === FulfillmentType.DELIVERY
+      ? `${area}${street ? `, ${street}` : ""} — Landmark: ${landmark}${
+          deliveryNotes ? `. Notes: ${deliveryNotes}` : ""
+        }`
+      : undefined;
+  return { ...rest, address };
+}
+
 // Client checkout form: the customer fields only — items come from the cart.
-export const checkoutFormSchema = checkoutFieldsSchema.superRefine(requireAddressForDelivery);
+export const checkoutFormSchema = checkoutFieldsSchema
+  .superRefine(requireDeliveryFields)
+  .transform(toAddress);
 
 // Pre-transform shape (what the form fields hold), same convention as CreateProductFormInput.
 export type CheckoutFormInput = z.input<typeof checkoutFormSchema>;
@@ -172,6 +195,7 @@ export const placeOrderSchema = checkoutFieldsSchema
       )
       .min(1, ITEMS_ERROR),
   })
-  .superRefine(requireAddressForDelivery);
+  .superRefine(requireDeliveryFields)
+  .transform(toAddress);
 
 export type PlaceOrderInput = z.infer<typeof placeOrderSchema>;

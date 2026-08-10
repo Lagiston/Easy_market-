@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import {
 import { useStoreSettings } from "@/lib/settings-context";
 import OrderStatusBadge, { CANCEL_REASON_LABELS } from "@/components/OrderStatusBadge";
 import SmsLogList from "@/components/SmsLogList";
+import { Money } from "@/components/Money";
 import CancelOrderDialog from "./CancelOrderDialog";
 import CancelUnreachableOrderDialog from "./CancelUnreachableOrderDialog";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ function extractServerError(error: unknown, fallback: string) {
     : fallback;
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-2">
       <dt className="text-sm text-muted-foreground">{label}</dt>
@@ -188,19 +189,21 @@ export default function OrderDetailPage() {
                   {order.items.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>{item.productName.en}</TableCell>
-                      <TableCell className="tabular-nums">{item.unitPrice}</TableCell>
+                      <TableCell className="tabular-nums">
+                        <Money amount={item.unitPrice} />
+                      </TableCell>
                       <TableCell className="tabular-nums">{item.quantity}</TableCell>
                       <TableCell className="text-end tabular-nums">
-                        {item.unitPrice * item.quantity}
+                        <Money amount={item.unitPrice * item.quantity} />
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
               <dl className="divide-y">
-                <DetailRow label="Subtotal" value={String(order.subtotal)} />
-                <DetailRow label="Delivery fee" value={String(order.deliveryFee)} />
-                <DetailRow label="Total" value={String(order.total)} />
+                <DetailRow label="Subtotal" value={<Money amount={order.subtotal} />} />
+                <DetailRow label="Delivery fee" value={<Money amount={order.deliveryFee} />} />
+                <DetailRow label="Total" value={<Money amount={order.total} />} />
               </dl>
             </div>
             {order.smsLogs && (

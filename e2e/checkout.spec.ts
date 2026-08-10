@@ -87,19 +87,33 @@ test.describe("Guest checkout", () => {
       await page.getByRole("link", { name: "Proceed to checkout" }).click();
       await expect(page).toHaveURL("/checkout");
 
-      // Delivery is the default, so the Address field is visible. With the
-      // seeded default settings (fee 0), delivery shows as Free.
-      await expect(page.getByLabel("Delivery or pickup")).toContainText("Delivery");
-      await page.getByLabel("Name").fill("E2E Guest");
-      await page.getByLabel("Phone", { exact: true }).fill("700123456");
-      await page.getByLabel("Address").fill("12 Market Street");
+      // Delivery is the default fulfillment card, so the area/landmark
+      // fields are visible. The test DB has no seeded Setting row, so
+      // getSettings() falls back to DEFAULT_SETTINGS (deliveryFee 0),
+      // which renders as "Free".
+      await expect(page.getByRole("button", { name: "Delivery" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await page.getByLabel(/Full name/).fill("E2E Guest");
+      await page.getByLabel(/^Phone \*$/).fill("700123456");
+      await page.getByLabel(/Area \/ ward/).fill("Kinondoni");
+      await page.getByLabel(/Nearest landmark/).fill("Opposite the Total petrol station");
 
-      // Order summary reflects DB price × quantity.
-      const summary = page.getByText("Order summary").locator("..");
-      await expect(summary.getByText(`${name} × 2`)).toBeVisible();
-      await expect(summary.getByText(String(price * 2)).first()).toBeVisible();
+      // Order summary reflects DB price × quantity — name and quantity are
+      // separate elements now, and Money renders "TSh" and the number as
+      // separate text nodes, so match the summary line's container instead
+      // of a single combined text string.
+      const summaryItem = page.getByText(name, { exact: true }).locator("..").locator("..");
+      await expect(summaryItem).toBeVisible();
+      await expect(summaryItem.getByText("2", { exact: true })).toBeVisible();
+      await expect(summaryItem.getByText((price * 2).toLocaleString())).toBeVisible();
+      // "Free" also appears in the pickup fulfillment card's price line, so
+      // scope this assertion to the delivery-fee row itself.
+      const deliveryFeeRow = page.getByText("Delivery fee", { exact: true }).locator("..");
+      await expect(deliveryFeeRow).toContainText("Free");
 
-      await page.getByRole("button", { name: "Place order" }).click();
+      await page.getByRole("button", { name: /Place order/ }).click();
 
       // Confirmation page shows an 8-character order code prominently.
       await expect(page).toHaveURL("/checkout/confirmation");
@@ -172,7 +186,7 @@ test.describe("Guest checkout", () => {
       expect(row.status).toBe("RECEIVED");
       expect(row.fulfillmentType).toBe("DELIVERY");
       expect(row.customerName).toBe("E2E Guest");
-      expect(row.address).toBe("12 Market Street");
+      expect(row.address).toBe("Kinondoni — Landmark: Opposite the Total petrol station");
       expect(row.quantity).toBe(2);
       expect(row.unitPrice).toBe(price);
       expect(row.stock).toBe(initialStock - 2);

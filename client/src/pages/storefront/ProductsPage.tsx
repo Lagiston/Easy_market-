@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Money, formatCurrencyValue } from "@/components/Money";
 import { cn } from "@/lib/utils";
 
 export type StorefrontProduct = {
@@ -755,11 +756,10 @@ export default function ProductsPage() {
 
                       <div className="mt-auto flex items-end justify-between pt-4">
                         <p className="text-xl font-extrabold tracking-tight text-foreground">
-                          <span className="me-1 text-xs font-semibold text-muted-foreground">KSh</span>
-                          <span>{currentPrice}</span>
+                          <Money amount={currentPrice} />
                           {isOnSale && (
                             <span className="ms-2 text-[13px] font-normal text-muted-foreground line-through">
-                              {product.price}
+                              {formatCurrencyValue(product.price)}
                             </span>
                           )}
                         </p>

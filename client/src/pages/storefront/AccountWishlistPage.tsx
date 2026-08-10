@@ -5,6 +5,7 @@ import { ImageOff, ShoppingCart, Trash2, Zap } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
+import { Money, formatCurrencyValue } from "@/components/Money";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -83,13 +84,20 @@ export default function AccountWishlistPage() {
                     <div className="flex items-center gap-2">
                       {product.priceDropped ? (
                         <p className="text-sm">
+                          {/* priceDropped is only true when priceAtSave !== null
+                              (server-computed), so this is safe here even though
+                              the field's own type is nullable. */}
                           <span className="text-muted-foreground line-through">
-                            {product.priceAtSave}
+                            {formatCurrencyValue(product.priceAtSave!)}
                           </span>{" "}
-                          <span className="font-medium text-primary">{product.price}</span>
+                          <span className="font-medium text-primary">
+                            <Money amount={product.price} />
+                          </span>
                         </p>
                       ) : (
-                        <p className="text-sm text-muted-foreground">{product.price}</p>
+                        <p className="text-sm text-muted-foreground">
+                          <Money amount={product.price} />
+                        </p>
                       )}
                       {product.stock === 0 ? (
                         <Badge variant="destructive">{t("products.outOfStock")}</Badge>

@@ -11,6 +11,7 @@ import {
 } from "@es-market/core";
 import { localize } from "@/lib/localize";
 import { translateFieldError } from "@/lib/zod-error-i18n";
+import { Money } from "@/components/Money";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -139,13 +140,17 @@ export default function AccountOrdersPage() {
                       <span className="min-w-0 truncate">
                         {localize(item.productName, language)} × {item.quantity}
                       </span>
-                      <span className="tabular-nums">{item.unitPrice * item.quantity}</span>
+                      <span className="tabular-nums">
+                        <Money amount={item.unitPrice * item.quantity} />
+                      </span>
                     </li>
                   ))}
                 </ul>
                 <div className="flex justify-between border-t pt-3 text-base font-semibold">
                   <span>{t("checkout.total")}</span>
-                  <span className="tabular-nums">{order.total}</span>
+                  <span className="tabular-nums">
+                    <Money amount={order.total} />
+                  </span>
                 </div>
               </CardContent>
             </Card>

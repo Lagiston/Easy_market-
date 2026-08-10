@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ImageOff, Minus, Plus, Trash2 } from "lucide-react";
 import { localize } from "@/lib/localize";
 import { useCart } from "@/lib/cart";
+import { Money } from "@/components/Money";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -56,7 +57,9 @@ export default function CartPage() {
                           {[item.size, item.color].filter(Boolean).join(" / ")}
                         </p>
                       )}
-                      <p className="text-sm text-muted-foreground">{item.price}</p>
+                      <p className="text-sm text-muted-foreground">
+                        <Money amount={item.price} />
+                      </p>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Button
@@ -84,7 +87,7 @@ export default function CartPage() {
                       </Button>
                     </div>
                     <p className="w-16 text-end font-semibold tabular-nums">
-                      {item.price * item.quantity}
+                      <Money amount={item.price * item.quantity} />
                     </p>
                     <Button
                       variant="ghost"
@@ -103,7 +106,9 @@ export default function CartPage() {
 
           <div className="flex items-center justify-between border-t pt-4">
             <p className="text-sm text-muted-foreground">{t("cart.subtotal")}</p>
-            <p className="text-xl font-semibold tabular-nums">{subtotal}</p>
+            <p className="text-xl font-semibold tabular-nums">
+              <Money amount={subtotal} />
+            </p>
           </div>
 
           <div className="flex items-center justify-between gap-4">

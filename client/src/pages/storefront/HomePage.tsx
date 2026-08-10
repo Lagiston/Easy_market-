@@ -177,7 +177,7 @@ export default function HomePage() {
             <p className="mb-[16px] w-full max-w-md rounded-[16px] bg-intro-card/35 px-[26px] py-[22px] font-work-sans text-lg leading-[1.55] font-light text-intro-ink/72 backdrop-blur-[6px]">
               <span className="font-bold text-primary">{t("home.introBodyHighlight0")}</span>
               {t("home.introBodyPart1")}
-              <span className="font-bold text-primary">{t("home.introBodyHighlight1")}</span>
+              <span className="font-bold text-brand-orange">{t("home.introBodyHighlight1")}</span>
               {t("home.introBodyPart2")}
               <span className="font-bold text-primary">{t("home.introBodyHighlight2")}</span>
               {t("home.introBodyPart3")}

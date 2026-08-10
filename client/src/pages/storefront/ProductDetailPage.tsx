@@ -24,6 +24,7 @@ import ProductVariantPicker from "@/components/storefront/ProductVariantPicker";
 import WishlistButton from "@/components/storefront/WishlistButton";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Money, formatCurrencyValue } from "@/components/Money";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { StorefrontProduct } from "./ProductsPage";
 
@@ -179,7 +180,9 @@ export default function ProductDetailPage() {
                         )}
                       </div>
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-foreground">{related.price}</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          <Money amount={related.price} />
+                        </p>
                         {related.averageRating !== null && (
                           <p
                             aria-label={`${t("reviews.averageLabel", {
@@ -371,11 +374,10 @@ function ProductDetailContent({
         <Card className={cn(GLASS_PANEL_CLASS, "space-y-4 rounded-[18px] p-5")}>
           <div className="flex flex-wrap items-end justify-between gap-2">
             <p className="text-4xl font-black tracking-[-0.035em] text-foreground">
-              <span className="me-1.5 text-sm font-semibold text-muted-foreground">KSh</span>
-              <span>{currentPrice}</span>
+              <Money amount={currentPrice} />
               {isOnSale && (
                 <span className="ms-2 text-base font-normal text-muted-foreground line-through">
-                  {product.price}
+                  {formatCurrencyValue(product.price)}
                 </span>
               )}
               {isOnSale && (

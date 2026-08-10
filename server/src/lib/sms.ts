@@ -125,7 +125,7 @@ export async function sendSms(
 // values (verified by literal length checks against the sample data below).
 
 export function buildOrderConfirmedSms({ code, total }: { code: string; total: number }): string {
-  return `Halatu: order ${code} confirmed. Total KSh ${total}, pay on delivery. Arriving in 24-48hrs. halatu.co.tz/t/${code}`;
+  return `Halatu: order ${code} confirmed. Total TSh ${total}, pay on delivery. Arriving in 24-48hrs. halatu.co.tz/t/${code}`;
 }
 
 export function buildOutForDeliverySms({
@@ -135,7 +135,7 @@ export function buildOutForDeliverySms({
   code: string;
   total: number;
 }): string {
-  return `Halatu: order ${code} is out for delivery, arriving by 18:00 today. Pay KSh ${total} on delivery. halatu.co.tz/t/${code}`;
+  return `Halatu: order ${code} is out for delivery, arriving by 18:00 today. Pay TSh ${total} on delivery. halatu.co.tz/t/${code}`;
 }
 
 // Links back to the order's own Track page rather than a fabricated

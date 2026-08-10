@@ -19,7 +19,7 @@ vi.mock("axios", async (importOriginal) => {
 const mockedGet = vi.mocked(axios.get);
 const mockedPost = vi.mocked(axios.post);
 
-// Defaults every test to a guest (no session) — the two prefill/save-address
+// Defaults every test to a guest (no session) — the prefill/save-address
 // tests below override this to a signed-in session.
 vi.mock("@/lib/customer-auth-client", () => ({
   customerAuthClient: { useSession: vi.fn(), updateUser: vi.fn() },
@@ -83,8 +83,16 @@ const buyNowItem: CartItem = {
 };
 
 async function fillCustomerFields() {
-  await userEvent.type(screen.getByLabelText("Name"), "Jane Doe");
-  await userEvent.type(screen.getByLabelText("Phone"), "712345678");
+  await userEvent.type(screen.getByLabelText(/Full name/), "Jane Doe");
+  await userEvent.type(screen.getByLabelText(/^Phone \*$/), "712345678");
+}
+
+async function fillDeliveryAddressFields() {
+  await userEvent.type(screen.getByLabelText(/Area \/ ward/), "Kinondoni");
+  await userEvent.type(
+    screen.getByLabelText(/Nearest landmark/),
+    "opposite the Total petrol station",
+  );
 }
 
 describe("storefront CheckoutPage", () => {
@@ -112,12 +120,12 @@ describe("storefront CheckoutPage", () => {
     mockSettings(200);
     renderPage();
 
-    expect(await screen.findByText("Rice 5kg × 2")).toBeInTheDocument();
-    expect(screen.getByText("Sunflower Oil × 1")).toBeInTheDocument();
+    expect(await screen.findByText("Rice 5kg")).toBeInTheDocument();
+    expect(screen.getByText("Sunflower Oil")).toBeInTheDocument();
     // Delivery is the default → the configured fee applies once settings load
-    expect(await screen.findByText("200")).toBeInTheDocument();
-    expect(screen.getByText("3800")).toBeInTheDocument();
-    expect(screen.getByText("4000")).toBeInTheDocument();
+    expect(await screen.findAllByText("200")).not.toHaveLength(0);
+    expect(screen.getAllByText("3,800").length).toBeGreaterThanOrEqual(1); // subtotal
+    expect(screen.getByText("4,000")).toBeInTheDocument(); // total due
   });
 
   it("shows free delivery when the subtotal reaches the threshold", async () => {
@@ -125,33 +133,34 @@ describe("storefront CheckoutPage", () => {
     mockSettings(200, 3000); // subtotal 3800 ≥ 3000
     renderPage();
 
-    expect(await screen.findByText("Free")).toBeInTheDocument();
-    expect(screen.getAllByText("3800").length).toBeGreaterThanOrEqual(1); // total = subtotal
+    expect(await screen.findAllByText("Free")).not.toHaveLength(0);
+    expect(screen.getAllByText("3,800").length).toBeGreaterThanOrEqual(1); // total = subtotal
   });
 
-  it("switching to pickup hides the address field and zeroes the fee", async () => {
+  it("switching to pickup hides the address fields and zeroes the fee", async () => {
     seedCart();
     mockSettings(200);
     renderPage();
 
-    expect(await screen.findByLabelText("Address")).toBeInTheDocument();
-    await userEvent.click(screen.getByLabelText("Delivery or pickup"));
-    await userEvent.click(await screen.findByRole("option", { name: "Pickup" }));
+    expect(await screen.findByLabelText(/Area \/ ward/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Store pickup" }));
 
-    expect(screen.queryByLabelText("Address")).not.toBeInTheDocument();
-    expect(await screen.findByText("Free")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Area \/ ward/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Nearest landmark/)).not.toBeInTheDocument();
+    expect(await screen.findAllByText("Free")).not.toHaveLength(0);
   });
 
-  it("shows validation errors, including a required address for delivery", async () => {
+  it("shows validation errors, including required area/landmark for delivery", async () => {
     seedCart();
     mockSettings();
     renderPage();
 
-    await userEvent.click(await screen.findByRole("button", { name: "Place order" }));
+    await userEvent.click(await screen.findByRole("button", { name: /Place order/ }));
 
     expect(await screen.findByText("Name must be at least 2 characters")).toBeInTheDocument();
     expect(screen.getByText("A valid phone number is required")).toBeInTheDocument();
-    expect(screen.getByText("Address is required for delivery")).toBeInTheDocument();
+    expect(screen.getByText("Area / ward is required for delivery")).toBeInTheDocument();
+    expect(screen.getByText("Nearest landmark is required for delivery")).toBeInTheDocument();
     expect(mockedPost).not.toHaveBeenCalled();
   });
 
@@ -164,17 +173,24 @@ describe("storefront CheckoutPage", () => {
     renderPage();
 
     await fillCustomerFields();
-    await userEvent.type(await screen.findByLabelText("Address"), "12 Main Street");
-    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await fillDeliveryAddressFields();
+    await userEvent.click(screen.getByRole("button", { name: /Place order/ }));
 
     expect(await screen.findByText("Confirmation page")).toBeInTheDocument();
+    // Posts the raw pre-transform fields (area/street/landmark), not a
+    // client-joined `address` string — placeOrderSchema computes the
+    // canonical address server-side from these same raw fields, mirroring
+    // checkoutFormSchema's own transform (see CheckoutPage.tsx's mutationFn
+    // comment). Sending an already-joined `address` instead 400ed with
+    // "Area / ward is required for delivery" every time in a real E2E run.
     expect(mockedPost).toHaveBeenCalledWith(
       "/api/storefront/orders",
       expect.objectContaining({
         customerName: "Jane Doe",
         customerPhone: "+255712345678",
         fulfillmentType: "DELIVERY",
-        address: "12 Main Street",
+        area: "Kinondoni",
+        landmark: "opposite the Total petrol station",
         items: [
           { productId: "p1", quantity: 2 },
           { productId: "p2", quantity: 1 },
@@ -182,6 +198,25 @@ describe("storefront CheckoutPage", () => {
       }),
     );
     expect(JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]")).toEqual([]);
+  });
+
+  it("places a pickup order with no address fields required", async () => {
+    seedCart();
+    mockSettings(200);
+    mockedPost.mockResolvedValueOnce({
+      data: { order: { code: "ABCD2345", items: [], subtotal: 3800, deliveryFee: 0, total: 3800 } },
+    });
+    renderPage();
+
+    await fillCustomerFields();
+    await userEvent.click(screen.getByRole("button", { name: "Store pickup" }));
+    await userEvent.click(screen.getByRole("button", { name: /Place order/ }));
+
+    expect(await screen.findByText("Confirmation page")).toBeInTheDocument();
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/api/storefront/orders",
+      expect.objectContaining({ fulfillmentType: "PICKUP", area: "", landmark: "" }),
+    );
   });
 
   it("shows the server error when placement fails", async () => {
@@ -200,8 +235,8 @@ describe("storefront CheckoutPage", () => {
     renderPage();
 
     await fillCustomerFields();
-    await userEvent.type(await screen.findByLabelText("Address"), "12 Main Street");
-    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await fillDeliveryAddressFields();
+    await userEvent.click(screen.getByRole("button", { name: /Place order/ }));
 
     expect(await screen.findByText("Not enough stock for Rice 5kg")).toBeInTheDocument();
     await waitFor(() =>
@@ -209,12 +244,38 @@ describe("storefront CheckoutPage", () => {
     );
   });
 
+  it("changes an item's quantity and removes an item from the summary", async () => {
+    seedCart();
+    mockSettings(200);
+    renderPage();
+
+    await screen.findByText("Rice 5kg");
+    await userEvent.click(screen.getByRole("button", { name: "Increase quantity of Rice 5kg" }));
+    // Rice line total goes from 3000 (1500×2) to 4500 (1500×3)
+    expect(await screen.findByText("4,500")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Remove Sunflower Oil from cart" }));
+    expect(screen.queryByText("Sunflower Oil")).not.toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem("es-market-cart") ?? "[]")).toHaveLength(1);
+  });
+
+  it("redirects to the cart when the last item is removed from the summary", async () => {
+    seedCart([cartItems[0]]);
+    mockSettings(200);
+    renderPage();
+
+    await screen.findByText("Rice 5kg");
+    await userEvent.click(screen.getByRole("button", { name: "Remove Rice 5kg from cart" }));
+
+    expect(await screen.findByText("Cart page")).toBeInTheDocument();
+  });
+
   it("checks out a buy-now item passed via location state, with an empty cart", async () => {
     mockSettings(200);
     renderPage([{ pathname: "/checkout", state: { buyNowItem } }]);
 
-    expect(await screen.findByText("Cooking Oil 3L × 2")).toBeInTheDocument();
-    expect(screen.getAllByText("1560").length).toBeGreaterThanOrEqual(2); // line total and subtotal, both 780 × 2
+    expect(await screen.findByText("Cooking Oil 3L")).toBeInTheDocument();
+    expect(screen.getAllByText("1,560").length).toBeGreaterThanOrEqual(2); // line total and subtotal, both 780 × 2
     expect(screen.queryByText("Cart page")).not.toBeInTheDocument();
   });
 
@@ -227,8 +288,8 @@ describe("storefront CheckoutPage", () => {
     renderPage([{ pathname: "/checkout", state: { buyNowItem } }]);
 
     await fillCustomerFields();
-    await userEvent.type(await screen.findByLabelText("Address"), "12 Main Street");
-    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await fillDeliveryAddressFields();
+    await userEvent.click(screen.getByRole("button", { name: /Place order/ }));
 
     expect(await screen.findByText("Confirmation page")).toBeInTheDocument();
     expect(mockedPost).toHaveBeenCalledWith(
@@ -244,12 +305,12 @@ describe("storefront CheckoutPage", () => {
     mockSettings();
     renderPage();
 
-    expect(await screen.findByLabelText("Address")).toHaveValue("");
-    expect(screen.getByLabelText("Name")).toHaveValue("");
+    expect(await screen.findByLabelText(/Area \/ ward/)).toHaveValue("");
+    expect(screen.getByLabelText(/Full name/)).toHaveValue("");
     expect(screen.queryByText("Save this address to my profile")).not.toBeInTheDocument();
   });
 
-  it("prefills name, mobile, and address from a signed-in customer's saved profile", async () => {
+  it("prefills name and mobile from a signed-in customer's saved profile", async () => {
     mockedUseSession.mockReturnValue({
       data: {
         user: {
@@ -265,9 +326,11 @@ describe("storefront CheckoutPage", () => {
     mockSettings();
     renderPage();
 
-    expect(await screen.findByLabelText("Name")).toHaveValue("Jane Doe");
-    expect(screen.getByLabelText("Phone")).toHaveValue("712345678");
-    expect(screen.getByLabelText("Address")).toHaveValue("12 Main Street");
+    expect(await screen.findByLabelText(/Full name/)).toHaveValue("Jane Doe");
+    expect(screen.getByLabelText(/^Phone \*$/)).toHaveValue("712345678");
+    // No address prefill — the saved flat address string doesn't split back
+    // into area/street/landmark.
+    expect(screen.getByLabelText(/Area \/ ward/)).toHaveValue("");
   });
 
   it("does not write back to the profile when the save-address checkbox is left unchecked", async () => {
@@ -283,9 +346,9 @@ describe("storefront CheckoutPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Jane Doe");
-    await userEvent.type(screen.getByLabelText("Phone"), "712345678");
-    await userEvent.type(screen.getByLabelText("Address"), "12 Main Street");
-    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await userEvent.type(screen.getByLabelText(/^Phone \*$/), "712345678");
+    await fillDeliveryAddressFields();
+    await userEvent.click(screen.getByRole("button", { name: /Place order/ }));
 
     await screen.findByText("Confirmation page");
     expect(mockedUpdateUser).not.toHaveBeenCalled();
@@ -301,16 +364,28 @@ describe("storefront CheckoutPage", () => {
     >);
     seedCart();
     mockSettings(200);
+    // The write-back uses the server-computed `order.address` (the
+    // canonical joined string, since the mutation now posts the raw
+    // area/landmark fields rather than a client-joined address).
     mockedPost.mockResolvedValueOnce({
-      data: { order: { code: "ABCD2345", items: [], subtotal: 3800, deliveryFee: 200, total: 4000 } },
+      data: {
+        order: {
+          code: "ABCD2345",
+          items: [],
+          subtotal: 3800,
+          deliveryFee: 200,
+          total: 4000,
+          address: "Kinondoni — Landmark: opposite the Total petrol station",
+        },
+      },
     });
     renderPage();
 
     await screen.findByDisplayValue("Jane Doe");
-    await userEvent.type(screen.getByLabelText("Phone"), "712345678");
-    await userEvent.type(screen.getByLabelText("Address"), "12 Main Street");
+    await userEvent.type(screen.getByLabelText(/^Phone \*$/), "712345678");
+    await fillDeliveryAddressFields();
     await userEvent.click(screen.getByText("Save this address to my profile"));
-    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await userEvent.click(screen.getByRole("button", { name: /Place order/ }));
 
     await screen.findByText("Confirmation page");
     await waitFor(() =>
@@ -318,7 +393,7 @@ describe("storefront CheckoutPage", () => {
         expect.objectContaining({
           name: "Jane Doe",
           mobile: "+255712345678",
-          address: "12 Main Street",
+          address: "Kinondoni — Landmark: opposite the Total petrol station",
         }),
       ),
     );
@@ -341,10 +416,10 @@ describe("storefront CheckoutPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Jane Doe");
-    await userEvent.type(screen.getByLabelText("Phone"), "712345678");
-    await userEvent.type(screen.getByLabelText("Address"), "12 Main Street");
+    await userEvent.type(screen.getByLabelText(/^Phone \*$/), "712345678");
+    await fillDeliveryAddressFields();
     await userEvent.click(screen.getByText("Save this address to my profile"));
-    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await userEvent.click(screen.getByRole("button", { name: /Place order/ }));
 
     // The order itself still succeeds and navigates — the write-back failure
     // is a non-blocking, best-effort second request.
