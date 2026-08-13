@@ -14,25 +14,39 @@
     "label": "Language"
   },
   "home": {
-    "eyebrow": "Geyafa",
+    "eyebrow": "HALATU",
     "headlineLine1": "Serve looks.",
     "headlineLine2": "Head to toe.",
     "subline": "Wigs, makeup, fashion, and fine details — everything to turn heads.",
     "cta": "Shop the collection",
-    "introEyebrow": "OUR STORY",
-    "introHeadlinePart1": "Halatu is here for those who choose to ",
-    "introHeadlineHighlight": "stand out",
-    "introHeadlinePart2": " rather than blend in.",
-    "introBodyHighlight0": "Our goal",
-    "introBodyPart1": " is to make luxury feel natural and self-expression limitless, with everything you need to create a look that reflects your ",
-    "introBodyHighlight1": "unique spirit",
-    "introBodyPart2": ". From a daring new wig to a flawless makeup set, a sharp suit, or the perfect heels, you'll find it all in ",
-    "introBodyHighlight2": "one caring space",
-    "introBodyPart3": ".",
-    "introCta": "Discover the collection →",
-    "outroLinePart1": "One brand. ",
-    "outroLineHighlight": "Every category.",
-    "outroLinePart2": " Infinite ways to express yourself.",
+    "ourStory": {
+      "kicker": "OUR STORY",
+      "headlinePart1": "For people who choose to ",
+      "headlineHighlight": "stand out",
+      "headlinePart2": ", not blend in.",
+      "body": "We make luxury feel effortless and self-expression limitless — every piece of your look, in one place.",
+      "pillars": {
+        "brand": {
+          "label": "One brand",
+          "text": "Wigs, makeup, clothing, shoes, bags and jewellery under one roof."
+        },
+        "category": {
+          "label": "Every category",
+          "text": "From a daring new wig to the perfect heels — and the details between."
+        },
+        "wear": {
+          "label": "Infinite ways to wear it",
+          "text": "Dress it up, play it down, remix it for what's next."
+        }
+      }
+    },
+    "categories": {
+      "lookGoodKicker": "Look Good",
+      "viewAll": "View all",
+      "itemCount_one": "{{count}} item",
+      "itemCount_other": "{{count}} items",
+      "tileAriaLabel": "Browse {{name}}, {{count}} items"
+    },
     "features": {
       "heading": "How We Deliver",
       "subheading": "Simple, flexible ways to get your order — pay in cash either way.",
@@ -53,8 +67,9 @@
       }
     },
     "videoSection": {
-      "tagline": "Made to be seen. Made for you.",
-      "cta": "Explore the collection"
+      "headline": "The details finish the look.",
+      "subline": "Makeup, earrings, and the finishing pieces that pull an outfit together.",
+      "cta": "Explore beauty"
     }
   },
   "contact": {

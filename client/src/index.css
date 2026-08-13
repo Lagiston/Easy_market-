@@ -11,6 +11,10 @@
 @import "@fontsource/work-sans/400.css";
 @import "@fontsource/work-sans/500.css";
 @import "@fontsource/work-sans/700.css";
+@import "@fontsource/archivo/400.css";
+@import "@fontsource/archivo/600.css";
+@import "@fontsource/archivo/700.css";
+@import "@fontsource/archivo/800.css";
 
 @custom-variant dark (&:is(.dark *));
 /* Users who disable transparency (OS accessibility setting) get opaque
@@ -34,14 +38,26 @@
     --font-dm-sans: 'DM Sans Variable', sans-serif;
     --font-sora: 'Sora', sans-serif;
     --font-work-sans: 'Work Sans', sans-serif;
+    --font-archivo: 'Archivo', sans-serif;
     /* Storefront hero accent — matches the visor color in the hero photo
        sequence. Fixed (not theme-adaptive) since it's tied to the imagery,
-       not the app's light/dark palette. Shared by both hero text blocks
-       (main headline/subline and the "OUR STORY" intro block) — was
-       previously two near-identical oranges, consolidated into one token. */
+       not the app's light/dark palette. Used by the main hero headline. */
     --color-brand-orange: oklch(0.72 0.19 41);
-    --color-intro-ink: oklch(0.98 0.002 260);
-    --color-intro-card: oklch(0.2 0.01 260);
+    /* Shared "photo-overlay" tokens — consumed by ScrollFrameAnimation for
+       both the main headline overlay and the bottom-right "Our story" panel
+       (HomePage.tsx), which draw over a photo rather than a card. Raw
+       values differ between :root (light) and .dark (dark) below, so
+       every consumer of these utilities repaints automatically when the
+       existing next-themes toggle flips .dark on <html>, no separate toggle
+       or data-theme attribute needed. */
+    --color-hero-fg: var(--hero-fg);
+    --color-hero-muted: var(--hero-muted);
+    --color-hero-accent: var(--hero-accent);
+    --color-hero-brand: var(--hero-brand);
+    --color-hero-brand-hover: var(--hero-brand-hover);
+    --color-hero-brand-ink: var(--hero-brand-ink);
+    --color-hero-line: var(--hero-line);
+    --color-hero-panel: var(--hero-panel-bg);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -117,6 +133,34 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.58 0.09 152);
+
+    /* Storefront photo-overlay tokens (ScrollFrameAnimation's headline and
+       "Our story" panel overlays) — light-mode values. These draw over a
+       photo, not a card, so they're their own pair rather than reusing
+       foreground/muted-foreground, which are tuned for card surfaces. */
+    --hero-fg: #101512;
+    --hero-muted: #4d554f;
+    --hero-accent: #e0450f;
+    --hero-brand: #15803d;
+    --hero-brand-hover: #166f38;
+    --hero-brand-ink: #ffffff;
+    /* "Our story" panel surface — a fixed-alpha rgba (not a bg- /NN Tailwind
+       opacity modifier) since the two themes need different alpha values,
+       not just different hues, to stay legible over the photo. */
+    --hero-panel-bg: rgba(255, 255, 255, 0.72);
+    --hero-line: rgba(16, 21, 18, 0.12);
+    --hero-panel-shadow: 0 30px 70px -34px rgba(16, 21, 18, 0.42);
+    /* The scrim must flip lightness with the theme, not just re-tint — a
+       dark scrim on a light page (or vice versa) leaves a mismatched band
+       where the photo meets the page background. */
+    --hero-scrim-x: linear-gradient(
+        90deg,
+        rgba(246, 247, 245, 0.95) 0%,
+        rgba(246, 247, 245, 0.8) 34%,
+        rgba(246, 247, 245, 0.16) 62%,
+        transparent 80%
+    );
+    --hero-scrim-y: linear-gradient(0deg, #f6f7f5 0%, transparent 26%);
 }
 
 .dark {
@@ -154,6 +198,26 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.62 0.12 152);
+
+    /* Storefront hero overlay — dark-mode values (the original, un-themed
+       look this section always had). */
+    --hero-fg: #f2f5f2;
+    --hero-muted: #b4bab6;
+    --hero-accent: #ff5a1f;
+    --hero-brand: #22c55e;
+    --hero-brand-hover: #34d67a;
+    --hero-brand-ink: #06140b;
+    --hero-panel-bg: rgba(10, 12, 11, 0.52);
+    --hero-line: rgba(255, 255, 255, 0.1);
+    --hero-panel-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.9);
+    --hero-scrim-x: linear-gradient(
+        90deg,
+        rgba(10, 12, 11, 0.94) 0%,
+        rgba(10, 12, 11, 0.72) 34%,
+        rgba(10, 12, 11, 0.15) 62%,
+        transparent 80%
+    );
+    --hero-scrim-y: linear-gradient(0deg, #0a0c0b 0%, transparent 26%);
 }
 
 @layer base {
@@ -178,3 +242,4 @@
     margin: 0;
   }
 }
+

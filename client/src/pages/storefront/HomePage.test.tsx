@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
 import { MemoryRouter } from "react-router";
@@ -23,18 +23,39 @@ function renderPage() {
   );
 }
 
+// axios.get is now called with two distinct storefront URLs (promo-blocks,
+// categories) — a blanket mockResolvedValue can no longer serve both, so
+// each test's setup keys the response by URL.
+function mockStorefrontData({
+  promoBlocks = [],
+  categories = [],
+}: {
+  promoBlocks?: unknown[];
+  categories?: unknown[];
+} = {}) {
+  mockedGet.mockImplementation((url: string) => {
+    if (url === "/api/storefront/promo-blocks") {
+      return Promise.resolve({ data: { promoBlocks } });
+    }
+    if (url === "/api/storefront/categories") {
+      return Promise.resolve({ data: { categories } });
+    }
+    return Promise.reject(new Error(`Unexpected GET ${url}`));
+  });
+}
+
 describe("storefront HomePage", () => {
   beforeEach(async () => {
     window.localStorage.clear();
     mockedGet.mockReset();
-    mockedGet.mockResolvedValue({ data: { promoBlocks: [] } });
+    mockStorefrontData();
     await i18n.changeLanguage("en");
   });
 
   it("renders the hero with a CTA linking to the product list", async () => {
     renderPage();
 
-    expect(screen.getByText("Geyafa")).toBeInTheDocument();
+    expect(screen.getByText("HALATU")).toBeInTheDocument();
     const heading = screen.getByRole("heading", { name: /serve looks.*head to toe/i });
     expect(heading).toBeInTheDocument();
     expect(
@@ -44,6 +65,18 @@ describe("storefront HomePage", () => {
       "href",
       "/products",
     );
+  });
+
+  it("renders the 'Our story' card and its three pillars", async () => {
+    renderPage();
+
+    expect(await screen.findByText("OUR STORY")).toBeInTheDocument();
+    expect(
+      screen.getByText((_, element) => element?.textContent === "For people who choose to stand out, not blend in."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("One brand")).toBeInTheDocument();
+    expect(screen.getByText("Every category")).toBeInTheDocument();
+    expect(screen.getByText("Infinite ways to wear it")).toBeInTheDocument();
   });
 
   it("renders the three feature highlights", async () => {
@@ -71,7 +104,7 @@ describe("storefront HomePage", () => {
     );
   });
 
-  it("plays the background video muted, looped, and autoplaying, with a CTA linking to the product list", async () => {
+  it("plays the background video muted, looped, and autoplaying, with a CTA falling back to the unfiltered product list when no Makeup category exists", async () => {
     renderPage();
 
     const video = document.querySelector("video");
@@ -79,10 +112,26 @@ describe("storefront HomePage", () => {
     expect(video?.muted).toBe(true);
     expect(video?.loop).toBe(true);
     expect(video?.autoplay).toBe(true);
-    expect(screen.getByRole("link", { name: /explore the collection/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /explore beauty/i })).toHaveAttribute(
       "href",
       "/products",
     );
+  });
+
+  it("points the editorial banner CTA at the Makeup category when one exists", async () => {
+    mockStorefrontData({
+      categories: [
+        { id: "cat-makeup", name: { en: "Makeup" }, imageUrl: null, homeRow: "look_good", itemCount: 5 },
+      ],
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: /explore beauty/i })).toHaveAttribute(
+        "href",
+        "/products?category=cat-makeup",
+      );
+    });
   });
 
   it("does not autoplay the background video when prefers-reduced-motion is set", async () => {
@@ -116,7 +165,7 @@ describe("storefront HomePage", () => {
   });
 
   it("renders no promo section when there are no active promo blocks", async () => {
-    mockedGet.mockResolvedValue({ data: { promoBlocks: [] } });
+    mockStorefrontData({ promoBlocks: [] });
     renderPage();
 
     await screen.findByRole("heading", { name: /serve looks.*head to toe/i });
@@ -125,18 +174,16 @@ describe("storefront HomePage", () => {
   });
 
   it("renders active promo blocks with a headline, copy, and internal CTA link", async () => {
-    mockedGet.mockResolvedValue({
-      data: {
-        promoBlocks: [
-          {
-            id: "promo1",
-            headline: { en: "Summer Sale" },
-            copy: { en: "20% off all beverages" },
-            ctaLabel: "Shop now",
-            ctaUrl: "/products?tag=sale",
-          },
-        ],
-      },
+    mockStorefrontData({
+      promoBlocks: [
+        {
+          id: "promo1",
+          headline: { en: "Summer Sale" },
+          copy: { en: "20% off all beverages" },
+          ctaLabel: "Shop now",
+          ctaUrl: "/products?tag=sale",
+        },
+      ],
     });
     renderPage();
 
@@ -149,18 +196,16 @@ describe("storefront HomePage", () => {
   });
 
   it("renders an external CTA as a new-tab anchor", async () => {
-    mockedGet.mockResolvedValue({
-      data: {
-        promoBlocks: [
-          {
-            id: "promo1",
-            headline: { en: "Partner offer" },
-            copy: null,
-            ctaLabel: "Learn more",
-            ctaUrl: "https://example.com/offer",
-          },
-        ],
-      },
+    mockStorefrontData({
+      promoBlocks: [
+        {
+          id: "promo1",
+          headline: { en: "Partner offer" },
+          copy: null,
+          ctaLabel: "Learn more",
+          ctaUrl: "https://example.com/offer",
+        },
+      ],
     });
     renderPage();
 
@@ -171,16 +216,89 @@ describe("storefront HomePage", () => {
   });
 
   it("renders a promo block with no CTA", async () => {
-    mockedGet.mockResolvedValue({
-      data: {
-        promoBlocks: [
-          { id: "promo1", headline: { en: "Announcement" }, copy: null, ctaLabel: null, ctaUrl: null },
-        ],
-      },
+    mockStorefrontData({
+      promoBlocks: [
+        { id: "promo1", headline: { en: "Announcement" }, copy: null, ctaLabel: null, ctaUrl: null },
+      ],
     });
     renderPage();
 
     expect(await screen.findByText("Announcement")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /learn more|shop now/i })).not.toBeInTheDocument();
+  });
+
+  const LOOK_GOOD_CATEGORY = {
+    id: "cat-wigs",
+    name: { en: "Wigs" },
+    imageUrl: null,
+    homeRow: "look_good",
+    itemCount: 0,
+  };
+  const LOOK_GOOD_CATEGORY_WITH_IMAGE = {
+    id: "cat-makeup",
+    name: { en: "Makeup" },
+    imageUrl: "/api/uploads/categories/makeup.jpg",
+    homeRow: "look_good",
+    itemCount: 5,
+  };
+  const HOME_EVERYDAY_CATEGORY = {
+    id: "cat-groceries",
+    name: { en: "Groceries" },
+    imageUrl: "/api/uploads/categories/groceries.jpg",
+    homeRow: "home_everyday",
+    itemCount: 16,
+  };
+
+  it("renders no category section when there are no homepage categories", async () => {
+    mockStorefrontData({ categories: [] });
+    renderPage();
+
+    await screen.findByRole("heading", { name: /serve looks.*head to toe/i });
+    expect(screen.queryByText("Look Good")).not.toBeInTheDocument();
+  });
+
+  it("renders only the Look Good row with correct tiles, counts, and links — not Home & Everyday categories", async () => {
+    mockStorefrontData({ categories: [LOOK_GOOD_CATEGORY, HOME_EVERYDAY_CATEGORY] });
+    renderPage();
+
+    expect(await screen.findByText("Look Good")).toBeInTheDocument();
+    expect(screen.getByText("Wigs")).toBeInTheDocument();
+    expect(screen.getByText("0 items")).toBeInTheDocument();
+
+    expect(screen.getByRole("link", { name: "Browse Wigs, 0 items" })).toHaveAttribute(
+      "href",
+      "/products?category=cat-wigs",
+    );
+
+    expect(screen.queryByText("Home & Everyday")).not.toBeInTheDocument();
+    expect(screen.queryByText("Groceries")).not.toBeInTheDocument();
+  });
+
+  it("reverses the API's newest-first order back to seeded (oldest-first) order", async () => {
+    // /api/storefront/categories returns createdAt desc — Makeup (seeded
+    // after Wigs) comes first in the raw response, so the component must
+    // reverse it to render Wigs before Makeup.
+    mockStorefrontData({ categories: [LOOK_GOOD_CATEGORY_WITH_IMAGE, LOOK_GOOD_CATEGORY] });
+    renderPage();
+
+    await screen.findByText("Wigs");
+    const names = screen
+      .getAllByText(/^(Wigs|Makeup)$/)
+      .map((el) => el.textContent);
+    expect(names).toEqual(["Wigs", "Makeup"]);
+  });
+
+  it("shows a placeholder circle when a category has no image, and a photo when it does", async () => {
+    mockStorefrontData({ categories: [LOOK_GOOD_CATEGORY, LOOK_GOOD_CATEGORY_WITH_IMAGE] });
+    renderPage();
+
+    await screen.findByText("Wigs");
+    // Tile photos are decorative (alt=""), so they don't have an accessible
+    // "img" role — query the DOM directly instead. Scoped to uploaded
+    // category images specifically, since OurStorySection also renders its
+    // own (unrelated) decorative photo on this page.
+    const images = document.querySelectorAll('img[src^="/api/uploads/categories/"]');
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute("src", "/api/uploads/categories/makeup.jpg");
   });
 });

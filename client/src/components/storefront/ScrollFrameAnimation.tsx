@@ -4,27 +4,48 @@ const FRAME_COUNT = 270;
 const FRAME_PATH = (index: number) =>
   `/scroll-frames/ezgif-frame-${String(index).padStart(3, "0")}.jpg`;
 
+// "cover" fit anchored at background-position: center 22% — fills the full
+// canvas edge to edge (cropping overflow) instead of letterboxing, matching
+// CSS background-position's own formula: offset = (containerSize -
+// scaledImageSize) * focal fraction.
+const FOCAL_Y = 0.22;
+
+function coverDrawRect(cssWidth: number, cssHeight: number, imgWidth: number, imgHeight: number) {
+  const scale = Math.max(cssWidth / imgWidth, cssHeight / imgHeight);
+  const drawWidth = imgWidth * scale;
+  const drawHeight = imgHeight * scale;
+  return {
+    drawWidth,
+    drawHeight,
+    offsetX: (cssWidth - drawWidth) * 0.5,
+    offsetY: (cssHeight - drawHeight) * FOCAL_Y,
+  };
+}
+
 // One scroll-height "page" of runway per frame step, capped so the section
 // doesn't demand an absurd amount of scrolling on very tall viewports.
 const SCROLL_HEIGHT_VH = 400;
 
 // The headline overlay fades out over the first slice of scroll progress so
-// the frames get full attention once real scrubbing kicks in. The end-side
-// overlay only starts fading in once the headline is fully gone, then stays
-// visible — sequential, not a cross-fade. The outro overlay (left side again)
-// only fades in near the very end of the scrub, as a closing line just before
-// the section releases its scroll-jacking and the page moves on.
+// the frames get full attention once real scrubbing kicks in. The
+// left-center "Our story" card only starts fading in once the headline is
+// fully gone, then stays visible — sequential, not a cross-fade (the two
+// occupy the same screen position but never overlap in time). The
+// bottom-right pillars only start fading in once the card has finished
+// fading in, for a smooth staggered reveal rather than everything landing
+// at once.
 const OVERLAY_FADE_END_PROGRESS = 0.2;
-// The intro card's four pieces reveal one after another within the same
-// 0.2–0.4 window the whole card used to fade in as one block, each on its
-// own slightly-overlapping slice (overlap keeps the reveal feeling fluid
-// rather than four hard snaps).
-const END_EYEBROW_FADE = [0.2, 0.26] as const;
-const END_HEADLINE_FADE = [0.24, 0.3] as const;
-const END_BODY_FADE = [0.28, 0.34] as const;
-const END_CTA_FADE = [0.32, 0.4] as const;
-const OUTRO_OVERLAY_FADE_START_PROGRESS = 0.55;
-const OUTRO_OVERLAY_FADE_END_PROGRESS = 0.7;
+const END_OVERLAY_FADE = [0.2, 0.4] as const;
+// Each pillar reveals one after another within the [0.4, 0.6] window the
+// group used to fade in as one block, each on its own slightly-overlapping
+// slice (overlap keeps the reveal feeling fluid rather than three hard
+// snaps) — matches the "One brand" → "Every category" → "Infinite ways to
+// wear it" reading order.
+const PILLAR_ITEM_FADES = [
+  [0.4, 0.48],
+  [0.46, 0.54],
+  [0.52, 0.6],
+] as const;
 
 // Shared linear-interpolation clamp used by every fade slot below — how far
 // `clamped` (0–1 scroll progress) has moved through a [start, end] window.
@@ -38,28 +59,39 @@ function applyOpacity(el: HTMLElement | null, opacity: number) {
   el.style.pointerEvents = opacity === 0 ? "none" : "auto";
 }
 
+// Two-layer scrim so the headline stays legible over the photo and the
+// photo's bottom edge blends into the page background instead of cutting
+// off hard — a horizontal fade (left, where the headline sits, to
+// transparent) plus a vertical fade into the page's own background color.
+function HeroScrim() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div
+        className="absolute inset-0 transition-[background] duration-300 motion-reduce:transition-none"
+        style={{ background: "var(--hero-scrim-x)" }}
+      />
+      <div
+        className="absolute inset-0 transition-[background] duration-300 motion-reduce:transition-none"
+        style={{ background: "var(--hero-scrim-y)" }}
+      />
+    </div>
+  );
+}
+
 export function ScrollFrameAnimation({
   children,
   endChildren,
-  outroChildren,
+  pillarsChildren,
 }: {
   children?: ReactNode;
-  endChildren?: {
-    eyebrow: ReactNode;
-    headline: ReactNode;
-    body: ReactNode;
-    cta: ReactNode;
-  };
-  outroChildren?: ReactNode;
+  endChildren?: ReactNode;
+  pillarsChildren?: ReactNode[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const endEyebrowRef = useRef<HTMLDivElement>(null);
-  const endHeadlineRef = useRef<HTMLDivElement>(null);
-  const endBodyRef = useRef<HTMLDivElement>(null);
-  const endCtaRef = useRef<HTMLDivElement>(null);
-  const outroOverlayRef = useRef<HTMLDivElement>(null);
+  const endOverlayRef = useRef<HTMLDivElement>(null);
+  const pillarItemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const currentFrameRef = useRef(1);
   const rafRef = useRef<number | null>(null);
@@ -90,16 +122,13 @@ export function ScrollFrameAnimation({
         canvas.height = Math.round(cssHeight * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        const scale = Math.min(cssWidth / img.naturalWidth, cssHeight / img.naturalHeight);
-        const drawWidth = img.naturalWidth * scale;
-        const drawHeight = img.naturalHeight * scale;
-        ctx.drawImage(
-          img,
-          (cssWidth - drawWidth) / 2,
-          (cssHeight - drawHeight) / 2,
-          drawWidth,
-          drawHeight,
+        const { drawWidth, drawHeight, offsetX, offsetY } = coverDrawRect(
+          cssWidth,
+          cssHeight,
+          img.naturalWidth,
+          img.naturalHeight,
         );
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
       };
 
       if (img.complete) drawStatic();
@@ -138,14 +167,12 @@ export function ScrollFrameAnimation({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, cssWidth, cssHeight);
 
-      // "contain" fit: show the full frame edge to edge, no cropping and no
-      // scaling past 1:1 relative to the source's own aspect ratio.
-      const scale = Math.min(cssWidth / img.naturalWidth, cssHeight / img.naturalHeight);
-      const drawWidth = img.naturalWidth * scale;
-      const drawHeight = img.naturalHeight * scale;
-      const offsetX = (cssWidth - drawWidth) / 2;
-      const offsetY = (cssHeight - drawHeight) / 2;
-
+      const { drawWidth, drawHeight, offsetX, offsetY } = coverDrawRect(
+        cssWidth,
+        cssHeight,
+        img.naturalWidth,
+        img.naturalHeight,
+      );
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     };
 
@@ -171,19 +198,10 @@ export function ScrollFrameAnimation({
         1 - computeFadeOpacity(clamped, 0, OVERLAY_FADE_END_PROGRESS),
       );
 
-      applyOpacity(endEyebrowRef.current, computeFadeOpacity(clamped, ...END_EYEBROW_FADE));
-      applyOpacity(endHeadlineRef.current, computeFadeOpacity(clamped, ...END_HEADLINE_FADE));
-      applyOpacity(endBodyRef.current, computeFadeOpacity(clamped, ...END_BODY_FADE));
-      applyOpacity(endCtaRef.current, computeFadeOpacity(clamped, ...END_CTA_FADE));
-
-      applyOpacity(
-        outroOverlayRef.current,
-        computeFadeOpacity(
-          clamped,
-          OUTRO_OVERLAY_FADE_START_PROGRESS,
-          OUTRO_OVERLAY_FADE_END_PROGRESS,
-        ),
-      );
+      applyOpacity(endOverlayRef.current, computeFadeOpacity(clamped, ...END_OVERLAY_FADE));
+      PILLAR_ITEM_FADES.forEach(([start, end], i) => {
+        applyOpacity(pillarItemRefs.current[i] ?? null, computeFadeOpacity(clamped, start, end));
+      });
     };
 
     const onScrollOrResize = () => {
@@ -210,24 +228,28 @@ export function ScrollFrameAnimation({
 
   if (reducedMotionRef.current) {
     return (
-      <div ref={containerRef} className="relative h-screen w-full">
+      <div ref={containerRef} className="relative h-screen w-full overflow-hidden rounded-b-3xl">
         <canvas ref={canvasRef} className="h-full w-full" />
+        <HeroScrim />
         {children && (
-          <div className="absolute inset-y-0 start-0 flex w-full max-w-xl items-center p-8 md:p-16">
+          <div className="absolute inset-y-0 start-0 flex w-full max-w-2xl items-center px-8 pt-30 pb-15 md:px-16">
             {children}
           </div>
         )}
-        {endChildren && (
-          <div className="absolute inset-x-0 bottom-0 w-full p-4 md:inset-auto md:right-[5%] md:bottom-[6%] md:w-[380px] md:p-0">
-            <div>{endChildren.eyebrow}</div>
-            <div>{endChildren.headline}</div>
-            <div>{endChildren.body}</div>
-            <div>{endChildren.cta}</div>
-          </div>
-        )}
-        {outroChildren && (
-          <div className="absolute left-0 top-24 flex w-full max-w-xl items-start p-6 md:inset-y-0 md:items-center md:p-16">
-            {outroChildren}
+        {(endChildren || pillarsChildren) && (
+          <div className="absolute inset-x-0 bottom-0 flex w-full flex-col items-center gap-4 p-4 md:contents">
+            {endChildren && (
+              <div className="w-full md:absolute md:inset-auto md:top-1/2 md:left-0 md:block md:w-auto md:-translate-y-1/2">
+                {endChildren}
+              </div>
+            )}
+            {pillarsChildren && pillarsChildren.length > 0 && (
+              <div className="w-full space-y-4 md:absolute md:inset-auto md:right-0 md:bottom-[6%] md:block md:w-auto">
+                {pillarsChildren.map((pillar, i) => (
+                  <div key={i}>{pillar}</div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -236,38 +258,42 @@ export function ScrollFrameAnimation({
 
   return (
     <div ref={containerRef} style={{ height: `${SCROLL_HEIGHT_VH}vh` }} className="relative">
-      <div className="sticky top-0 h-screen w-full animate-[navbar-enter_0.6s_ease-out_0.15s_both] motion-reduce:animate-none">
+      <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden rounded-b-3xl animate-[navbar-enter_0.6s_ease-out_0.15s_both] motion-reduce:animate-none">
         <canvas ref={canvasRef} className="h-full w-full" />
+        <HeroScrim />
         {children && (
           <div
             ref={overlayRef}
-            className="absolute inset-y-0 start-0 flex w-full max-w-xl items-center p-8 md:p-16"
+            className="absolute inset-y-0 start-0 flex w-full max-w-2xl items-center px-8 pt-30 pb-15 md:px-16"
           >
             {children}
           </div>
         )}
-        {endChildren && (
-          <div className="absolute inset-x-0 bottom-0 w-full p-4 md:inset-auto md:right-[5%] md:bottom-[6%] md:w-[380px] md:p-0">
-            <div ref={endEyebrowRef} className="opacity-0">
-              {endChildren.eyebrow}
-            </div>
-            <div ref={endHeadlineRef} className="opacity-0">
-              {endChildren.headline}
-            </div>
-            <div ref={endBodyRef} className="opacity-0">
-              {endChildren.body}
-            </div>
-            <div ref={endCtaRef} className="opacity-0">
-              {endChildren.cta}
-            </div>
-          </div>
-        )}
-        {outroChildren && (
-          <div
-            ref={outroOverlayRef}
-            className="absolute left-0 top-24 flex w-full max-w-xl items-start p-6 opacity-0 md:inset-y-0 md:items-center md:p-16"
-          >
-            {outroChildren}
+        {(endChildren || pillarsChildren) && (
+          <div className="absolute inset-x-0 bottom-0 flex w-full flex-col items-center gap-4 p-4 md:contents">
+            {endChildren && (
+              <div
+                ref={endOverlayRef}
+                className="w-full opacity-0 md:absolute md:inset-auto md:top-1/2 md:left-0 md:block md:w-auto md:-translate-y-1/2"
+              >
+                {endChildren}
+              </div>
+            )}
+            {pillarsChildren && pillarsChildren.length > 0 && (
+              <div className="w-full space-y-4 md:absolute md:inset-auto md:right-0 md:bottom-[6%] md:block md:w-auto">
+                {pillarsChildren.map((pillar, i) => (
+                  <div
+                    key={i}
+                    ref={(el) => {
+                      pillarItemRefs.current[i] = el;
+                    }}
+                    className="opacity-0"
+                  >
+                    {pillar}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

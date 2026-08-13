@@ -3,13 +3,29 @@ import { Link } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, HandCoins, Store, Truck } from "lucide-react";
+import { ArrowRight, Gem, HandCoins, LayoutGrid, Sparkles, Store, Truck } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { LocalizedDescription, LocalizedName } from "@es-market/core";
 import { localize } from "@/lib/localize";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollFrameAnimation } from "@/components/storefront/ScrollFrameAnimation";
+import CategoryBrowseSection from "@/components/storefront/CategoryBrowseSection";
+import type { StorefrontCategory } from "@/pages/storefront/ProductsPage";
+
+// Reuses the hero's own final scroll frame for the "Our story" card's
+// circular portrait — this codebase has no dedicated "Our story" campaign
+// photography yet, and this keeps it visually continuous with the hero.
+const OUR_STORY_PHOTO_SRC = "/scroll-frames/ezgif-frame-270.jpg";
+
+// One decorative accent (orange, --hero-accent) for the pillar icons —
+// matches the kicker/headline highlight in the "Our story" card above.
+const OUR_STORY_PILLARS: { key: "brand" | "category" | "wear"; Icon: LucideIcon }[] = [
+  { key: "brand", Icon: Gem },
+  { key: "category", Icon: LayoutGrid },
+  { key: "wear", Icon: Sparkles },
+];
 
 const FEATURES = [
   { key: "payOnDelivery", Icon: HandCoins, color: "#22c55e", href: "/checkout" },
@@ -42,8 +58,11 @@ function FeatureCard({
 }) {
   const { key, Icon, color, href } = feature;
 
+  // The glow lives on a -z-10 pseudo-element inside an `isolate` stacking
+  // context (not a box-shadow on the card itself) so it can't bleed past
+  // its own layer into neighboring cards as a neon halo.
   const wrapperClassName =
-    "block h-full rounded-3xl outline-none transition-all duration-300 hover:-translate-y-1 shadow-[0_0_60px_-15px_var(--glow-color)] hover:shadow-[0_0_90px_-10px_var(--glow-color)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-white";
+    "relative isolate block h-full rounded-3xl outline-none transition-all duration-300 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-white before:absolute before:inset-0 before:-z-10 before:rounded-3xl before:bg-[var(--glow-color)] before:opacity-55 before:blur-2xl before:transition-opacity before:duration-300 before:content-[''] hover:before:opacity-85";
   const wrapperStyle = { "--glow-color": color } as CSSProperties;
 
   const cardContent = (
@@ -70,7 +89,7 @@ function FeatureCard({
         </p>
         <span
           aria-hidden
-          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-white"
+          className="mt-auto inline-flex items-center gap-1.5 pt-4.5 text-sm font-semibold text-white"
         >
           {t(`home.features.${key}.link`)}
           <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
@@ -154,84 +173,124 @@ export default function HomePage() {
         .then((res) => res.data.promoBlocks),
   });
 
+  // Same query key ProductsPage.tsx's own category-filter fetch uses, so
+  // both pages share one cache entry.
+  const { data: categories } = useQuery({
+    queryKey: ["storefront", "categories"],
+    queryFn: () =>
+      axios
+        .get<{ categories: StorefrontCategory[] }>("/api/storefront/categories")
+        .then((res) => res.data.categories),
+  });
+
+  // The editorial banner's CTA points at a specific category (not the
+  // generic product list) — falls back to the unfiltered list if "Makeup"
+  // hasn't been created/renamed in this environment yet.
+  const beautyCategory = categories?.find((c) => c.name.en === "Makeup");
+  const beautyHref = beautyCategory ? `/products?category=${beautyCategory.id}` : "/products";
+
   return (
-    <div className="space-y-12">
-      <ScrollFrameAnimation
-        endChildren={{
-          eyebrow: (
-            <div className="mb-3 flex items-center gap-2">
-              <span className="h-[2px] w-[28px] bg-brand-orange drop-shadow-lg" />
-              <span className="font-work-sans text-[13px] font-bold tracking-[0.18em] text-brand-orange uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
-                {t("home.introEyebrow")}
-              </span>
+    <div>
+      {/* Full-bleed: cancels StorefrontLayout's <main> px-6 py-8 (24px/32px)
+          and pulls the extra 88px up under the floating sticky nav, so the
+          photo runs edge to edge instead of sitting in a boxed/margined card. */}
+      <div className="relative -mx-6 -mt-[120px]">
+        <ScrollFrameAnimation
+          endChildren={
+            <div
+              className="flex w-[300px] max-w-[64vw] flex-col items-center gap-4 rounded-[280px] border px-3.5 pt-3.5 pb-7 backdrop-blur-[26px] backdrop-saturate-[1.2] transition-[background-color,border-color,box-shadow] duration-300 motion-reduce:transition-none reduced-transparency:bg-background reduced-transparency:backdrop-blur-none"
+              style={{
+                background: "var(--hero-panel-bg)",
+                borderColor: "var(--hero-line)",
+                boxShadow: "var(--hero-panel-shadow)",
+              }}
+            >
+              <div
+                className="aspect-square w-full overflow-hidden rounded-full border"
+                style={{
+                  borderColor: "var(--hero-line)",
+                  boxShadow: "0 0 80px color-mix(in srgb, var(--hero-accent) 18%, transparent)",
+                }}
+              >
+                <img
+                  src={OUR_STORY_PHOTO_SRC}
+                  alt=""
+                  aria-hidden
+                  className="size-full object-cover"
+                />
+              </div>
+
+              <div className="flex flex-col items-center gap-3 px-4 text-center font-archivo sm:px-6">
+                <div className="flex items-center gap-2">
+                  <span aria-hidden className="h-px w-[26px] bg-hero-accent" />
+                  <span className="text-xs font-bold tracking-[0.32em] text-hero-accent uppercase">
+                    {t("home.ourStory.kicker")}
+                  </span>
+                </div>
+
+                <p className="text-[22px] leading-[1.08] font-extrabold tracking-[-0.02em] text-hero-fg text-balance sm:text-[28px]">
+                  {t("home.ourStory.headlinePart1")}
+                  <span className="text-hero-accent">{t("home.ourStory.headlineHighlight")}</span>
+                  {t("home.ourStory.headlinePart2")}
+                </p>
+
+                <p className="max-w-[340px] text-base leading-[1.55] text-hero-muted text-pretty">
+                  {t("home.ourStory.body")}
+                </p>
+              </div>
             </div>
-          ),
-          headline: (
-            <p className="mb-[12px] font-sora text-[30px] font-bold leading-[1.15] tracking-[-0.01em] text-intro-ink drop-shadow-lg">
-              {t("home.introHeadlinePart1")}
-              <span className="text-brand-orange">{t("home.introHeadlineHighlight")}</span>
-              {t("home.introHeadlinePart2")}
+          }
+          pillarsChildren={OUR_STORY_PILLARS.map(({ key, Icon }) => (
+            <div key={key} className="flex items-start gap-2.75">
+              <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-hero-accent drop-shadow-lg" />
+              <div>
+                <p className="text-sm font-semibold text-hero-fg drop-shadow-lg">
+                  {t(`home.ourStory.pillars.${key}.label`)}
+                </p>
+                <p className="text-[12.5px] text-hero-muted drop-shadow-lg">
+                  {t(`home.ourStory.pillars.${key}.text`)}
+                </p>
+              </div>
+            </div>
+          ))}
+        >
+          <div className="space-y-6 font-dm-sans md:space-y-8">
+            <p className="text-sm font-bold tracking-[0.1em] text-primary">{t("home.eyebrow")}</p>
+            <h1 className="max-w-[13ch] text-[clamp(46px,6.6vw,92px)] leading-[0.96] font-black tracking-[-0.035em]">
+              <span className="block text-hero-fg drop-shadow-lg transition-colors duration-300 motion-reduce:transition-none">
+                {t("home.headlineLine1")}
+              </span>
+              <span className="block text-hero-accent drop-shadow-lg transition-colors duration-300 motion-reduce:transition-none">
+                {t("home.headlineLine2")}
+              </span>
+            </h1>
+            <p className="max-w-[40ch] text-lg text-hero-muted transition-colors duration-300 motion-reduce:transition-none">
+              {t("home.subline")}
             </p>
-          ),
-          body: (
-            <p className="mb-[16px] w-full max-w-md rounded-[16px] bg-intro-card/35 px-[26px] py-[22px] font-work-sans text-lg leading-[1.55] font-light text-intro-ink/72 backdrop-blur-[6px]">
-              <span className="font-bold text-primary">{t("home.introBodyHighlight0")}</span>
-              {t("home.introBodyPart1")}
-              <span className="font-bold text-brand-orange">{t("home.introBodyHighlight1")}</span>
-              {t("home.introBodyPart2")}
-              <span className="font-bold text-primary">{t("home.introBodyHighlight2")}</span>
-              {t("home.introBodyPart3")}
-            </p>
-          ),
-          cta: (
             <Link
               to="/products"
-              className="inline-block border-b border-brand-orange pb-0.5 font-work-sans text-[15px] font-medium text-white drop-shadow-lg outline-none hover:opacity-80 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-white"
+              className="inline-flex h-[52px] items-center gap-2 rounded-[13px] bg-hero-brand px-7 font-bold text-hero-brand-ink outline-none transition-colors duration-300 hover:bg-hero-brand-hover focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-hero-fg motion-reduce:transition-none"
             >
-              {t("home.introCta")}
+              {t("home.cta")}
+              <ArrowRight data-icon="inline-end" className="rtl:rotate-180" />
             </Link>
-          ),
-        }}
-        outroChildren={
-          <p className="font-dm-sans text-lg text-white/80 drop-shadow-lg md:text-xl">
-            {t("home.outroLinePart1")}
-            <span className="font-bold text-primary drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
-              {t("home.outroLineHighlight")}
-            </span>
-            {t("home.outroLinePart2")}
-          </p>
-        }
-      >
-        <div className="space-y-6 font-dm-sans md:space-y-8">
-          <p className="text-sm font-bold tracking-[0.1em] text-primary">{t("home.eyebrow")}</p>
-          <h1 className="text-6xl leading-[0.94] font-black tracking-tight md:text-8xl">
-            <span className="block text-white drop-shadow-lg">{t("home.headlineLine1")}</span>
-            <span className="block text-primary drop-shadow-lg">{t("home.headlineLine2")}</span>
-          </h1>
-          <p className="max-w-md text-lg text-brand-orange">{t("home.subline")}</p>
-          <Link
-            to="/products"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "rounded-full bg-primary font-bold text-white hover:bg-primary/90",
-            )}
-          >
-            {t("home.cta")}
-            <ArrowRight data-icon="inline-end" className="rtl:rotate-180" />
-          </Link>
-        </div>
-      </ScrollFrameAnimation>
+          </div>
+        </ScrollFrameAnimation>
+      </div>
+      <CategoryBrowseSection categories={categories} />
       {promoBlocks && promoBlocks.length > 0 && (
-        <div className="mx-auto max-w-5xl px-6">
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {promoBlocks.map((promoBlock) => (
-              <PromoBlockCard key={promoBlock.id} promoBlock={promoBlock} language={language} />
-            ))}
-          </section>
-        </div>
+        <section className="py-16">
+          <div className="mx-auto max-w-[1240px] px-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {promoBlocks.map((promoBlock) => (
+                <PromoBlockCard key={promoBlock.id} promoBlock={promoBlock} language={language} />
+              ))}
+            </div>
+          </div>
+        </section>
       )}
-      <section className="py-20">
-        <div className="mx-auto max-w-6xl px-6">
+      <section className="py-16">
+        <div className="mx-auto max-w-[1240px] px-6">
           <h2 className="text-4xl font-semibold tracking-tight text-foreground">
             {t("home.features.heading")}
           </h2>
@@ -245,38 +304,49 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <section className="relative flex h-screen items-center justify-center overflow-hidden bg-neutral-950">
-        <video
-          className="absolute inset-0 size-full object-cover"
-          poster={VIDEO_SECTION_POSTER}
-          preload={prefersReducedMotion ? "metadata" : "auto"}
-          autoPlay={!prefersReducedMotion}
-          muted
-          loop
-          playsInline
-          aria-hidden
-        >
-          <source src={VIDEO_SECTION_SRC_MOBILE} media="(max-width: 767px)" type="video/mp4" />
-          <source src={VIDEO_SECTION_SRC} type="video/mp4" />
-        </video>
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50"
-        />
-        <div className="relative z-10 px-6 text-center">
-          <p className="font-dm-sans text-3xl font-bold text-white drop-shadow-lg md:text-5xl">
-            {t("home.videoSection.tagline")}
-          </p>
-          <Link
-            to="/products"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "mt-6 rounded-full bg-primary font-bold text-white hover:bg-primary/90",
-            )}
+      {/* Full-bleed, same as the hero: -mx-6 cancels StorefrontLayout's
+          <main> px-6, and h-screen matches the hero's sticky viewport
+          height so the two full-bleed sections read as the same size. */}
+      <section className="-mx-6">
+        <div className="relative h-screen overflow-hidden rounded-t-3xl bg-neutral-950">
+          <video
+            className="absolute inset-0 size-full object-cover"
+            poster={VIDEO_SECTION_POSTER}
+            preload={prefersReducedMotion ? "metadata" : "auto"}
+            autoPlay={!prefersReducedMotion}
+            muted
+            loop
+            playsInline
+            aria-hidden
           >
-            {t("home.videoSection.cta")}
-            <ArrowRight data-icon="inline-end" className="rtl:rotate-180" />
-          </Link>
+            <source src={VIDEO_SECTION_SRC_MOBILE} media="(max-width: 767px)" type="video/mp4" />
+            <source src={VIDEO_SECTION_SRC} type="video/mp4" />
+          </video>
+          {/* Bottom-weighted scrim: fully opaque at the bottom (where the
+              copy sits) fading to transparent at the top, so the image
+              itself stays the focus rather than being darkened uniformly. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"
+          />
+          <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
+            <p className="font-dm-sans text-3xl font-bold text-white drop-shadow-lg md:text-5xl">
+              {t("home.videoSection.headline")}
+            </p>
+            <p className="mt-3 max-w-md text-sm text-white/80 drop-shadow-lg md:text-base">
+              {t("home.videoSection.subline")}
+            </p>
+            <Link
+              to={beautyHref}
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "mt-6 rounded-full bg-primary font-bold text-white hover:bg-primary/90",
+              )}
+            >
+              {t("home.videoSection.cta")}
+              <ArrowRight data-icon="inline-end" className="rtl:rotate-180" />
+            </Link>
+          </div>
         </div>
       </section>
     </div>
