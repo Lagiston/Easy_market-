@@ -106,4 +106,51 @@ describe("SiteFooter", () => {
       "https://www.google.com/maps/search/?api=1&query=12%20Market%20Street%2C%20City%20Center",
     );
   });
+
+  it("renders the mission statement", () => {
+    renderFooter();
+    expect(
+      screen.getByText(
+        "Practical hardware and building supplies for Dar es Salaam — sourced honestly, priced fairly, delivered on time.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("renders Instagram, TikTok, and Facebook social links without a configured phone number", () => {
+    renderFooter();
+    expect(screen.getByRole("link", { name: "instagram" })).toHaveAttribute(
+      "href",
+      "https://instagram.com/halatu",
+    );
+    expect(screen.getByRole("link", { name: "tiktok" })).toHaveAttribute(
+      "href",
+      "https://tiktok.com/@halatu",
+    );
+    expect(screen.getByRole("link", { name: "facebook" })).toHaveAttribute(
+      "href",
+      "https://facebook.com/halatu",
+    );
+    expect(screen.queryByRole("link", { name: "whatsapp" })).not.toBeInTheDocument();
+  });
+
+  it("adds a WhatsApp social link derived from the configured contact phone", async () => {
+    mockedGet.mockReset();
+    mockedGet.mockResolvedValue({
+      data: {
+        settings: {
+          deliveryFee: 0,
+          freeDeliveryThreshold: null,
+          contactPhone: "+255 700 123 456",
+          contactEmail: null,
+          contactAddress: null,
+        },
+      },
+    });
+    renderFooter();
+
+    expect(await screen.findByRole("link", { name: "whatsapp" })).toHaveAttribute(
+      "href",
+      "https://wa.me/255700123456",
+    );
+  });
 });

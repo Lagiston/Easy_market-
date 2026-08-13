@@ -15,6 +15,10 @@
 @import "@fontsource/archivo/600.css";
 @import "@fontsource/archivo/700.css";
 @import "@fontsource/archivo/800.css";
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
 
 @custom-variant dark (&:is(.dark *));
 /* Users who disable transparency (OS accessibility setting) get opaque
@@ -39,6 +43,7 @@
     --font-sora: 'Sora', sans-serif;
     --font-work-sans: 'Work Sans', sans-serif;
     --font-archivo: 'Archivo', sans-serif;
+    --font-poppins: 'Poppins', sans-serif;
     /* Storefront hero accent — matches the visor color in the hero photo
        sequence. Fixed (not theme-adaptive) since it's tied to the imagery,
        not the app's light/dark palette. Used by the main hero headline. */

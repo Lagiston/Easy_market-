@@ -26,6 +26,7 @@ import {
 import { translateFieldError } from "@/lib/zod-error-i18n";
 import { usePublicStoreSettings } from "@/lib/storefront-settings";
 import { formatPhoneDisplay, buildWhatsAppLink } from "@/lib/contact-links";
+import { InstagramIcon, TiktokIcon, FacebookIcon } from "@/lib/social-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +42,10 @@ import { Textarea } from "@/components/ui/textarea";
 
 // No admin-configurable social settings exist anywhere in this codebase yet —
 // these three are plain hardcoded links (confirmed with the store owner),
-// not sourced from Settings like phone/email/address are.
+// not sourced from Settings like phone/email/address are. Icons are shared
+// with SiteFooter.tsx via @/lib/social-icons (which also has a WhatsApp
+// icon, not used here since this page already has its own WhatsApp CTA
+// button above — a second icon-button would be a duplicate affordance).
 const SOCIAL_LINKS = [
   { key: "instagram", href: "https://instagram.com/halatu", Icon: InstagramIcon },
   { key: "tiktok", href: "https://tiktok.com/@halatu", Icon: TiktokIcon },
@@ -522,31 +526,5 @@ function ContactRow({
         <span className="block text-[12.5px] text-muted-foreground">{hint}</span>
       </span>
     </a>
-  );
-}
-
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function FacebookIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.25-1.5 1.55-1.5H16.7V3.7C16.4 3.65 15.4 3.55 14.25 3.55c-2.4 0-4.05 1.47-4.05 4.15V9.9H7.5V13h2.7v8h3.3Z" />
-    </svg>
-  );
-}
-
-function TiktokIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M16.5 3c.4 2.1 1.7 3.4 4 3.6v2.9c-1.4 0-2.8-.4-4-1.2v6.5a5.9 5.9 0 1 1-5.9-5.9c.3 0 .6 0 .9.07v3a3 3 0 1 0 2.1 2.86V3h2.9Z" />
-    </svg>
   );
 }
