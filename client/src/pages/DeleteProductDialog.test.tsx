@@ -14,6 +14,7 @@ const product: ProductRow = {
   name: { en: "Rice 5kg" },
   description: null,
   price: 1500,
+  salePrice: null,
   stock: 20,
   lowStockThreshold: 10,
   images: [],

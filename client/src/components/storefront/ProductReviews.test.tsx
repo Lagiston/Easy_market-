@@ -28,6 +28,7 @@ const reviews: StorefrontReview[] = [
   {
     id: "r1",
     authorName: "Amina",
+    headline: null,
     rating: 5,
     comment: "Excellent quality",
     verifiedPurchase: true,
@@ -39,6 +40,7 @@ const reviews: StorefrontReview[] = [
   {
     id: "r2",
     authorName: "Joseph",
+    headline: null,
     rating: 3,
     comment: null,
     verifiedPurchase: false,

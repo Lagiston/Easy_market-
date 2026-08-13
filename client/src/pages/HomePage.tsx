@@ -501,7 +501,7 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Select value={dateRange} onValueChange={setDateRange}>
+            <Select value={dateRange} onValueChange={(value) => value && setDateRange(value)}>
               <SelectTrigger className="h-[38px] w-44" aria-label="Date range">
                 <SelectValue>
                   {{ "7d": "Last 7 days", "30d": "Last 30 days", quarter: "This quarter" }[

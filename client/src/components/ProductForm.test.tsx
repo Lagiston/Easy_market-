@@ -483,6 +483,7 @@ describe("ProductForm (edit mode)", () => {
     name: { en: "Rice 5kg" },
     description: { en: "Long grain rice" },
     price: 1500,
+    salePrice: null,
     stock: 20,
     lowStockThreshold: 10,
     images: [],

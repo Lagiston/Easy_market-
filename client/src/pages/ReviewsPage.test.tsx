@@ -13,6 +13,7 @@ const reviews: ReviewRow[] = [
   {
     id: "r1",
     authorName: "Amina",
+    headline: null,
     rating: 5,
     comment: "Excellent quality",
     verifiedPurchase: true,
@@ -25,6 +26,7 @@ const reviews: ReviewRow[] = [
   {
     id: "r2",
     authorName: "Joseph",
+    headline: null,
     rating: 2,
     comment: null,
     verifiedPurchase: false,

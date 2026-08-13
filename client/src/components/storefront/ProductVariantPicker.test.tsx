@@ -10,6 +10,7 @@ const base: StorefrontProduct = {
   name: { en: "Shirt" },
   description: null,
   price: 1000,
+  salePrice: null,
   stock: 10,
   lowStockThreshold: 10,
   images: [],
@@ -20,6 +21,7 @@ const base: StorefrontProduct = {
   averageRating: null,
   reviewCount: 0,
   wishlistCount: 0,
+  createdAt: "2026-07-20T10:00:00.000Z",
 };
 
 function renderPicker(product: StorefrontProduct, relatedProducts: StorefrontProduct[]) {
