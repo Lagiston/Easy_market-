@@ -117,7 +117,7 @@ export default function ContactPage() {
     <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-[#0a0c0b] px-6 py-14 font-dm-sans text-white">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(34,197,94,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(14,165,233,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
       />
       <div className="relative mx-auto max-w-[1160px] space-y-10">
         <div className="space-y-3 text-center">
@@ -159,7 +159,7 @@ export default function ContactPage() {
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
                     openStatus.isOpen
-                      ? "bg-emerald-500/15 text-emerald-400"
+                      ? "bg-sky-500/15 text-sky-400"
                       : "bg-white/[0.06] text-neutral-400",
                   )}
                 >
@@ -268,10 +268,10 @@ export default function ContactPage() {
           <div className="rounded-[20px] border border-white/[0.07] bg-white/[0.032] p-6 backdrop-blur-xl reduced-transparency:bg-neutral-950 reduced-transparency:backdrop-blur-none">
             {mutation.isSuccess ? (
               <div className="flex flex-col items-center gap-3 py-10 text-center">
-                <CheckCircle2 aria-hidden className="size-12 text-emerald-500" />
+                <CheckCircle2 aria-hidden className="size-12 text-sky-500" />
                 <h2 className="text-xl font-bold">{t("contact.successTitle")}</h2>
                 <p className="max-w-sm text-sm text-neutral-400">{t("contact.successDetail")}</p>
-                <div className="mt-2 rounded-[13px] border border-emerald-500/25 bg-emerald-500/[0.07] px-5 py-3">
+                <div className="mt-2 rounded-[13px] border border-sky-500/25 bg-sky-500/[0.07] px-5 py-3">
                   <p className="text-[11px] font-semibold tracking-[0.08em] text-neutral-500 uppercase">
                     {t("contact.messageCodeLabel")}
                   </p>
@@ -284,7 +284,7 @@ export default function ContactPage() {
                 </p>
                 <Link
                   to="/track"
-                  className="mt-1 inline-flex h-10 items-center gap-2 rounded-[13px] border border-emerald-500/30 bg-emerald-500/10 px-4 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/15"
+                  className="mt-1 inline-flex h-10 items-center gap-2 rounded-[13px] border border-sky-500/30 bg-sky-500/10 px-4 text-sm font-semibold text-sky-300 hover:bg-sky-500/15"
                 >
                   {t("contact.trackMessage")}
                 </Link>
@@ -408,7 +408,7 @@ export default function ContactPage() {
                       placeholder={t("contact.messagePlaceholder")}
                       disabled={mutation.isPending}
                       aria-invalid={!!errors.message}
-                      className="min-h-[130px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]"
+                      className="min-h-[130px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]"
                       {...register("message")}
                     />
                     <p
@@ -434,7 +434,7 @@ export default function ContactPage() {
                   <Button
                     type="submit"
                     disabled={mutation.isPending}
-                    className="h-[50px] w-full gap-2 rounded-[13px] bg-emerald-500 font-bold text-[#06140b] hover:bg-emerald-400"
+                    className="h-[50px] w-full gap-2 rounded-[13px] bg-sky-500 font-bold text-[#06140b] hover:bg-sky-400"
                   >
                     <Send aria-hidden className="size-4" />
                     {mutation.isPending ? t("contact.sending") : t("contact.send")}
@@ -453,7 +453,7 @@ export default function ContactPage() {
 }
 
 const CONTROL_CLASS =
-  "h-[46px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]";
+  "h-[46px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]";
 
 function FieldLabel({
   htmlFor,
@@ -469,7 +469,7 @@ function FieldLabel({
     <Label htmlFor={htmlFor} className="text-sm font-medium text-neutral-300">
       {children}
       {required ? (
-        <span className="text-emerald-500"> *</span>
+        <span className="text-sky-500"> *</span>
       ) : (
         <span className="text-neutral-500"> {t("contact.optionalLabel")}</span>
       )}
@@ -503,20 +503,20 @@ function ContactRow({
         !last && "border-b border-white/[0.07]",
       )}
     >
-      <span className="grid size-[38px] shrink-0 place-items-center rounded-xl border border-emerald-500/20 bg-emerald-500/10">
-        <Icon aria-hidden className="size-4.5 text-emerald-500" />
+      <span className="grid size-[38px] shrink-0 place-items-center rounded-xl border border-sky-500/20 bg-sky-500/10">
+        <Icon aria-hidden className="size-4.5 text-sky-500" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-xs font-semibold tracking-[0.06em] text-neutral-500 uppercase">
           {label}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[15.5px] font-semibold text-white transition-colors group-hover:text-emerald-500">
+          <span className="truncate text-[15.5px] font-semibold text-white transition-colors group-hover:text-sky-500">
             {value}
           </span>
           <ArrowUpRight
             aria-hidden
-            className="size-4 shrink-0 text-emerald-500 opacity-0 transition-opacity group-hover:opacity-100"
+            className="size-4 shrink-0 text-sky-500 opacity-0 transition-opacity group-hover:opacity-100"
           />
         </span>
         <span className="block text-[12.5px] text-neutral-500">{hint}</span>

@@ -70,7 +70,7 @@ describe("ThemeToggle", () => {
 
     await user.click(button); // dark
     await waitFor(() =>
-      expect(themeColorMeta()).toHaveAttribute("content", "#090c09")
+      expect(themeColorMeta()).toHaveAttribute("content", "#080c0e")
     );
 
     await user.click(button); // light

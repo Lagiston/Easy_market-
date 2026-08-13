@@ -102,7 +102,7 @@ function computeOpenStatus(now: Date): OpenStatus {
 // with a literal dark-safe gray, same "forced-dark page needs a literal
 // override, not a theme token" precedent as Money's prefixClassName.
 const CONTROL_CLASS =
-  "h-[46px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]";
+  "h-[46px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]";
 const MONEY_PREFIX_CLASS = "text-[0.66em] font-semibold text-neutral-500";
 
 export default function CheckoutPage() {
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
     <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-[#0a0c0b] px-6 py-14 font-dm-sans text-white">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(34,197,94,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(14,165,233,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
       />
       <div className="relative mx-auto max-w-[1120px] space-y-6">
         <Link
@@ -441,7 +441,7 @@ export default function CheckoutPage() {
                         id="checkout-notes"
                         rows={3}
                         placeholder={t("checkout.notesPlaceholder")}
-                        className="min-h-[90px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]"
+                        className="min-h-[90px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]"
                         {...register("deliveryNotes")}
                       />
                     </div>
@@ -461,7 +461,7 @@ export default function CheckoutPage() {
                     <div className="space-y-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
                       {settings?.contactAddress && (
                         <p className="flex items-center gap-2 text-sm font-semibold text-white">
-                          <Store aria-hidden className="size-4 shrink-0 text-emerald-500" />
+                          <Store aria-hidden className="size-4 shrink-0 text-sky-500" />
                           {settings.contactAddress}
                         </p>
                       )}
@@ -492,7 +492,7 @@ export default function CheckoutPage() {
                           href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                          className="inline-flex items-center gap-1 text-sm font-semibold text-sky-400 hover:text-sky-300"
                         >
                           {t("contact.getDirections")}
                           <ArrowUpRight aria-hidden className="size-3.5" />
@@ -507,7 +507,7 @@ export default function CheckoutPage() {
                         id="checkout-pickup-notes"
                         rows={3}
                         placeholder={t("checkout.pickupNotesPlaceholder")}
-                        className="min-h-[90px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]"
+                        className="min-h-[90px] rounded-xl border-white/[0.07] bg-white/[0.04] placeholder:text-neutral-600 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]"
                         {...register("deliveryNotes")}
                       />
                     </div>
@@ -637,7 +637,7 @@ export default function CheckoutPage() {
               <Button
                 type="submit"
                 disabled={mutation.isPending}
-                className="h-[52px] w-full rounded-[13px] bg-emerald-500 text-base font-bold text-[#06140b] hover:bg-emerald-400"
+                className="h-[52px] w-full rounded-[13px] bg-sky-500 text-base font-bold text-[#06140b] hover:bg-sky-400"
               >
                 {mutation.isPending
                   ? t("checkout.placing")
@@ -660,7 +660,7 @@ function Panel({ step, title, children }: { step: number; title: string; childre
   return (
     <div className="rounded-[18px] border border-white/[0.07] bg-white/[0.032] p-[22px] backdrop-blur-xl reduced-transparency:bg-neutral-950 reduced-transparency:backdrop-blur-none">
       <div className="mb-4 flex items-center gap-2.5">
-        <span className="grid size-6 shrink-0 place-items-center rounded-full border border-emerald-500/25 bg-emerald-500/10 text-xs font-bold text-emerald-500">
+        <span className="grid size-6 shrink-0 place-items-center rounded-full border border-sky-500/25 bg-sky-500/10 text-xs font-bold text-sky-500">
           {step}
         </span>
         <h2 className="font-semibold text-white">{title}</h2>
@@ -685,7 +685,7 @@ function FieldLabel({
       className="text-[11.5px] font-semibold tracking-[0.08em] text-neutral-500 uppercase"
     >
       {children}
-      {required && <span className="text-emerald-500"> *</span>}
+      {required && <span className="text-sky-500"> *</span>}
     </Label>
   );
 }
@@ -714,17 +714,17 @@ function FulfillmentCard({
       className={cn(
         "relative flex flex-col items-start gap-2 rounded-2xl border p-4 text-start transition-colors",
         selected
-          ? "border-emerald-500 bg-emerald-500/[0.07] ring-[3px] ring-emerald-500/[0.12]"
+          ? "border-sky-500 bg-sky-500/[0.07] ring-[3px] ring-sky-500/[0.12]"
           : "border-white/[0.07] bg-white/[0.032] hover:bg-white/[0.05]",
       )}
     >
       {selected && (
-        <span className="absolute end-3 top-3 grid size-5 place-items-center rounded-full bg-emerald-500 text-[#06140b]">
+        <span className="absolute end-3 top-3 grid size-5 place-items-center rounded-full bg-sky-500 text-[#06140b]">
           <Check aria-hidden className="size-3.5" strokeWidth={3} />
         </span>
       )}
-      <span className="grid size-10 place-items-center rounded-xl border border-emerald-500/20 bg-emerald-500/10">
-        <Icon aria-hidden className="size-5 text-emerald-500" />
+      <span className="grid size-10 place-items-center rounded-xl border border-sky-500/20 bg-sky-500/10">
+        <Icon aria-hidden className="size-5 text-sky-500" />
       </span>
       <span className="font-semibold text-white">{title}</span>
       <span className="text-[13px] text-neutral-400">{description}</span>
@@ -736,7 +736,7 @@ function FulfillmentCard({
 function TrustLine({ icon: Icon, text }: { icon: typeof Shield; text: string }) {
   return (
     <p className="flex items-center gap-2.5 text-[13px] text-neutral-300">
-      <Icon aria-hidden className="size-4 shrink-0 text-emerald-500" />
+      <Icon aria-hidden className="size-4 shrink-0 text-sky-500" />
       {text}
     </p>
   );

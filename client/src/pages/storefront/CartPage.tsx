@@ -77,7 +77,7 @@ export default function CartPage() {
     <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-[#0a0c0b] px-6 py-14 font-dm-sans text-white">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(34,197,94,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(14,165,233,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
       />
       <div className="relative mx-auto max-w-[1120px] space-y-6">
         <div className="flex items-baseline gap-3">
@@ -99,7 +99,7 @@ export default function CartPage() {
             <button
               type="button"
               onClick={undo}
-              className="shrink-0 font-semibold text-emerald-400 hover:text-emerald-300"
+              className="shrink-0 font-semibold text-sky-400 hover:text-sky-300"
             >
               {t("cart.undo")}
             </button>
@@ -117,7 +117,7 @@ export default function CartPage() {
             </div>
             <Link
               to="/products"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-emerald-500 px-6 font-bold text-[#06140b] hover:bg-emerald-400"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-sky-500 px-6 font-bold text-[#06140b] hover:bg-sky-400"
             >
               {t("cart.browseProducts")}
             </Link>
@@ -127,9 +127,9 @@ export default function CartPage() {
             <div className="space-y-4">
               {freeDeliveryThreshold !== null &&
                 (meetsThreshold ? (
-                  <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/[0.26] bg-emerald-500/[0.07] px-4 py-3">
-                    <CheckCircle2 aria-hidden className="size-4 shrink-0 text-emerald-400" />
-                    <p className="text-sm font-semibold text-emerald-400">
+                  <div className="flex items-center gap-2 rounded-2xl border border-sky-500/[0.26] bg-sky-500/[0.07] px-4 py-3">
+                    <CheckCircle2 aria-hidden className="size-4 shrink-0 text-sky-400" />
+                    <p className="text-sm font-semibold text-sky-400">
                       {t("cart.freeDeliveryAchieved")}
                     </p>
                   </div>
@@ -179,7 +179,7 @@ export default function CartPage() {
                         <div className="min-w-0 space-y-1">
                           <Link
                             to={`/products/${item.productId}`}
-                            className="block truncate font-semibold text-white hover:text-emerald-400"
+                            className="block truncate font-semibold text-white hover:text-sky-400"
                           >
                             {name}
                           </Link>
@@ -296,7 +296,7 @@ export default function CartPage() {
               <div className="space-y-2">
                 <Link
                   to="/checkout"
-                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[13px] bg-emerald-500 font-bold text-[#06140b] hover:bg-emerald-400"
+                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[13px] bg-sky-500 font-bold text-[#06140b] hover:bg-sky-400"
                 >
                   {t("cart.checkout")}
                   <ArrowRight aria-hidden className="size-4" />
@@ -325,7 +325,7 @@ export default function CartPage() {
 function TrustLine({ icon: Icon, text }: { icon: typeof Wallet; text: string }) {
   return (
     <p className="flex items-center gap-2.5 text-[13px] text-neutral-300">
-      <Icon aria-hidden className="size-4 shrink-0 text-emerald-500" />
+      <Icon aria-hidden className="size-4 shrink-0 text-sky-500" />
       {text}
     </p>
   );

@@ -107,7 +107,7 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.38 0.09 152);
+    --primary: oklch(0.38 0.09 236);
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -118,7 +118,7 @@
     --destructive: oklch(0.577 0.245 27.325);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
-    --ring: oklch(0.58 0.09 152);
+    --ring: oklch(0.58 0.09 236);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -127,12 +127,12 @@
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.38 0.09 152);
+    --sidebar-primary: oklch(0.38 0.09 236);
     --sidebar-primary-foreground: oklch(0.985 0 0);
     --sidebar-accent: oklch(0.97 0 0);
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.58 0.09 152);
+    --sidebar-ring: oklch(0.58 0.09 236);
 
     /* Storefront photo-overlay tokens (ScrollFrameAnimation's headline and
        "Our story" panel overlays) — light-mode values. These draw over a
@@ -165,26 +165,26 @@
 
 .dark {
     color-scheme: dark;
-    /* Surfaces carry a whisper of the forest-green brand hue (152) so dark
+    /* Surfaces carry a whisper of the arctic-blue brand hue (236) so dark
        mode feels designed rather than flat gray. */
-    --background: oklch(0.15 0.008 152);
+    --background: oklch(0.15 0.008 236);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0.01 152);
+    --card: oklch(0.205 0.01 236);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0.01 152);
+    --popover: oklch(0.205 0.01 236);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.62 0.12 152);
-    --primary-foreground: oklch(0.145 0.02 152);
-    --secondary: oklch(0.269 0.012 152);
+    --primary: oklch(0.62 0.12 236);
+    --primary-foreground: oklch(0.145 0.02 236);
+    --secondary: oklch(0.269 0.012 236);
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0.012 152);
+    --muted: oklch(0.269 0.012 236);
     --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0.012 152);
+    --accent: oklch(0.269 0.012 236);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.62 0.12 152);
+    --ring: oklch(0.62 0.12 236);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -192,12 +192,12 @@
     --chart-5: oklch(0.269 0 0);
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.62 0.12 152);
-    --sidebar-primary-foreground: oklch(0.145 0.02 152);
+    --sidebar-primary: oklch(0.62 0.12 236);
+    --sidebar-primary-foreground: oklch(0.145 0.02 236);
     --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.62 0.12 152);
+    --sidebar-ring: oklch(0.62 0.12 236);
 
     /* Storefront hero overlay — dark-mode values (the original, un-themed
        look this section always had). */

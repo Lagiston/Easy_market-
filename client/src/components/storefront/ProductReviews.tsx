@@ -85,7 +85,7 @@ const GLASS_PANEL_CLASS =
   "rounded-[20px] border border-foreground/10 bg-card/60 backdrop-blur-xl reduced-transparency:bg-card reduced-transparency:backdrop-blur-none";
 
 const FORM_CONTROL_CLASS =
-  "rounded-xl border-foreground/10 bg-card/40 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16] reduced-transparency:bg-card";
+  "rounded-xl border-foreground/10 bg-card/40 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16] reduced-transparency:bg-card";
 
 function StarRow({ rating, label }: { rating: number; label: string }) {
   return (
@@ -173,7 +173,7 @@ function ReviewAvatar({ name }: { name: string }) {
   return (
     <span
       aria-hidden
-      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-sm font-bold text-white"
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-700 text-sm font-bold text-white"
     >
       {initial}
     </span>
@@ -427,7 +427,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
                       className="w-full"
                     >
                       <ProgressTrack className="h-1.5 bg-foreground/[0.07]">
-                        <ProgressIndicator className="bg-gradient-to-r from-emerald-500 to-emerald-400" />
+                        <ProgressIndicator className="bg-gradient-to-r from-sky-500 to-sky-400" />
                       </ProgressTrack>
                     </Progress>
                     <span className="text-right">{count}</span>
@@ -462,7 +462,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
             </Select>
             <Label
               className={cn(
-                "inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-card/60 px-3.5 py-2 text-sm text-muted-foreground backdrop-blur-xl transition-colors has-data-checked:border-emerald-500 has-data-checked:bg-emerald-500/10 has-data-checked:text-foreground reduced-transparency:bg-card",
+                "inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-card/60 px-3.5 py-2 text-sm text-muted-foreground backdrop-blur-xl transition-colors has-data-checked:border-sky-500 has-data-checked:bg-sky-500/10 has-data-checked:text-foreground reduced-transparency:bg-card",
               )}
             >
               <Checkbox
@@ -508,7 +508,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
                       {review.authorName}
                     </span>
                     {review.verifiedPurchase && (
-                      <Badge className="border-emerald-600/30 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-400">
+                      <Badge className="border-sky-600/30 bg-sky-500/15 text-sky-700 dark:border-sky-500/30 dark:text-sky-400">
                         <BadgeCheck aria-hidden className="size-3" />
                         {t("reviews.verifiedPurchase")}
                       </Badge>
@@ -552,7 +552,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
                     </p>
                   )}
                   {review.staffReply && (
-                    <div className="mt-3 ms-6 rounded-md border-s-2 border-emerald-500 bg-muted/50 p-3">
+                    <div className="mt-3 ms-6 rounded-md border-s-2 border-sky-500 bg-muted/50 p-3">
                       <p className="text-xs font-medium text-muted-foreground">
                         {t("reviews.staffReplyLabel")}
                       </p>
@@ -677,7 +677,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
               </p>
             )}
             {mutation.isSuccess && (
-              <p className="text-sm text-emerald-600 dark:text-emerald-400">
+              <p className="text-sm text-sky-600 dark:text-sky-400">
                 {t("reviews.success")}
               </p>
             )}
@@ -685,7 +685,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
               <Button
                 type="submit"
                 disabled={mutation.isPending}
-                className="w-auto bg-emerald-500 text-[#07130c] hover:bg-emerald-400"
+                className="w-auto bg-sky-500 text-[#07130c] hover:bg-sky-400"
               >
                 {mutation.isPending ? t("reviews.submitting") : t("reviews.submit")}
               </Button>

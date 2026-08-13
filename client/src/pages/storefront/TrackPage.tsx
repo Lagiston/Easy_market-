@@ -115,7 +115,7 @@ const MESSAGE_STATUS_LABEL_KEYS: Record<InquiryStatus, string> = {
 };
 
 const CONTROL_CLASS =
-  "h-12 rounded-[13px] border-white/[0.07] bg-white/[0.04] text-[15px] focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16]";
+  "h-12 rounded-[13px] border-white/[0.07] bg-white/[0.04] text-[15px] focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]";
 
 // This page forces a permanently-dark shell regardless of the site's actual
 // light/dark toggle — Money's default text-muted-foreground prefix would
@@ -148,7 +148,7 @@ function Timeline({
               <span
                 className={cn(
                   "grid size-[26px] shrink-0 place-items-center rounded-full",
-                  state === "completed" && "bg-emerald-500 text-[#06140b]",
+                  state === "completed" && "bg-sky-500 text-[#06140b]",
                   state === "current" &&
                     "bg-amber-500 text-[#1a1203] shadow-[0_0_0_5px_rgba(245,158,11,0.16)]",
                   state === "upcoming" && "border border-white/[0.16] bg-transparent",
@@ -161,7 +161,7 @@ function Timeline({
                 <span
                   className={cn(
                     "min-h-6 w-0.5 flex-1",
-                    state === "completed" ? "bg-emerald-500" : "bg-white/[0.12]",
+                    state === "completed" ? "bg-sky-500" : "bg-white/[0.12]",
                   )}
                 />
               )}
@@ -202,14 +202,14 @@ function StatusChip({
   tone,
 }: {
   label: string;
-  tone: "amber" | "emerald" | "gray" | "red";
+  tone: "amber" | "sky" | "gray" | "red";
 }) {
   return (
     <span
       className={cn(
         "shrink-0 rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap",
         tone === "red" && "border-red-500/32 bg-red-500/[0.14] text-red-400",
-        tone === "emerald" && "border-emerald-500/32 bg-emerald-500/[0.14] text-emerald-400",
+        tone === "sky" && "border-sky-500/32 bg-sky-500/[0.14] text-sky-400",
         tone === "amber" && "border-amber-500/32 bg-amber-500/[0.14] text-amber-400",
         tone === "gray" && "border-white/[0.16] bg-white/[0.06] text-neutral-400",
       )}
@@ -310,7 +310,7 @@ export default function TrackPage() {
     <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-[#0a0c0b] px-6 py-14 font-dm-sans text-white">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(34,197,94,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(14,165,233,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
       />
       <div
         className={cn(
@@ -319,11 +319,11 @@ export default function TrackPage() {
         )}
       >
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="grid size-13 place-items-center rounded-[15px] border border-emerald-500/25 bg-emerald-500/10">
+          <span className="grid size-13 place-items-center rounded-[15px] border border-sky-500/25 bg-sky-500/10">
             {mode === "order" ? (
-              <Truck aria-hidden className="size-6 text-emerald-500" />
+              <Truck aria-hidden className="size-6 text-sky-500" />
             ) : (
-              <MessageCircle aria-hidden className="size-6 text-emerald-500" />
+              <MessageCircle aria-hidden className="size-6 text-sky-500" />
             )}
           </span>
           <h1 className="text-[32px] font-extrabold tracking-[-0.03em]">{t("track.title")}</h1>
@@ -412,7 +412,7 @@ export default function TrackPage() {
               <Button
                 type="submit"
                 disabled={activeMutation.isPending}
-                className="h-[50px] w-full gap-2 rounded-[13px] bg-emerald-500 font-bold text-[#06140b] hover:bg-emerald-400"
+                className="h-[50px] w-full gap-2 rounded-[13px] bg-sky-500 font-bold text-[#06140b] hover:bg-sky-400"
               >
                 {activeMutation.isPending ? (
                   <>
@@ -446,7 +446,7 @@ export default function TrackPage() {
                   event.preventDefault();
                   window.HalatuChat?.open();
                 }}
-                className="inline-flex h-10 items-center gap-2 rounded-[13px] border border-emerald-500/30 bg-emerald-500/10 px-4 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/15"
+                className="inline-flex h-10 items-center gap-2 rounded-[13px] border border-sky-500/30 bg-sky-500/10 px-4 text-sm font-semibold text-sky-300 hover:bg-sky-500/15"
               >
                 <MessageCircle aria-hidden className="size-4" />
                 {t("track.chatWithUs")}
@@ -515,13 +515,13 @@ function OrderResultPanel({
         </div>
         <StatusChip
           label={t(ORDER_STATUS_LABEL_KEYS[status])}
-          tone={isCancelled ? "red" : isDelivered ? "emerald" : "amber"}
+          tone={isCancelled ? "red" : isDelivered ? "sky" : "amber"}
         />
       </div>
 
       {status === OrderStatus.OUT_FOR_DELIVERY && (
-        <div className="flex items-start gap-3 rounded-[13px] border border-emerald-500/25 bg-emerald-500/[0.07] p-4">
-          <Clock aria-hidden className="size-5 shrink-0 text-emerald-500" />
+        <div className="flex items-start gap-3 rounded-[13px] border border-sky-500/25 bg-sky-500/[0.07] p-4">
+          <Clock aria-hidden className="size-5 shrink-0 text-sky-500" />
           <div>
             <p className="font-semibold text-white">{t("track.order.eta.title")}</p>
             {lookupPhone && (
@@ -605,7 +605,7 @@ function OrderResultPanel({
       </div>
 
       <div className="flex items-start gap-3 rounded-[13px] border border-white/[0.07] bg-white/[0.03] p-4">
-        <Truck aria-hidden className="size-5 shrink-0 text-emerald-500" />
+        <Truck aria-hidden className="size-5 shrink-0 text-sky-500" />
         <div className="text-sm">
           <p className="font-semibold text-white">
             {t(isDelivery ? "track.order.deliveryMethod.delivery" : "track.order.deliveryMethod.pickup")}
@@ -675,7 +675,7 @@ function MessageResultPanel({
         </div>
         <StatusChip
           label={t(MESSAGE_STATUS_LABEL_KEYS[inquiry.status])}
-          tone={isClosed ? "gray" : isResolved ? "emerald" : "amber"}
+          tone={isClosed ? "gray" : isResolved ? "sky" : "amber"}
         />
       </div>
 
@@ -709,7 +709,7 @@ function MessageResultPanel({
                   "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm whitespace-pre-wrap",
                   isCustomer
                     ? "rounded-bl-[5px] border border-white/[0.07] bg-white/[0.045] text-neutral-200"
-                    : "rounded-br-[5px] border border-emerald-500/[0.26] bg-emerald-500/[0.11] text-white",
+                    : "rounded-br-[5px] border border-sky-500/[0.26] bg-sky-500/[0.11] text-white",
                 )}
               >
                 {message.body}

@@ -88,7 +88,7 @@ export default function ProductDetailPage() {
         style={
           {
             background:
-              "radial-gradient(60% 60% at 0% 0%, rgba(34,197,94,0.15) 0%, transparent 60%), radial-gradient(60% 60% at 100% 0%, rgba(255,90,31,0.09) 0%, transparent 60%)",
+              "radial-gradient(60% 60% at 0% 0%, rgba(14,165,233,0.15) 0%, transparent 60%), radial-gradient(60% 60% at 100% 0%, rgba(255,90,31,0.09) 0%, transparent 60%)",
           } as CSSProperties
         }
       />
@@ -190,7 +190,7 @@ export default function ProductDetailPage() {
                             })} · ${t("reviews.count", { count: related.reviewCount })}`}
                             className="flex items-center gap-1 text-sm text-muted-foreground"
                           >
-                            <Star aria-hidden className="size-3.5 fill-emerald-500 text-emerald-500" />
+                            <Star aria-hidden className="size-3.5 fill-sky-500 text-sky-500" />
                             <span aria-hidden>
                               {related.averageRating.toFixed(1)} ({related.reviewCount})
                             </span>
@@ -256,7 +256,7 @@ function ProductDetailContent({
         {t("products.saleBadge", { percent: discountPercent })}
       </Badge>
     ) : isNew ? (
-      <Badge className="border-emerald-600/30 bg-emerald-500/15 text-[11px] font-bold tracking-wide text-emerald-700 uppercase backdrop-blur dark:border-emerald-500/30 dark:text-emerald-400">
+      <Badge className="border-sky-600/30 bg-sky-500/15 text-[11px] font-bold tracking-wide text-sky-700 uppercase backdrop-blur dark:border-sky-500/30 dark:text-sky-400">
         {t("products.new")}
       </Badge>
     ) : null;
@@ -273,7 +273,7 @@ function ProductDetailContent({
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "radial-gradient(120% 60% at 50% 112%, rgba(34,197,94,0.30), transparent 62%)",
+                "radial-gradient(120% 60% at 50% 112%, rgba(14,165,233,0.30), transparent 62%)",
             }}
           />
           {product.images[activeImage] ? (
@@ -304,7 +304,7 @@ function ProductDetailContent({
                 className={cn(
                   "aspect-square overflow-hidden rounded-2xl border bg-white transition-all",
                   index === activeImage
-                    ? "border-emerald-500 ring-4 ring-emerald-500/[0.16]"
+                    ? "border-sky-500 ring-4 ring-sky-500/[0.16]"
                     : "border-foreground/10 hover:border-foreground/20",
                 )}
               >
@@ -317,7 +317,7 @@ function ProductDetailContent({
 
       <div className="space-y-5">
         <div>
-          <p className="text-[11px] font-bold tracking-[0.14em] text-emerald-500 uppercase">
+          <p className="text-[11px] font-bold tracking-[0.14em] text-sky-500 uppercase">
             {localize(product.category.name, language)}
           </p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-[-0.03em] leading-tight text-foreground">
@@ -399,11 +399,11 @@ function ProductDetailContent({
               {t("products.lowStock", { count: product.stock })}
             </p>
           ) : (
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-sky-600 dark:text-sky-400">
               <span
                 aria-hidden
-                className="size-2 rounded-full bg-emerald-500"
-                style={{ boxShadow: "0 0 0 3px rgba(34,197,94,0.18)" }}
+                className="size-2 rounded-full bg-sky-500"
+                style={{ boxShadow: "0 0 0 3px rgba(14,165,233,0.18)" }}
               />
               {t("products.inStockReady")}
             </p>
@@ -411,7 +411,7 @@ function ProductDetailContent({
 
           {product.wishlistCount > 0 && (
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Heart aria-hidden className="size-3.5 fill-emerald-500 text-emerald-500" />
+              <Heart aria-hidden className="size-3.5 fill-sky-500 text-sky-500" />
               {t("products.wishlistCount", { count: product.wishlistCount })}
             </p>
           )}
@@ -466,7 +466,7 @@ function ProductDetailContent({
                 );
                 toast.success(t("cart.addedToast", { name: productName }));
               }}
-              className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-[13px] bg-emerald-500 font-bold text-[#07130c] transition-all hover:bg-emerald-400 hover:shadow-[0_12px_30px_-12px_rgba(34,197,94,0.6)] disabled:pointer-events-none disabled:opacity-50"
+              className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-[13px] bg-sky-500 font-bold text-[#07130c] transition-all hover:bg-sky-400 hover:shadow-[0_12px_30px_-12px_rgba(14,165,233,0.6)] disabled:pointer-events-none disabled:opacity-50"
             >
               <ShoppingCart className="size-4" />
               {t("cart.addToCart")}
@@ -508,7 +508,7 @@ function ProductDetailContent({
               key={key}
               className={cn(GLASS_PANEL_CLASS, "flex items-start gap-2.5 rounded-2xl p-3.5")}
             >
-              <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+              <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-sky-500" />
               <div>
                 <p className="text-[13px] font-bold text-foreground">
                   {t(`products.perks.${key}.title`)}

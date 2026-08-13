@@ -26,7 +26,7 @@ export default function ThemeToggle({
     if (!resolvedTheme) return;
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", resolvedTheme === "dark" ? "#090c09" : "#ffffff");
+      ?.setAttribute("content", resolvedTheme === "dark" ? "#080c0e" : "#ffffff");
   }, [resolvedTheme]);
 
   return (

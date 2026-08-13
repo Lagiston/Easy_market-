@@ -120,9 +120,9 @@ const CHIP_ACTIVE_CLASS =
 const FIELD_LABEL_CLASS =
   "mb-2 text-[11px] leading-tight font-semibold tracking-[0.09em] text-muted-foreground uppercase";
 const CONTROL_CLASS =
-  "h-11 min-w-0 rounded-xl border-foreground/10 bg-card/40 px-3.5 text-sm hover:border-foreground/20 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16] reduced-transparency:bg-card";
+  "h-11 min-w-0 rounded-xl border-foreground/10 bg-card/40 px-3.5 text-sm hover:border-foreground/20 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16] reduced-transparency:bg-card";
 const SELECT_CONTROL_CLASS =
-  "h-11 w-full min-w-0 rounded-xl border-foreground/10 bg-card/40 text-sm hover:border-foreground/20 focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/[0.16] reduced-transparency:bg-card data-[size=default]:h-11";
+  "h-11 w-full min-w-0 rounded-xl border-foreground/10 bg-card/40 text-sm hover:border-foreground/20 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16] reduced-transparency:bg-card data-[size=default]:h-11";
 const FILTER_PILL_CLASS =
   "inline-flex max-w-full items-center gap-1.5 rounded-full border border-foreground/10 bg-card/60 py-1.5 ps-3 pe-2 text-[12.5px] text-foreground reduced-transparency:bg-card";
 
@@ -360,14 +360,14 @@ export default function ProductsPage() {
         style={
           {
             background:
-              "radial-gradient(60% 60% at 0% 0%, rgba(34,197,94,0.16) 0%, transparent 60%), radial-gradient(60% 60% at 100% 0%, rgba(255,90,31,0.10) 0%, transparent 60%)",
+              "radial-gradient(60% 60% at 0% 0%, rgba(14,165,233,0.16) 0%, transparent 60%), radial-gradient(60% 60% at 100% 0%, rgba(255,90,31,0.10) 0%, transparent 60%)",
           } as CSSProperties
         }
       />
       <div className="relative mx-auto max-w-[1340px] space-y-8 px-6 py-14">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold tracking-[0.32em] text-emerald-500 uppercase">
+            <p className="text-[11px] font-bold tracking-[0.32em] text-sky-500 uppercase">
               {t("home.eyebrow")}
             </p>
             <h1 className="mt-2 text-5xl font-black tracking-[-0.035em] text-foreground">
@@ -596,7 +596,7 @@ export default function ProductsPage() {
                     ? "rgba(115,115,115,0.45)"
                     : isOnSale
                       ? "rgba(255,90,31,0.45)"
-                      : "rgba(34,197,94,0.45)";
+                      : "rgba(14,165,233,0.45)";
 
                 const badge =
                   stockStatus === "soldOut" ? (
@@ -611,7 +611,7 @@ export default function ProductsPage() {
                       {t("products.saleBadge", { percent: discountPercent })}
                     </Badge>
                   ) : isNew ? (
-                    <Badge className="border-emerald-600/30 bg-emerald-500/15 text-[10.5px] font-bold tracking-wide text-emerald-700 uppercase backdrop-blur dark:border-emerald-500/30 dark:text-emerald-400">
+                    <Badge className="border-sky-600/30 bg-sky-500/15 text-[10.5px] font-bold tracking-wide text-sky-700 uppercase backdrop-blur dark:border-sky-500/30 dark:text-sky-400">
                       {t("products.new")}
                     </Badge>
                   ) : null;
@@ -777,19 +777,19 @@ export default function ProductsPage() {
                         <p
                           className={cn(
                             "flex items-center gap-1.5 text-[11.5px] font-semibold",
-                            stockStatus === "soldOut" ? "text-muted-foreground" : "text-emerald-600 dark:text-emerald-400",
+                            stockStatus === "soldOut" ? "text-muted-foreground" : "text-sky-600 dark:text-sky-400",
                           )}
                         >
                           <span
                             aria-hidden
                             className={cn(
                               "size-1.5 rounded-full",
-                              stockStatus === "soldOut" ? "bg-muted-foreground/50" : "bg-emerald-500",
+                              stockStatus === "soldOut" ? "bg-muted-foreground/50" : "bg-sky-500",
                             )}
                             style={
                               stockStatus === "soldOut"
                                 ? undefined
-                                : { boxShadow: "0 0 0 3px rgba(34,197,94,0.18)" }
+                                : { boxShadow: "0 0 0 3px rgba(14,165,233,0.18)" }
                             }
                           />
                           {t(`products.stock.${stockStatus}`)}
