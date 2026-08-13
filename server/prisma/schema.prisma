@@ -169,6 +169,8 @@ model CustomerVerification {
 model Category {
   id        String    @id
   name      Json
+  imageUrl  String?
+  homeRow   String?
   createdAt DateTime  @default(now())
   deletedAt DateTime?
   products  Product[]

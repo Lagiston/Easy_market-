@@ -14,6 +14,13 @@
     "label": "Langue"
   },
   "home": {
+    "categories": {
+      "lookGoodKicker": "Look & Beauté",
+      "viewAll": "Voir tout",
+      "itemCount_one": "{{count}} article",
+      "itemCount_other": "{{count}} articles",
+      "tileAriaLabel": "Parcourir {{name}}, {{count}} articles"
+    },
     "features": {
       "heading": "Comment nous livrons",
       "subheading": "Des façons simples et flexibles de recevoir votre commande — payez en espèces dans les deux cas.",

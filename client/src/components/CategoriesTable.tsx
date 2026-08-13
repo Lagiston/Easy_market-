@@ -14,6 +14,8 @@ import {
 export type CategoryRow = {
   id: string;
   name: LocalizedName;
+  imageUrl: string | null;
+  homeRow: string | null;
 };
 
 export default function CategoriesTable({

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createCategorySchema,
@@ -13,7 +13,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import CategoryImageUpload from "@/components/CategoryImageUpload";
 import type { CategoryRow } from "@/components/CategoriesTable";
+
+const HOME_ROW_LABELS: Record<string, string> = {
+  look_good: "Look Good row",
+};
 
 export default function CategoryForm({
   category,
@@ -26,13 +38,17 @@ export default function CategoryForm({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<UpdateCategoryFormInput, unknown, UpdateCategoryInput>({
     resolver: zodResolver(category ? updateCategorySchema : createCategorySchema),
     defaultValues: category
-      ? { name: { en: category.name.en, ar: category.name.ar ?? "" } }
-      : { name: { en: "", ar: "" } },
+      ? {
+          name: { en: category.name.en, ar: category.name.ar ?? "" },
+          homeRow: category.homeRow ?? "",
+        }
+      : { name: { en: "", ar: "" }, homeRow: "" },
   });
 
   const mutation = useMutation({
@@ -110,6 +126,39 @@ export default function CategoryForm({
           </div>
         </TabsContent>
       </Tabs>
+      <div className="grid gap-1.5">
+        <Label htmlFor="category-form-home-row">Homepage row</Label>
+        <Controller
+          name="homeRow"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value || "none"}
+              onValueChange={(value) => field.onChange(value === "none" ? "" : value)}
+            >
+              <SelectTrigger id="category-form-home-row" className="w-full">
+                <SelectValue placeholder="Not on homepage">
+                  {(value: string) => HOME_ROW_LABELS[value] ?? "Not on homepage"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Not on homepage</SelectItem>
+                <SelectItem value="look_good">Look Good row</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
+      {category && (
+        <div className="grid gap-1.5">
+          <Label>Cover image</Label>
+          <CategoryImageUpload
+            categoryId={category.id}
+            imageUrl={category.imageUrl}
+            onChanged={() => queryClient.invalidateQueries({ queryKey: ["categories"] })}
+          />
+        </div>
+      )}
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
       <DialogFooter showCloseButton>
         <Button type="submit" disabled={mutation.isPending}>

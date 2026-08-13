@@ -103,10 +103,12 @@ export {
 export {
   createCategorySchema,
   updateCategorySchema,
+  HOME_ROWS,
   type CreateCategoryInput,
   type CreateCategoryFormInput,
   type UpdateCategoryInput,
   type UpdateCategoryFormInput,
+  type HomeRow,
 } from "./schemas/category";
 export {
   InquiryChannel,

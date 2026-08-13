@@ -362,10 +362,22 @@ storefrontRouter.post<{ id: string }>("/storefront/products/:id/reviews", async 
 storefrontRouter.get("/storefront/categories", async (_req, res) => {
   const categories = await prisma.category.findMany({
     where: { deletedAt: null },
-    select: { id: true, name: true },
+    select: { id: true, name: true, imageUrl: true, homeRow: true },
     orderBy: { createdAt: "desc" },
   });
-  res.json({ categories });
+
+  // Same aggregate-then-join-by-id shape as attachProductSummaries /
+  // getMostWishlistedProducts — one grouped count query, not N+1.
+  const counts = await prisma.product.groupBy({
+    by: ["categoryId"],
+    where: { deletedAt: null, categoryId: { in: categories.map((c) => c.id) } },
+    _count: true,
+  });
+  const countById = new Map(counts.map((c) => [c.categoryId, c._count]));
+
+  res.json({
+    categories: categories.map((c) => ({ ...c, itemCount: countById.get(c.id) ?? 0 })),
+  });
 });
 
 // Distinct tags across the non-deleted catalog, for the storefront's tag

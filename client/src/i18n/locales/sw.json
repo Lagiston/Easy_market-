@@ -14,6 +14,13 @@
     "label": "Lugha"
   },
   "home": {
+    "categories": {
+      "lookGoodKicker": "Onekana Vizuri",
+      "viewAll": "Angalia yote",
+      "itemCount_one": "bidhaa {{count}}",
+      "itemCount_other": "bidhaa {{count}}",
+      "tileAriaLabel": "Vinjari {{name}}, bidhaa {{count}}"
+    },
     "features": {
       "heading": "Jinsi Tunavyowasilisha",
       "subheading": "Njia rahisi na rahisi kubadilika za kupata oda yako — lipa taslimu kwa njia yoyote.",

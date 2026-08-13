@@ -14,6 +14,13 @@
     "label": "اللغة"
   },
   "home": {
+    "categories": {
+      "lookGoodKicker": "التألق",
+      "viewAll": "عرض الكل",
+      "itemCount_one": "{{count}} منتج",
+      "itemCount_other": "{{count}} منتجات",
+      "tileAriaLabel": "تصفح {{name}}، {{count}} منتجات"
+    },
     "features": {
       "heading": "كيف نوصّل طلبك",
       "subheading": "طرق بسيطة ومرنة لاستلام طلبك — الدفع نقدًا في الحالتين.",

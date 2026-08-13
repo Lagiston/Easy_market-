@@ -76,9 +76,15 @@ export type StorefrontProduct = {
   createdAt: string;
 };
 
-type StorefrontCategory = { id: string; name: LocalizedName };
+export type StorefrontCategory = {
+  id: string;
+  name: LocalizedName;
+  imageUrl: string | null;
+  homeRow: string | null;
+  itemCount: number;
+};
 
-const ALL_CATEGORIES = "all";
+export const ALL_CATEGORIES = "all";
 const ALL_TAGS = "all";
 
 const SORT_LABEL_KEYS: Record<StorefrontProductSort, string> = {
@@ -186,7 +192,12 @@ export default function ProductsPage() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [categoryId, setCategoryId] = useState(ALL_CATEGORIES);
+  // `category` is read-once, not two-way synced — same reasoning as `tag`
+  // above: a homepage category tile link should land here pre-filtered
+  // without every chip click round-tripping through the URL.
+  const [categoryId, setCategoryId] = useState(
+    () => searchParams.get("category") ?? ALL_CATEGORIES,
+  );
   const [tag, setTag] = useState(() => searchParams.get("tag") ?? ALL_TAGS);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");

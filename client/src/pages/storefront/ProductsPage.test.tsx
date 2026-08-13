@@ -60,8 +60,8 @@ const products: StorefrontProduct[] = [
 ];
 
 const categories = [
-  { id: "c1", name: { en: "Groceries", ar: "بقالة" } },
-  { id: "c2", name: { en: "Beverages" } },
+  { id: "c1", name: { en: "Groceries", ar: "بقالة" }, imageUrl: null, homeRow: null, itemCount: 1 },
+  { id: "c2", name: { en: "Beverages" }, imageUrl: null, homeRow: null, itemCount: 1 },
 ];
 
 function mockApi(overrides?: {
@@ -424,6 +424,16 @@ describe("storefront ProductsPage", () => {
 
     await waitFor(() => {
       expect(lastProductsParams()).toEqual({ tag: "organic", sort: "newest", page: 1 });
+    });
+  });
+
+  it("pre-fills the category filter from an incoming ?category= query param", async () => {
+    mockApi({ products: [products[0]!], total: 1 });
+    renderPage("/products?category=c1");
+    await screen.findByText("Rice 5kg");
+
+    await waitFor(() => {
+      expect(lastProductsParams()).toEqual({ categoryId: "c1", sort: "newest", page: 1 });
     });
   });
 
