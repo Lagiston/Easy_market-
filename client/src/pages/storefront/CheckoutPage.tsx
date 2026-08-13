@@ -648,6 +648,11 @@ export default function CheckoutPage() {
               <p className="text-center text-[12.5px] text-neutral-500">
                 {t("checkout.confirmationNote")}
               </p>
+              <p className="text-center text-[12.5px]">
+                <Link to="/policy#returns" className="text-sky-500 underline hover:text-sky-400">
+                  {t("checkout.returnPolicyLink")}
+                </Link>
+              </p>
             </div>
           </aside>
         </form>

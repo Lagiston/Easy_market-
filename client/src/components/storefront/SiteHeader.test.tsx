@@ -44,6 +44,15 @@ describe("SiteHeader", () => {
     expect(desktopHomeLink).not.toHaveClass("bg-primary/10");
   });
 
+  it("renders About and Policy nav links pointing to their routes", () => {
+    renderHeader();
+    const aboutLinks = screen.getAllByRole("link", { name: "About us" });
+    expect(aboutLinks.some((link) => link.getAttribute("href") === "/about")).toBe(true);
+
+    const policyLinks = screen.getAllByRole("link", { name: "Policy" });
+    expect(policyLinks.some((link) => link.getAttribute("href") === "/policy")).toBe(true);
+  });
+
   it("keeps the Products nav link active on a nested product detail route", () => {
     renderHeader("/products/abc123");
     const productsLinks = screen.getAllByRole("link", { name: "Products" });

@@ -60,6 +60,7 @@ export default function Layout({ user }: { user: SessionUser }) {
     { to: "/admin/promo-blocks", label: "Promo blocks", adminOnly: true },
     { to: "/admin/reviews", label: "Reviews", adminOnly: true },
     { to: "/admin/settings", label: "Settings", adminOnly: true },
+    { to: "/admin/site-content", label: "Site content", adminOnly: true },
   ].filter((item) => !item.adminOnly || user.role === Role.ADMIN);
 
   return (

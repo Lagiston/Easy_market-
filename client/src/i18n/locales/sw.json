@@ -3,6 +3,8 @@
   "nav": {
     "home": "Nyumbani",
     "products": "Bidhaa",
+    "about": "Kuhusu sisi",
+    "policy": "Sera",
     "contact": "Wasiliana",
     "signIn": "Ingia",
     "theme": "Badilisha mandhari",
@@ -40,6 +42,34 @@
         "link": "Tafuta duka letu →"
       }
     }
+  },
+  "about": {
+    "title": "Kuhusu Halatu",
+    "subtitle": "Duka la mtaani, sasa mtandaoni.",
+    "storyHeading": "Hadithi yetu",
+    "storyBody1": "Halatu ilianza kama duka moja la kimwili, lililojengwa kwa kuwafahamu wateja wetu kwa majina na kuhakikisha kila agizo ni sahihi kabla halijatoka mlangoni.",
+    "storyBody2": "Kuleta duka lilelile mtandaoni kunamaanisha uangalifu ule ule, tofauti ni tu mlango mkubwa zaidi — watu halisi wanaokagua kila agizo, bidhaa halisi kwenye rafu, na timu inayoweza kufikiwa kweli.",
+    "valuesHeading": "Tunachosimamia",
+    "valueQualityTitle": "Bidhaa halisi, bei halisi",
+    "valueQualityBody": "Unachokiona ndicho kilichopo dukani — hakuna orodha za uongo, hakuna mabadiliko ya kushtukiza.",
+    "valueServiceTitle": "Watu, si fomu tu",
+    "valueServiceBody": "Kila agizo na kila ujumbe hukaguliwa na mmoja wa timu yetu kabla ya kuthibitishwa au kujibiwa.",
+    "valueCommunityTitle": "Imejengwa kwa ajili ya jamii yetu",
+    "valueCommunityBody": "Lipa unapopokea au unapochukua, usafirishaji wa ndani, na msaada kwa lugha ambazo wateja wetu huzungumza kweli.",
+    "cta": "Nunua mkusanyiko"
+  },
+  "policy": {
+    "title": "Sera",
+    "subtitle": "Urejeshaji, faragha, na masharti — kwa lugha rahisi.",
+    "returnsHeading": "Urejeshaji na malipo ya kurudishwa",
+    "returnsBody1": "Kwa kuwa unalipa unapopokea au unapochukua, huwahi kulipa kabla ya kuona agizo lako — kama kuna hitilafu, unaweza kulikataa papo hapo na hutalipishwa.",
+    "returnsBody2": "Wafanyakazi wanathibitisha kila agizo kwa simu kabla ya kulituma. Ikiwa hatuwezi kukufikia baada ya majaribio kadhaa, agizo linafutwa na bidhaa yoyote iliyohifadhiwa inarudishwa kiotomatiki. Unaweza pia kufuatilia hali ya agizo lako wakati wowote kwa kutumia msimbo wa agizo na nambari yako ya simu.",
+    "privacyHeading": "Faragha",
+    "privacyBody1": "Tunakusanya jina, nambari ya simu, na anwani unayotoa wakati wa malipo ili kutimiza na kuthibitisha agizo lako — kuagiza bila akaunti kunapatikana kila wakati, na akaunti haihitajiki kamwe kununua kitu.",
+    "privacyBody2": "Ukifungua akaunti, tunahifadhi maelezo ya wasifu wako (jina, simu, anwani, na taarifa za hiari kama jinsia au eneo) ili uweze kuagiza tena haraka zaidi na kuona historia ya maagizo yako. Hatuuzi data yako, na hatuna orodha za matangazo kwa barua pepe.",
+    "termsHeading": "Masharti ya huduma",
+    "termsBody1": "Bei na bidhaa zilizoonyeshwa kwenye tovuti ndizo zilizopo dukani kwa hakika; ikiwa kitu kitaisha kati ya agizo lako na simu yetu ya uthibitisho, tutakujulisha kabla ya kukutoza chochote.",
+    "termsBody2": "Kwa sasa hakuna njia ya kujirekebishia nenosiri la akaunti ya mteja — ukifungiwa nje, wasiliana nasi kupitia ukurasa wa Mawasiliano na mfanyakazi atakusaidia. Maoni ya bidhaa yanakaguliwa na yanaweza kuondolewa yakikiuka miongozo ya kawaida (barua taka, matusi, au maudhui yasiyohusiana)."
   },
   "contact": {
     "title": "Wasiliana nasi",
@@ -287,6 +317,7 @@
     "placeOrderWithTotal": "Weka oda · {{total}}",
     "placing": "Inatuma oda…",
     "confirmationNote": "Hutalipa chochote sasa. Tutakupigia simu ndani ya saa moja kuthibitisha, kisha kuwasilisha.",
+    "returnPolicyLink": "Soma sera yetu ya urejeshaji",
     "error": "Imeshindwa kutuma oda. Tafadhali jaribu tena.",
     "saveAddress": "Hifadhi anwani hii kwenye wasifu wangu",
     "saveAddressError": "Imeshindwa kuhifadhi anwani hii kwenye wasifu wako, lakini oda yako imewekwa."

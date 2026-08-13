@@ -3,6 +3,8 @@
   "nav": {
     "home": "Accueil",
     "products": "Produits",
+    "about": "À propos",
+    "policy": "Politiques",
     "contact": "Contact",
     "signIn": "Se connecter",
     "theme": "Changer de thème",
@@ -40,6 +42,34 @@
         "link": "Trouver notre magasin →"
       }
     }
+  },
+  "about": {
+    "title": "À propos de Halatu",
+    "subtitle": "Un commerce de quartier, désormais en ligne.",
+    "storyHeading": "Notre histoire",
+    "storyBody1": "Halatu a commencé comme une seule boutique physique, fondée sur le fait de connaître nos clients par leur nom et de s'assurer que chaque commande était correcte avant de quitter la boutique.",
+    "storyBody2": "Amener ce même commerce en ligne signifie le même soin, mais avec un plus grand seuil — de vraies personnes vérifient chaque commande, du vrai stock sur les étagères, et une équipe réellement joignable.",
+    "valuesHeading": "Ce que nous défendons",
+    "valueQualityTitle": "Vrai stock, vrais prix",
+    "valueQualityBody": "Ce que vous voyez est ce qui est sur l'étagère — pas d'annonces fantômes, pas de substitutions surprises.",
+    "valueServiceTitle": "Des personnes, pas juste un formulaire",
+    "valueServiceBody": "Chaque commande et chaque message est vérifié par un membre de notre équipe avant d'être confirmé ou répondu.",
+    "valueCommunityTitle": "Conçu pour notre communauté",
+    "valueCommunityBody": "Paiement à la livraison ou au retrait, livraison locale, et assistance dans les langues que nos clients parlent réellement.",
+    "cta": "Voir la collection"
+  },
+  "policy": {
+    "title": "Politiques",
+    "subtitle": "Retours, confidentialité et conditions — en langage clair.",
+    "returnsHeading": "Retours et remboursements",
+    "returnsBody1": "Comme vous payez à la livraison ou au retrait, vous ne payez jamais avant d'avoir vu votre commande — si quelque chose ne va pas, vous pouvez la refuser sur place et elle ne vous sera pas facturée.",
+    "returnsBody2": "Notre équipe confirme chaque commande par téléphone avant son envoi. Si nous ne parvenons pas à vous joindre après plusieurs tentatives, la commande est annulée et tout stock réservé est automatiquement libéré. Vous pouvez aussi suivre l'état de votre commande à tout moment avec son code et votre numéro de téléphone.",
+    "privacyHeading": "Confidentialité",
+    "privacyBody1": "Nous collectons le nom, le numéro de téléphone et l'adresse que vous fournissez lors du paiement pour traiter et confirmer votre commande — la commande en tant qu'invité est toujours disponible, et un compte n'est jamais requis pour acheter quoi que ce soit.",
+    "privacyBody2": "Si vous créez un compte, nous conservons les informations de votre profil (nom, téléphone, adresse, et informations facultatives comme le genre ou la région) afin que vous puissiez recommander plus rapidement et consulter votre historique de commandes. Nous ne vendons pas vos données et n'avons aucune liste de diffusion marketing par e-mail.",
+    "termsHeading": "Conditions d'utilisation",
+    "termsBody1": "Les prix et le stock affichés sur le site sont bien ce qui est réellement disponible en magasin ; si un article vient à manquer entre votre commande et notre appel de confirmation, nous vous en informerons avant de vous facturer quoi que ce soit.",
+    "termsBody2": "Il n'existe actuellement aucune réinitialisation de mot de passe en libre-service pour les comptes clients — si vous êtes bloqué, contactez-nous via la page Contact et un membre de l'équipe vous aidera. Les avis sur les produits sont modérés et peuvent être supprimés s'ils enfreignent les règles de bon sens (spam, abus ou contenu sans rapport)."
   },
   "contact": {
     "title": "Contactez-nous",
@@ -287,6 +317,7 @@
     "placeOrderWithTotal": "Passer la commande · {{total}}",
     "placing": "Envoi de la commande…",
     "confirmationNote": "Vous ne payez rien maintenant. Nous vous appellerons dans l'heure pour confirmer, puis livrerons.",
+    "returnPolicyLink": "Lire notre politique de retour",
     "error": "Impossible d'envoyer la commande. Veuillez réessayer.",
     "saveAddress": "Enregistrer cette adresse dans mon profil",
     "saveAddressError": "Impossible d'enregistrer cette adresse dans votre profil, mais votre commande a été passée."

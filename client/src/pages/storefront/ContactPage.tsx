@@ -114,7 +114,7 @@ export default function ContactPage() {
   const mapQuery = settings?.contactAddress ? encodeURIComponent(settings.contactAddress) : null;
 
   return (
-    <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-[#0a0c0b] px-6 py-14 font-dm-sans text-white">
+    <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-background px-6 py-14 font-dm-sans text-foreground">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(14,165,233,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
@@ -122,7 +122,7 @@ export default function ContactPage() {
       <div className="relative mx-auto max-w-[1160px] space-y-10">
         <div className="space-y-3 text-center">
           <h1 className="text-[44px] font-extrabold tracking-[-0.035em]">{t("contact.title")}</h1>
-          <p className="text-neutral-400">{t("contact.subtitle")}</p>
+          <p className="text-muted-foreground">{t("contact.subtitle")}</p>
         </div>
 
         {(whatsAppHref || callHref) && (
@@ -141,7 +141,7 @@ export default function ContactPage() {
             {callHref && (
               <a
                 href={callHref}
-                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[13px] border border-white/[0.07] bg-white/[0.032] px-5 font-bold text-white backdrop-blur-xl transition-colors hover:bg-white/[0.06] reduced-transparency:bg-neutral-900 reduced-transparency:backdrop-blur-none"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[13px] border border-foreground/10 bg-card/40 px-5 font-bold text-foreground backdrop-blur-xl transition-colors hover:bg-card/60 reduced-transparency:bg-card reduced-transparency:backdrop-blur-none"
               >
                 <Phone aria-hidden className="size-5" />
                 {t("contact.call")}
@@ -152,15 +152,15 @@ export default function ContactPage() {
 
         <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[0.85fr_1fr]">
           {/* Details panel */}
-          <div className="space-y-6 rounded-[20px] border border-white/[0.07] bg-white/[0.032] p-6 backdrop-blur-xl reduced-transparency:bg-neutral-950 reduced-transparency:backdrop-blur-none">
+          <div className="space-y-6 rounded-[20px] border border-foreground/10 bg-card/40 p-6 backdrop-blur-xl reduced-transparency:bg-card reduced-transparency:backdrop-blur-none">
             {openStatus && (
-              <div className="space-y-3 border-b border-white/[0.07] pb-5">
+              <div className="space-y-3 border-b border-foreground/10 pb-5">
                 <span
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
                     openStatus.isOpen
-                      ? "bg-sky-500/15 text-sky-400"
-                      : "bg-white/[0.06] text-neutral-400",
+                      ? "bg-sky-500/15 text-sky-700 dark:text-sky-400"
+                      : "bg-card/60 text-muted-foreground",
                   )}
                 >
                   <Clock aria-hidden className="size-3.5" />
@@ -172,7 +172,7 @@ export default function ContactPage() {
                   <div
                     className={cn(
                       "flex justify-between",
-                      !openStatus.isSunday ? "text-white" : "text-neutral-500",
+                      !openStatus.isSunday ? "text-foreground" : "text-muted-foreground",
                     )}
                   >
                     <span>{t("contact.hoursMonSat")}</span>
@@ -181,7 +181,7 @@ export default function ContactPage() {
                   <div
                     className={cn(
                       "flex justify-between",
-                      openStatus.isSunday ? "text-white" : "text-neutral-500",
+                      openStatus.isSunday ? "text-foreground" : "text-muted-foreground",
                     )}
                   >
                     <span>{t("contact.hoursSun")}</span>
@@ -224,7 +224,7 @@ export default function ContactPage() {
             </div>
 
             {mapQuery && (
-              <div className="relative h-[170px] overflow-hidden rounded-2xl border border-white/[0.07]">
+              <div className="relative h-[170px] overflow-hidden rounded-2xl border border-foreground/10">
                 <iframe
                   title={t("contact.address")}
                   src={`https://maps.google.com/maps?q=${mapQuery}&output=embed`}
@@ -244,8 +244,8 @@ export default function ContactPage() {
               </div>
             )}
 
-            <div className="space-y-3 border-t border-white/[0.07] pt-5">
-              <p className="text-xs font-semibold tracking-[0.06em] text-neutral-500 uppercase">
+            <div className="space-y-3 border-t border-foreground/10 pt-5">
+              <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                 {t("contact.followUs")}
               </p>
               <div className="flex gap-3">
@@ -255,7 +255,7 @@ export default function ContactPage() {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex size-10 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.032] text-white backdrop-blur-xl transition-transform hover:-translate-y-0.5 hover:bg-white/[0.06] motion-reduce:transition-none reduced-transparency:bg-neutral-900 reduced-transparency:backdrop-blur-none"
+                    className="flex size-10 items-center justify-center rounded-xl border border-foreground/10 bg-card/40 text-foreground backdrop-blur-xl transition-transform hover:-translate-y-0.5 hover:bg-card/60 motion-reduce:transition-none reduced-transparency:bg-card reduced-transparency:backdrop-blur-none"
                   >
                     <Icon aria-hidden className="size-4.5" />
                   </a>
@@ -265,26 +265,26 @@ export default function ContactPage() {
           </div>
 
           {/* Form panel */}
-          <div className="rounded-[20px] border border-white/[0.07] bg-white/[0.032] p-6 backdrop-blur-xl reduced-transparency:bg-neutral-950 reduced-transparency:backdrop-blur-none">
+          <div className="rounded-[20px] border border-foreground/10 bg-card/40 p-6 backdrop-blur-xl reduced-transparency:bg-card reduced-transparency:backdrop-blur-none">
             {mutation.isSuccess ? (
               <div className="flex flex-col items-center gap-3 py-10 text-center">
                 <CheckCircle2 aria-hidden className="size-12 text-sky-500" />
                 <h2 className="text-xl font-bold">{t("contact.successTitle")}</h2>
-                <p className="max-w-sm text-sm text-neutral-400">{t("contact.successDetail")}</p>
+                <p className="max-w-sm text-sm text-muted-foreground">{t("contact.successDetail")}</p>
                 <div className="mt-2 rounded-[13px] border border-sky-500/25 bg-sky-500/[0.07] px-5 py-3">
-                  <p className="text-[11px] font-semibold tracking-[0.08em] text-neutral-500 uppercase">
+                  <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
                     {t("contact.messageCodeLabel")}
                   </p>
-                  <p className="text-[20px] font-extrabold tracking-[0.08em] text-white">
+                  <p className="text-[20px] font-extrabold tracking-[0.08em] text-foreground">
                     {mutation.data.code}
                   </p>
                 </div>
-                <p className="max-w-sm text-[12.5px] text-neutral-500">
+                <p className="max-w-sm text-[12.5px] text-muted-foreground">
                   {t("contact.messageCodeHint")}
                 </p>
                 <Link
                   to="/track"
-                  className="mt-1 inline-flex h-10 items-center gap-2 rounded-[13px] border border-sky-500/30 bg-sky-500/10 px-4 text-sm font-semibold text-sky-300 hover:bg-sky-500/15"
+                  className="mt-1 inline-flex h-10 items-center gap-2 rounded-[13px] border border-sky-500/30 bg-sky-500/10 px-4 text-sm font-semibold text-sky-700 hover:bg-sky-500/15 dark:text-sky-300"
                 >
                   {t("contact.trackMessage")}
                 </Link>
@@ -292,7 +292,7 @@ export default function ContactPage() {
             ) : (
               <>
                 <h2 className="mb-1 text-lg font-semibold">{t("contact.formTitle")}</h2>
-                <p className="mb-5 text-sm text-neutral-400">{t("contact.responseTime")}</p>
+                <p className="mb-5 text-sm text-muted-foreground">{t("contact.responseTime")}</p>
                 <form
                   noValidate
                   onSubmit={handleSubmit((input) =>
@@ -332,7 +332,7 @@ export default function ContactPage() {
                       )}
                     />
                     {errors.topic && (
-                      <p className="text-sm text-red-400">
+                      <p className="text-sm text-destructive">
                         {translateFieldError(errors.topic.message, t)}
                       </p>
                     )}
@@ -352,7 +352,7 @@ export default function ContactPage() {
                         {...register("customerName")}
                       />
                       {errors.customerName && (
-                        <p className="text-sm text-red-400">
+                        <p className="text-sm text-destructive">
                           {translateFieldError(errors.customerName.message, t)}
                         </p>
                       )}
@@ -372,7 +372,7 @@ export default function ContactPage() {
                         {...register("customerPhone")}
                       />
                       {errors.customerPhone && (
-                        <p className="text-sm text-red-400">
+                        <p className="text-sm text-destructive">
                           {translateFieldError(errors.customerPhone.message, t)}
                         </p>
                       )}
@@ -390,9 +390,9 @@ export default function ContactPage() {
                       className={CONTROL_CLASS}
                       {...register("customerEmail")}
                     />
-                    <p className="text-[12.5px] text-neutral-500">{t("contact.emailOptionalHint")}</p>
+                    <p className="text-[12.5px] text-muted-foreground">{t("contact.emailOptionalHint")}</p>
                     {errors.customerEmail && (
-                      <p className="text-sm text-red-400">
+                      <p className="text-sm text-destructive">
                         {translateFieldError(errors.customerEmail.message, t)}
                       </p>
                     )}
@@ -408,13 +408,13 @@ export default function ContactPage() {
                       placeholder={t("contact.messagePlaceholder")}
                       disabled={mutation.isPending}
                       aria-invalid={!!errors.message}
-                      className="min-h-[130px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]"
+                      className="min-h-[130px] rounded-xl border-foreground/10 bg-card/40 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]"
                       {...register("message")}
                     />
                     <p
                       className={cn(
                         "text-end text-xs",
-                        isMessageOverLimit ? "text-red-400" : "text-neutral-500",
+                        isMessageOverLimit ? "text-destructive" : "text-muted-foreground",
                       )}
                     >
                       {t("contact.messageCount", {
@@ -423,13 +423,13 @@ export default function ContactPage() {
                       })}
                     </p>
                     {errors.message && (
-                      <p className="text-sm text-red-400">
+                      <p className="text-sm text-destructive">
                         {translateFieldError(errors.message.message, t)}
                       </p>
                     )}
                   </div>
 
-                  {serverError && <p className="text-sm text-red-400">{serverError}</p>}
+                  {serverError && <p className="text-sm text-destructive">{serverError}</p>}
 
                   <Button
                     type="submit"
@@ -439,7 +439,7 @@ export default function ContactPage() {
                     <Send aria-hidden className="size-4" />
                     {mutation.isPending ? t("contact.sending") : t("contact.send")}
                   </Button>
-                  <p className="text-center text-[12.5px] text-neutral-500">
+                  <p className="text-center text-[12.5px] text-muted-foreground">
                     {t("contact.privacyNote")}
                   </p>
                 </form>
@@ -453,7 +453,7 @@ export default function ContactPage() {
 }
 
 const CONTROL_CLASS =
-  "h-[46px] rounded-xl border-white/[0.07] bg-white/[0.04] focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]";
+  "h-[46px] rounded-xl border-foreground/10 bg-card/40 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16]";
 
 function FieldLabel({
   htmlFor,
@@ -466,12 +466,12 @@ function FieldLabel({
 }) {
   const { t } = useTranslation();
   return (
-    <Label htmlFor={htmlFor} className="text-sm font-medium text-neutral-300">
+    <Label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
       {children}
       {required ? (
         <span className="text-sky-500"> *</span>
       ) : (
-        <span className="text-neutral-500"> {t("contact.optionalLabel")}</span>
+        <span className="text-muted-foreground"> {t("contact.optionalLabel")}</span>
       )}
     </Label>
   );
@@ -500,18 +500,18 @@ function ContactRow({
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       className={cn(
         "group flex items-start gap-3.5 py-4",
-        !last && "border-b border-white/[0.07]",
+        !last && "border-b border-foreground/10",
       )}
     >
       <span className="grid size-[38px] shrink-0 place-items-center rounded-xl border border-sky-500/20 bg-sky-500/10">
         <Icon aria-hidden className="size-4.5 text-sky-500" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-xs font-semibold tracking-[0.06em] text-neutral-500 uppercase">
+        <span className="block text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
           {label}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[15.5px] font-semibold text-white transition-colors group-hover:text-sky-500">
+          <span className="truncate text-[15.5px] font-semibold text-foreground transition-colors group-hover:text-sky-500">
             {value}
           </span>
           <ArrowUpRight
@@ -519,7 +519,7 @@ function ContactRow({
             className="size-4 shrink-0 text-sky-500 opacity-0 transition-opacity group-hover:opacity-100"
           />
         </span>
-        <span className="block text-[12.5px] text-neutral-500">{hint}</span>
+        <span className="block text-[12.5px] text-muted-foreground">{hint}</span>
       </span>
     </a>
   );

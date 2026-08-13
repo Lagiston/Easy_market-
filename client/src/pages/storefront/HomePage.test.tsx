@@ -61,7 +61,7 @@ describe("storefront HomePage", () => {
     expect(
       screen.getByText("Wigs, makeup, fashion, and fine details — everything to turn heads."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /shop the collection/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /shop collection/i })).toHaveAttribute(
       "href",
       "/products",
     );

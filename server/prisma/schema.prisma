@@ -247,6 +247,18 @@ model Setting {
   @@map("setting")
 }
 
+// Admin-editable body text for the storefront's About/Policy pages. Same
+// key-value shape as Setting, but `value` is a plain String (always prose,
+// never a number/boolean/JsonNull), and the valid `key`s are a fixed,
+// closed set (SITE_CONTENT_KEYS in @es-market/core) rather than open-ended.
+model SiteContent {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("site_content")
+}
+
 enum OrderStatus {
   RECEIVED
   CONFIRMED

@@ -7,6 +7,8 @@ import StorefrontHomePage from "./pages/storefront/HomePage";
 import StorefrontProductsPage from "./pages/storefront/ProductsPage";
 import StorefrontProductDetailPage from "./pages/storefront/ProductDetailPage";
 import StorefrontContactPage from "./pages/storefront/ContactPage";
+import StorefrontAboutPage from "./pages/storefront/AboutPage";
+import StorefrontPolicyPage from "./pages/storefront/PolicyPage";
 import StorefrontCartPage from "./pages/storefront/CartPage";
 import StorefrontCheckoutPage from "./pages/storefront/CheckoutPage";
 import StorefrontOrderConfirmationPage from "./pages/storefront/OrderConfirmationPage";
@@ -18,6 +20,7 @@ import StorefrontAccountProfilePage from "./pages/storefront/AccountProfilePage"
 import StorefrontAccountOrdersPage from "./pages/storefront/AccountOrdersPage";
 import StorefrontAccountWishlistPage from "./pages/storefront/AccountWishlistPage";
 import SettingsPage from "./pages/SettingsPage";
+import SiteContentPage from "./pages/SiteContentPage";
 import OrdersPage from "./pages/OrdersPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import InquiriesPage from "./pages/InquiriesPage";
@@ -39,6 +42,8 @@ function App() {
         <Route index element={<StorefrontHomePage />} />
         <Route path="products" element={<StorefrontProductsPage />} />
         <Route path="products/:id" element={<StorefrontProductDetailPage />} />
+        <Route path="about" element={<StorefrontAboutPage />} />
+        <Route path="policy" element={<StorefrontPolicyPage />} />
         <Route path="contact" element={<StorefrontContactPage />} />
         <Route path="cart" element={<StorefrontCartPage />} />
         <Route path="checkout" element={<StorefrontCheckoutPage />} />
@@ -77,6 +82,7 @@ function App() {
         <Route path="promo-blocks" element={<PromoBlocksPage />} />
         <Route path="reviews" element={<ReviewsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="site-content" element={<SiteContentPage />} />
       </Route>
     </Routes>
   );

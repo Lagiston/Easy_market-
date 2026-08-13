@@ -23,6 +23,8 @@ import LanguageSwitcher from "./LanguageSwitcher";
 export const NAV_ITEMS = [
   { labelKey: "nav.home", to: "/" },
   { labelKey: "nav.products", to: "/products" },
+  { labelKey: "nav.about", to: "/about" },
+  { labelKey: "nav.policy", to: "/policy" },
   { labelKey: "nav.contact", to: "/contact" },
 ];
 
@@ -83,8 +85,8 @@ export default function SiteHeader() {
     <header className="sticky top-4 z-40 mx-4 animate-[navbar-enter_0.5s_ease-out_forwards] motion-reduce:animate-none md:mx-8">
       <div
         className={cn(
-          "grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-[18px] border border-border/60 bg-background/70 px-4 backdrop-blur-xl transition-[height,box-shadow,background-color,transform] duration-300 motion-reduce:transition-none reduced-transparency:bg-background reduced-transparency:backdrop-blur-none md:px-8 min-[860px]:grid-cols-[1fr_auto_1fr]",
-          scrolled ? "h-14 bg-background/50 shadow-md min-[860px]:h-14" : "h-16 min-[860px]:h-[66px]",
+          "grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-[18px] border border-border/60 bg-background/70 px-4 backdrop-blur-xl transition-[height,box-shadow,background-color,transform] duration-300 motion-reduce:transition-none reduced-transparency:bg-background reduced-transparency:backdrop-blur-none md:px-8 min-[960px]:grid-cols-[1fr_auto_1fr]",
+          scrolled ? "h-14 bg-background/50 shadow-md min-[960px]:h-14" : "h-16 min-[960px]:h-[66px]",
           hidden ? "pointer-events-none translate-y-[calc(-100%_-_1rem)]" : "translate-y-0",
         )}
       >
@@ -104,7 +106,7 @@ export default function SiteHeader() {
         {/* Center — floating pill nav */}
         <nav
           aria-label={t("nav.mainNavigation")}
-          className="col-start-2 hidden items-center gap-1 justify-self-center rounded-full bg-background/90 p-1.5 backdrop-blur-md reduced-transparency:bg-background reduced-transparency:backdrop-blur-none min-[860px]:flex"
+          className="col-start-2 hidden items-center gap-1 justify-self-center rounded-full bg-background/90 p-1.5 backdrop-blur-md reduced-transparency:bg-background reduced-transparency:backdrop-blur-none min-[960px]:flex"
         >
           {/* `end` is only set for "/" — every other nav item should stay
               highlighted on its nested routes too (e.g. /products/:id keeps
@@ -118,7 +120,7 @@ export default function SiteHeader() {
         </nav>
 
         {/* Right zone — desktop */}
-        <div className="col-start-3 hidden flex-nowrap items-center gap-3 justify-self-end min-[860px]:flex">
+        <div className="col-start-3 hidden flex-nowrap items-center gap-3 justify-self-end min-[960px]:flex">
           <Link
             to="/cart"
             aria-label={cartLabel}
@@ -149,7 +151,7 @@ export default function SiteHeader() {
         </div>
 
         {/* Mobile trigger */}
-        <div className="col-start-3 justify-self-end min-[860px]:hidden">
+        <div className="col-start-3 justify-self-end min-[960px]:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger render={<Button variant="ghost" size="icon" aria-label={t("nav.menu")} />}>
               <Menu className="size-5" />

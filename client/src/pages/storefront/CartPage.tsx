@@ -22,7 +22,7 @@ import { customerAuthClient } from "@/lib/customer-auth-client";
 import { usePublicStoreSettings } from "@/lib/storefront-settings";
 import { Money, formatCurrencyValue } from "@/components/Money";
 
-const MONEY_PREFIX_CLASS = "text-[0.66em] font-semibold text-neutral-500";
+const MONEY_PREFIX_CLASS = "text-[0.66em] font-semibold text-muted-foreground";
 // Long enough to read and react to, short enough that the bar doesn't linger
 // once its ~6s job (letting a misclick be corrected) is done.
 const UNDO_TIMEOUT_MS = 6000;
@@ -74,7 +74,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-[#0a0c0b] px-6 py-14 font-dm-sans text-white">
+    <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-background px-6 py-14 font-dm-sans text-foreground">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(14,165,233,0.16)_0%,transparent_70%)] reduced-transparency:hidden"
@@ -83,15 +83,15 @@ export default function CartPage() {
         <div className="flex items-baseline gap-3">
           <h1 className="text-[32px] font-extrabold tracking-[-0.02em]">{t("cart.title")}</h1>
           {items.length > 0 && (
-            <span className="text-sm text-neutral-500">
+            <span className="text-sm text-muted-foreground">
               {itemCount} {t("products.itemCount", { count: itemCount })}
             </span>
           )}
         </div>
 
         {pending && (
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.05] px-4 py-3 text-sm">
-            <p className="min-w-0 truncate text-neutral-300">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-foreground/10 bg-card/50 px-4 py-3 text-sm">
+            <p className="min-w-0 truncate text-foreground">
               {t(pending.kind === "saved" ? "cart.savedBar" : "cart.removedBar", {
                 name: localize(pending.item.name, language),
               })}
@@ -99,7 +99,7 @@ export default function CartPage() {
             <button
               type="button"
               onClick={undo}
-              className="shrink-0 font-semibold text-sky-400 hover:text-sky-300"
+              className="shrink-0 font-semibold text-sky-700 hover:text-sky-600 dark:text-sky-400 dark:hover:text-sky-300"
             >
               {t("cart.undo")}
             </button>
@@ -107,13 +107,13 @@ export default function CartPage() {
         )}
 
         {items.length === 0 ? (
-          <div className="mx-auto max-w-md space-y-4 rounded-[20px] border border-dashed border-white/[0.15] p-10 text-center">
-            <div className="mx-auto grid size-14 place-items-center rounded-full bg-white/[0.05]">
-              <ShoppingCart aria-hidden className="size-6 text-neutral-500" />
+          <div className="mx-auto max-w-md space-y-4 rounded-[20px] border border-dashed border-foreground/15 p-10 text-center">
+            <div className="mx-auto grid size-14 place-items-center rounded-full bg-card/50">
+              <ShoppingCart aria-hidden className="size-6 text-muted-foreground" />
             </div>
             <div className="space-y-1">
-              <p className="text-lg font-semibold text-white">{t("cart.emptyTitle")}</p>
-              <p className="text-sm text-neutral-400">{t("cart.emptySubtitle")}</p>
+              <p className="text-lg font-semibold text-foreground">{t("cart.emptyTitle")}</p>
+              <p className="text-sm text-muted-foreground">{t("cart.emptySubtitle")}</p>
             </div>
             <Link
               to="/products"
@@ -128,19 +128,19 @@ export default function CartPage() {
               {freeDeliveryThreshold !== null &&
                 (meetsThreshold ? (
                   <div className="flex items-center gap-2 rounded-2xl border border-sky-500/[0.26] bg-sky-500/[0.07] px-4 py-3">
-                    <CheckCircle2 aria-hidden className="size-4 shrink-0 text-sky-400" />
-                    <p className="text-sm font-semibold text-sky-400">
+                    <CheckCircle2 aria-hidden className="size-4 shrink-0 text-sky-700 dark:text-sky-400" />
+                    <p className="text-sm font-semibold text-sky-700 dark:text-sky-400">
                       {t("cart.freeDeliveryAchieved")}
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-2 rounded-2xl border border-amber-500/[0.26] bg-amber-500/[0.07] px-4 py-3">
-                    <p className="text-sm font-semibold text-amber-400">
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
                       {t("cart.freeDeliveryProgress", {
                         amount: `TSh ${formatCurrencyValue(freeDeliveryThreshold - subtotal)}`,
                       })}
                     </p>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.08]">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
                       <div
                         className="h-full rounded-full bg-amber-500 transition-all"
                         style={{
@@ -159,10 +159,13 @@ export default function CartPage() {
                   return (
                     <div
                       key={item.productId}
-                      className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.032] p-4 transition-colors hover:border-white/[0.15]"
+                      className="flex flex-wrap items-center gap-3 rounded-2xl border border-foreground/10 bg-card/40 p-4 transition-colors hover:border-foreground/20"
                     >
                       <div className="flex min-w-0 flex-1 items-center gap-4">
-                        <div className="flex size-[74px] shrink-0 items-center justify-center overflow-hidden rounded-[13px] border border-white/[0.07] bg-[radial-gradient(80%_70%_at_50%_30%,_#242a26,_#141815)]">
+                        {/* Sanctioned theme-independent photo well (matches
+                            the product grid/detail pages) so a transparent
+                            PNG upload still renders consistently. */}
+                        <div className="flex size-[74px] shrink-0 items-center justify-center overflow-hidden rounded-[13px] border border-foreground/10 bg-white">
                           {item.imageUrl ? (
                             <img
                               src={item.imageUrl}
@@ -179,7 +182,7 @@ export default function CartPage() {
                         <div className="min-w-0 space-y-1">
                           <Link
                             to={`/products/${item.productId}`}
-                            className="block truncate font-semibold text-white hover:text-sky-400"
+                            className="block truncate font-semibold text-foreground hover:text-sky-500"
                           >
                             {name}
                           </Link>
@@ -188,16 +191,16 @@ export default function CartPage() {
                               already baked into the product name itself. */}
                           {(item.size || item.color) &&
                             !name.includes([item.size, item.color].filter(Boolean).join(" / ")) && (
-                              <p className="text-xs text-neutral-500">
+                              <p className="text-xs text-muted-foreground">
                                 {[item.size, item.color].filter(Boolean).join(" / ")}
                               </p>
                             )}
-                          <p className="text-[12.5px] text-neutral-500">
+                          <p className="text-[12.5px] text-muted-foreground">
                             <Money amount={item.price} prefixClassName={MONEY_PREFIX_CLASS} />{" "}
                             {t("checkout.each")}
                           </p>
                           {lowStock && (
-                            <span className="inline-flex w-fit items-center rounded-full border border-amber-500/30 bg-amber-500/[0.12] px-2 py-0.5 text-[11px] font-semibold text-amber-400">
+                            <span className="inline-flex w-fit items-center rounded-full border border-amber-500/30 bg-amber-500/[0.12] px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
                               {t("products.lowStock", { count: item.stock })}
                             </span>
                           )}
@@ -211,11 +214,11 @@ export default function CartPage() {
                             aria-label={t("cart.decrease", { name })}
                             disabled={item.quantity <= 1}
                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                            className="grid size-8 place-items-center rounded-lg border border-white/[0.07] bg-white/[0.04] text-white disabled:opacity-40 hover:not-disabled:bg-white/[0.08]"
+                            className="grid size-8 place-items-center rounded-lg border border-foreground/10 bg-card/40 text-foreground disabled:opacity-40 hover:not-disabled:bg-card/70"
                           >
                             <Minus className="size-3.5" />
                           </button>
-                          <span className="w-6 text-center text-sm tabular-nums text-white">
+                          <span className="w-6 text-center text-sm tabular-nums text-foreground">
                             {item.quantity}
                           </span>
                           <button
@@ -223,13 +226,13 @@ export default function CartPage() {
                             aria-label={t("cart.increase", { name })}
                             disabled={item.quantity >= item.stock}
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            className="grid size-8 place-items-center rounded-lg border border-white/[0.07] bg-white/[0.04] text-white disabled:opacity-40 hover:not-disabled:bg-white/[0.08]"
+                            className="grid size-8 place-items-center rounded-lg border border-foreground/10 bg-card/40 text-foreground disabled:opacity-40 hover:not-disabled:bg-card/70"
                           >
                             <Plus className="size-3.5" />
                           </button>
                         </div>
 
-                        <p className="w-26 shrink-0 text-end text-base font-bold tabular-nums text-white">
+                        <p className="w-26 shrink-0 text-end text-base font-bold tabular-nums text-foreground">
                           <Money amount={lineTotal} prefixClassName={MONEY_PREFIX_CLASS} />
                         </p>
 
@@ -238,7 +241,7 @@ export default function CartPage() {
                             type="button"
                             aria-label={t("cart.saveForLater", { name })}
                             onClick={() => dropItem(item, "saved")}
-                            className="grid size-[34px] place-items-center rounded-[10px] text-neutral-500 hover:bg-white/[0.06] hover:text-pink-400"
+                            className="grid size-[34px] place-items-center rounded-[10px] text-muted-foreground hover:bg-card/60 hover:text-pink-500"
                           >
                             <Heart className="size-4" />
                           </button>
@@ -246,7 +249,7 @@ export default function CartPage() {
                             type="button"
                             aria-label={t("cart.remove", { name })}
                             onClick={() => dropItem(item, "removed")}
-                            className="grid size-[34px] place-items-center rounded-[10px] text-neutral-500 hover:bg-white/[0.06] hover:text-red-400"
+                            className="grid size-[34px] place-items-center rounded-[10px] text-muted-foreground hover:bg-card/60 hover:text-destructive"
                           >
                             <Trash2 className="size-4" />
                           </button>
@@ -259,17 +262,17 @@ export default function CartPage() {
             </div>
 
             <aside className="sticky top-6 space-y-4">
-              <div className="space-y-3 rounded-[18px] border border-white/[0.07] bg-white/[0.032] p-[22px] backdrop-blur-xl reduced-transparency:bg-neutral-950 reduced-transparency:backdrop-blur-none">
+              <div className="space-y-3 rounded-[18px] border border-foreground/10 bg-card/40 p-[22px] backdrop-blur-xl reduced-transparency:bg-card reduced-transparency:backdrop-blur-none">
                 <div className="space-y-1.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">{t("cart.subtotal")}</span>
-                    <span className="tabular-nums text-white">
+                    <span className="text-muted-foreground">{t("cart.subtotal")}</span>
+                    <span className="tabular-nums text-foreground">
                       <Money amount={subtotal} prefixClassName={MONEY_PREFIX_CLASS} />
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">{t("cart.delivery")}</span>
-                    <span className="tabular-nums text-white">
+                    <span className="text-muted-foreground">{t("cart.delivery")}</span>
+                    <span className="tabular-nums text-foreground">
                       {deliveryFee === 0 ? (
                         t("checkout.free")
                       ) : (
@@ -277,17 +280,17 @@ export default function CartPage() {
                       )}
                     </span>
                   </div>
-                  <p className="text-[12px] text-neutral-500">
+                  <p className="text-[12px] text-muted-foreground">
                     {contactAddress
                       ? t("cart.pickupNote", { address: contactAddress })
                       : t("cart.pickupNoteFallback")}
                   </p>
                 </div>
-                <div className="flex items-center justify-between border-t border-white/[0.07] pt-3">
-                  <span className="text-sm font-medium text-neutral-300">
+                <div className="flex items-center justify-between border-t border-foreground/10 pt-3">
+                  <span className="text-sm font-medium text-foreground">
                     {t("cart.estimatedTotal")}
                   </span>
-                  <span className="text-xl font-extrabold tabular-nums text-white">
+                  <span className="text-xl font-extrabold tabular-nums text-foreground">
                     <Money amount={total} prefixClassName={MONEY_PREFIX_CLASS} />
                   </span>
                 </div>
@@ -303,13 +306,13 @@ export default function CartPage() {
                 </Link>
                 <Link
                   to="/products"
-                  className="flex h-11 w-full items-center justify-center rounded-[13px] text-sm font-medium text-neutral-300 hover:bg-white/[0.06]"
+                  className="flex h-11 w-full items-center justify-center rounded-[13px] text-sm font-medium text-foreground hover:bg-card/60"
                 >
                   {t("cart.keepShopping")}
                 </Link>
               </div>
 
-              <div className="space-y-2.5 rounded-[18px] border border-white/[0.07] bg-white/[0.032] p-[22px]">
+              <div className="space-y-2.5 rounded-[18px] border border-foreground/10 bg-card/40 p-[22px]">
                 <TrustLine icon={Wallet} text={t("cart.trustCash")} />
                 <TrustLine icon={Truck} text={t("cart.trustDelivery")} />
                 <TrustLine icon={Store} text={t("cart.trustPickup")} />
@@ -324,7 +327,7 @@ export default function CartPage() {
 
 function TrustLine({ icon: Icon, text }: { icon: typeof Wallet; text: string }) {
   return (
-    <p className="flex items-center gap-2.5 text-[13px] text-neutral-300">
+    <p className="flex items-center gap-2.5 text-[13px] text-foreground">
       <Icon aria-hidden className="size-4 shrink-0 text-sky-500" />
       {text}
     </p>

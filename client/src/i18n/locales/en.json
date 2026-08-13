@@ -3,6 +3,8 @@
   "nav": {
     "home": "Home",
     "products": "Products",
+    "about": "About us",
+    "policy": "Policy",
     "contact": "Contact",
     "signIn": "Sign in",
     "theme": "Toggle theme",
@@ -18,7 +20,7 @@
     "headlineLine1": "Serve looks.",
     "headlineLine2": "Head to toe.",
     "subline": "Wigs, makeup, fashion, and fine details — everything to turn heads.",
-    "cta": "Shop the collection",
+    "cta": "Shop Collection",
     "ourStory": {
       "kicker": "OUR STORY",
       "headlinePart1": "For people who choose to ",
@@ -68,9 +70,28 @@
     },
     "videoSection": {
       "headline": "The details finish the look.",
-      "subline": "Makeup, earrings, and the finishing pieces that pull an outfit together.",
+      "sublinePart1": "Makeup, earrings, and ",
+      "sublineHighlight": "the finishing pieces",
+      "sublinePart2": " that pull an outfit together.",
       "cta": "Explore beauty"
     }
+  },
+  "about": {
+    "title": "About Halatu",
+    "subtitle": "A neighborhood store, now online.",
+    "storyHeading": "Our story",
+    "valuesHeading": "What we stand for",
+    "valueQualityTitle": "Real stock, real prices",
+    "valueServiceTitle": "People, not just a form",
+    "valueCommunityTitle": "Built for our community",
+    "cta": "Shop Collection"
+  },
+  "policy": {
+    "title": "Policies",
+    "subtitle": "Returns, privacy, and terms — in plain language.",
+    "returnsHeading": "Returns & refunds",
+    "privacyHeading": "Privacy",
+    "termsHeading": "Terms of service"
   },
   "contact": {
     "title": "Contact us",
@@ -318,6 +339,7 @@
     "placeOrderWithTotal": "Place order · {{total}}",
     "placing": "Placing order…",
     "confirmationNote": "You won't pay anything now. We'll call you within the hour to confirm, then deliver.",
+    "returnPolicyLink": "Read our return policy",
     "error": "Could not place the order. Please try again.",
     "saveAddress": "Save this address to my profile",
     "saveAddressError": "Could not save this address to your profile, but your order was placed."
