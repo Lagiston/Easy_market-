@@ -141,9 +141,9 @@
     --hero-fg: #101512;
     --hero-muted: #4d554f;
     --hero-accent: #e0450f;
-    --hero-brand: #15803d;
-    --hero-brand-hover: #166f38;
-    --hero-brand-ink: #ffffff;
+    --hero-brand: #0b4f63;
+    --hero-brand-hover: #0f766e;
+    --hero-brand-ink: #e6faff;
     /* "Our story" panel surface — a fixed-alpha rgba (not a bg- /NN Tailwind
        opacity modifier) since the two themes need different alpha values,
        not just different hues, to stay legible over the photo. */
@@ -204,9 +204,9 @@
     --hero-fg: #f2f5f2;
     --hero-muted: #b4bab6;
     --hero-accent: #ff5a1f;
-    --hero-brand: #22c55e;
-    --hero-brand-hover: #34d67a;
-    --hero-brand-ink: #06140b;
+    --hero-brand: #0b4f63;
+    --hero-brand-hover: #0f766e;
+    --hero-brand-ink: #e6faff;
     --hero-panel-bg: rgba(10, 12, 11, 0.52);
     --hero-line: rgba(255, 255, 255, 0.1);
     --hero-panel-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.9);

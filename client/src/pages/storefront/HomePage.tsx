@@ -269,10 +269,13 @@ export default function HomePage() {
             </p>
             <Link
               to="/products"
-              className="inline-flex h-[52px] items-center gap-2 rounded-[13px] bg-hero-brand px-7 font-bold text-hero-brand-ink outline-none transition-colors duration-300 hover:bg-hero-brand-hover focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-hero-fg motion-reduce:transition-none"
+              className="group relative isolate inline-flex h-[52px] items-center gap-2 rounded-[13px] border border-cyan-400/40 bg-[linear-gradient(135deg,#0b1f33_0%,#0b4f63_50%,#0f766e_100%)] px-7 font-bold text-hero-brand-ink shadow-[0_0_24px_rgba(14,165,233,0.55)] outline-none transition-[filter] duration-300 before:absolute before:inset-0 before:-z-10 before:rounded-[13px] before:shadow-[0_0_36px_rgba(14,165,233,0.9)] before:content-[''] before:animate-pulse hover:brightness-125 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-hero-fg motion-reduce:transition-none motion-reduce:before:animate-none"
             >
               {t("home.cta")}
-              <ArrowRight data-icon="inline-end" className="rtl:rotate-180" />
+              <ArrowRight
+                data-icon="inline-end"
+                className="rtl:rotate-180 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+              />
             </Link>
           </div>
         </ScrollFrameAnimation>
