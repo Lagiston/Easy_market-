@@ -24,7 +24,7 @@ export default function StorefrontLayout() {
         <div className="absolute top-1/3 -end-40 size-[28rem] rounded-full bg-primary/5 blur-3xl dark:bg-primary/10" />
       </div>
       <SiteHeader />
-      <main id="main-content" tabIndex={-1} className="flex-1 px-6 py-8 focus:outline-none">
+      <main id="main-content" tabIndex={-1} className="flex-1 px-6 pt-8 focus:outline-none">
         <Outlet />
       </main>
       <SiteFooter />
