@@ -13,11 +13,6 @@ import { ScrollFrameAnimation } from "@/components/storefront/ScrollFrameAnimati
 import CategoryBrowseSection from "@/components/storefront/CategoryBrowseSection";
 import type { StorefrontCategory } from "@/pages/storefront/ProductsPage";
 
-// Reuses the hero's own final scroll frame for the "Our story" card's
-// circular portrait — this codebase has no dedicated "Our story" campaign
-// photography yet, and this keeps it visually continuous with the hero.
-const OUR_STORY_PHOTO_SRC = "/scroll-frames/ezgif-frame-270.jpg";
-
 // One decorative accent (orange, --hero-accent) for the pillar icons —
 // matches the kicker/headline highlight in the "Our story" card above.
 const OUR_STORY_PILLARS: { key: "brand" | "category" | "wear"; Icon: LucideIcon }[] = [
@@ -204,47 +199,28 @@ export default function HomePage() {
       <div className="relative -mx-6 -mt-[120px]">
         <ScrollFrameAnimation
           endChildren={
-            <div
-              className="flex w-[300px] max-w-[64vw] flex-col items-center gap-4 rounded-[280px] border px-3.5 pt-3.5 pb-7 backdrop-blur-[26px] backdrop-saturate-[1.2] transition-[background-color,border-color,box-shadow] duration-300 motion-reduce:transition-none reduced-transparency:bg-background reduced-transparency:backdrop-blur-none"
-              style={{
-                background: "var(--hero-panel-bg)",
-                borderColor: "var(--hero-line)",
-                boxShadow: "var(--hero-panel-shadow)",
-              }}
-            >
-              <div
-                className="aspect-square w-full overflow-hidden rounded-full border"
-                style={{
-                  borderColor: "var(--hero-line)",
-                  boxShadow: "0 0 80px color-mix(in srgb, var(--hero-accent) 18%, transparent)",
-                }}
-              >
-                <img
-                  src={OUR_STORY_PHOTO_SRC}
-                  alt=""
-                  aria-hidden
-                  className="size-full object-cover"
-                />
+            // Panel chrome (pill card, backdrop-blur, glow, photo) removed —
+            // just the kicker/headline/paragraph left, floating directly over
+            // the hero photo like the left-side headline block. drop-shadow-lg
+            // on each piece keeps it legible without a card behind it, same
+            // convention pillarsChildren already uses for its own floating text.
+            <div className="flex w-[360px] max-w-[70vw] flex-col items-center gap-6 px-4 text-center font-archivo sm:px-6">
+              <div className="flex items-center gap-2">
+                <span aria-hidden className="h-px w-[30px] bg-hero-accent drop-shadow-lg" />
+                <span className="text-sm font-bold tracking-[0.32em] text-hero-accent uppercase drop-shadow-lg">
+                  {t("home.ourStory.kicker")}
+                </span>
               </div>
 
-              <div className="flex flex-col items-center gap-3 px-4 text-center font-archivo sm:px-6">
-                <div className="flex items-center gap-2">
-                  <span aria-hidden className="h-px w-[26px] bg-hero-accent" />
-                  <span className="text-xs font-bold tracking-[0.32em] text-hero-accent uppercase">
-                    {t("home.ourStory.kicker")}
-                  </span>
-                </div>
+              <p className="text-[26px] leading-[1.3] font-extrabold tracking-[-0.02em] text-hero-fg text-balance drop-shadow-lg sm:text-[32px]">
+                {t("home.ourStory.headlinePart1")}
+                <span className="text-hero-accent">{t("home.ourStory.headlineHighlight")}</span>
+                {t("home.ourStory.headlinePart2")}
+              </p>
 
-                <p className="text-[22px] leading-[1.08] font-extrabold tracking-[-0.02em] text-hero-fg text-balance sm:text-[28px]">
-                  {t("home.ourStory.headlinePart1")}
-                  <span className="text-hero-accent">{t("home.ourStory.headlineHighlight")}</span>
-                  {t("home.ourStory.headlinePart2")}
-                </p>
-
-                <p className="max-w-[340px] text-base leading-[1.55] text-hero-muted text-pretty">
-                  {t("home.ourStory.body")}
-                </p>
-              </div>
+              <p className="max-w-[400px] text-lg leading-[1.85] text-hero-muted text-pretty drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+                {t("home.ourStory.body")}
+              </p>
             </div>
           }
           pillarsChildren={OUR_STORY_PILLARS.map(({ key, Icon }) => (

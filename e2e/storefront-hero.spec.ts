@@ -30,8 +30,8 @@ test.describe("Storefront homepage hero (ScrollFrameAnimation)", () => {
 });
 
 // "Our story" content moved back into the scroll-jacked hero as
-// ScrollFrameAnimation's `endChildren` (a left-center glass card) and
-// `pillarsChildren` (a bottom-right set of three labelled pillars), both in
+// ScrollFrameAnimation's `endChildren` (a right-center glass card) and
+// `pillarsChildren` (a bottom-left set of three labelled pillars), both in
 // HomePage.tsx. Under normal motion these fade in sequentially via scroll
 // progress (opacity-0 + pointer-events: none until scrolled into range), so
 // they're only asserted here under prefers-reduced-motion, where

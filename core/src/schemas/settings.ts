@@ -9,11 +9,12 @@ const LOW_STOCK_DEFAULT_ERROR =
   "Default low stock threshold must be zero or a positive whole number";
 const CONTACT_EMAIL_ERROR = "Enter a valid email address";
 const CONTACT_PHONE_ERROR = "Phone number is too long";
+const SOCIAL_URL_ERROR = "Enter a valid link (starting with http:// or https://)";
 
 // Store-wide settings kept in the `Setting` key-value table. `freeDeliveryThreshold`
 // null means the free-delivery-above-total rule is disabled; `contactPhone`/
-// `contactEmail`/`contactAddress` null means "not configured yet" (hidden on
-// the storefront contact page, rather than shown blank).
+// `contactEmail`/`contactAddress`/`social*Url` null means "not configured yet"
+// (hidden on the storefront contact page/footer, rather than shown blank).
 export type StoreSettings = {
   deliveryFee: number;
   freeDeliveryThreshold: number | null;
@@ -22,6 +23,14 @@ export type StoreSettings = {
   contactPhone: string | null;
   contactEmail: string | null;
   contactAddress: string | null;
+  socialInstagramUrl: string | null;
+  socialTiktokUrl: string | null;
+  socialFacebookUrl: string | null;
+  // WhatsApp is the one exception with a fallback: when unset, the storefront
+  // still derives a wa.me link from contactPhone (buildWhatsAppLink) — see
+  // client/src/lib/social-icons.tsx's getSocialLinks. Set this to override
+  // that derived link (e.g. with a wa.me link carrying a preset message).
+  socialWhatsappUrl: string | null;
 };
 
 // Shape returned by GET /storefront/settings — callAttemptsBeforeCancel and
@@ -29,7 +38,15 @@ export type StoreSettings = {
 // (unauthenticated) storefront.
 export type PublicStoreSettings = Pick<
   StoreSettings,
-  "deliveryFee" | "freeDeliveryThreshold" | "contactPhone" | "contactEmail" | "contactAddress"
+  | "deliveryFee"
+  | "freeDeliveryThreshold"
+  | "contactPhone"
+  | "contactEmail"
+  | "contactAddress"
+  | "socialInstagramUrl"
+  | "socialTiktokUrl"
+  | "socialFacebookUrl"
+  | "socialWhatsappUrl"
 >;
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -40,6 +57,10 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   contactPhone: null,
   contactEmail: null,
   contactAddress: null,
+  socialInstagramUrl: null,
+  socialTiktokUrl: null,
+  socialFacebookUrl: null,
+  socialWhatsappUrl: null,
 };
 
 // Same "" → undefined clear pattern as freeDeliveryThreshold above and
@@ -49,6 +70,15 @@ const optionalTextSetting = () =>
   z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
     z.string().trim().transform(sanitizeText).optional(),
+  );
+
+// Same clear-on-blank pattern as optionalTextSetting, plus a plain .url()
+// check — these are always meant to be full external links (a profile page,
+// a wa.me link), never a same-site path like PromoBlock's ctaUrl.
+const optionalSocialUrlSetting = () =>
+  z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.string().trim().max(300, SOCIAL_URL_ERROR).url(SOCIAL_URL_ERROR).optional(),
   );
 
 export const updateSettingsSchema = z.object({
@@ -85,6 +115,10 @@ export const updateSettingsSchema = z.object({
   // Uncapped, same as Customer.address/Order.address — a physical address
   // isn't a bounded-length field the way an email or phone number is.
   contactAddress: optionalTextSetting(),
+  socialInstagramUrl: optionalSocialUrlSetting(),
+  socialTiktokUrl: optionalSocialUrlSetting(),
+  socialFacebookUrl: optionalSocialUrlSetting(),
+  socialWhatsappUrl: optionalSocialUrlSetting(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;

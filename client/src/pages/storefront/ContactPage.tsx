@@ -26,7 +26,7 @@ import {
 import { translateFieldError } from "@/lib/zod-error-i18n";
 import { usePublicStoreSettings } from "@/lib/storefront-settings";
 import { formatPhoneDisplay, buildWhatsAppLink } from "@/lib/contact-links";
-import { InstagramIcon, TiktokIcon, FacebookIcon } from "@/lib/social-icons";
+import { getSocialLinks } from "@/lib/social-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,18 +39,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
-// No admin-configurable social settings exist anywhere in this codebase yet —
-// these three are plain hardcoded links (confirmed with the store owner),
-// not sourced from Settings like phone/email/address are. Icons are shared
-// with SiteFooter.tsx via @/lib/social-icons (which also has a WhatsApp
-// icon, not used here since this page already has its own WhatsApp CTA
-// button above — a second icon-button would be a duplicate affordance).
-const SOCIAL_LINKS = [
-  { key: "instagram", href: "https://instagram.com/halatu", Icon: InstagramIcon },
-  { key: "tiktok", href: "https://tiktok.com/@halatu", Icon: TiktokIcon },
-  { key: "facebook", href: "https://facebook.com/halatu", Icon: FacebookIcon },
-] as const;
 
 const TOPIC_LABEL_KEYS: Record<InquiryTopic, string> = {
   [InquiryTopic.ORDER_ISSUE]: "contact.topicOrderIssue",
@@ -113,9 +101,19 @@ export default function ContactPage() {
     : null;
 
   const phone = settings?.contactPhone ?? null;
-  const whatsAppHref = phone ? buildWhatsAppLink(phone) : null;
+  // Same override-falls-back-to-phone rule as getSocialLinks (social-icons.tsx).
+  const whatsAppHref = settings?.socialWhatsappUrl || (phone ? buildWhatsAppLink(phone) : null);
   const callHref = phone ? `tel:${phone.replace(/\s/g, "")}` : null;
   const mapQuery = settings?.contactAddress ? encodeURIComponent(settings.contactAddress) : null;
+  const socialLinks = getSocialLinks(
+    settings ?? {
+      socialInstagramUrl: null,
+      socialTiktokUrl: null,
+      socialFacebookUrl: null,
+      socialWhatsappUrl: null,
+      contactPhone: null,
+    },
+  ).filter((link) => link.key !== "whatsapp");
 
   return (
     <div className="relative -mx-6 -my-8 min-h-[calc(100vh-1px)] overflow-hidden bg-background px-6 py-14 font-dm-sans text-foreground">
@@ -248,24 +246,27 @@ export default function ContactPage() {
               </div>
             )}
 
-            <div className="space-y-3 border-t border-foreground/10 pt-5">
-              <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
-                {t("contact.followUs")}
-              </p>
-              <div className="flex gap-3">
-                {SOCIAL_LINKS.map(({ key, href, Icon }) => (
-                  <a
-                    key={key}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex size-10 items-center justify-center rounded-xl border border-foreground/10 bg-card/40 text-foreground backdrop-blur-xl transition-transform hover:-translate-y-0.5 hover:bg-card/60 motion-reduce:transition-none reduced-transparency:bg-card reduced-transparency:backdrop-blur-none"
-                  >
-                    <Icon aria-hidden className="size-4.5" />
-                  </a>
-                ))}
+            {socialLinks.length > 0 && (
+              <div className="space-y-3 border-t border-foreground/10 pt-5">
+                <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+                  {t("contact.followUs")}
+                </p>
+                <div className="flex gap-3">
+                  {socialLinks.map(({ key, href, Icon }) => (
+                    <a
+                      key={key}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={key}
+                      className="flex size-10 items-center justify-center rounded-xl border border-foreground/10 bg-card/40 text-foreground backdrop-blur-xl transition-transform hover:-translate-y-0.5 hover:bg-card/60 motion-reduce:transition-none reduced-transparency:bg-card reduced-transparency:backdrop-blur-none"
+                    >
+                      <Icon aria-hidden className="size-4.5" />
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Form panel */}

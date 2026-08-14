@@ -1,11 +1,15 @@
 // Shared social icon components + links, used by both ContactPage.tsx and
-// SiteFooter.tsx. Instagram/TikTok/Facebook have no admin-configurable
-// Settings backing them anywhere in this codebase yet — these are plain
-// hardcoded links (confirmed with the store owner), not sourced from
-// Settings like phone/email/address are. WhatsApp is the exception: its
-// link is derived from the existing admin-configured contactPhone setting
-// via buildWhatsAppLink, same as ContactPage's own WhatsApp CTA button.
+// SiteFooter.tsx. Instagram/TikTok/Facebook/WhatsApp are all sourced from
+// admin-configurable Settings (socialInstagramUrl/socialTiktokUrl/
+// socialFacebookUrl/socialWhatsappUrl) — same "hidden until configured"
+// convention as contactPhone/contactEmail/contactAddress, rather than shown
+// blank or falling back to a hardcoded link. WhatsApp keeps one extra
+// fallback: when socialWhatsappUrl isn't set, it's still derived from the
+// existing contactPhone setting via buildWhatsAppLink, same as ContactPage's
+// own WhatsApp CTA button — an admin only needs to set socialWhatsappUrl to
+// override that derived link (e.g. with a preset-message wa.me link).
 import { buildWhatsAppLink } from "@/lib/contact-links";
+import type { PublicStoreSettings } from "@es-market/core";
 
 export function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -49,16 +53,33 @@ export type SocialLink = {
   Icon: typeof InstagramIcon;
 };
 
-const STATIC_SOCIAL_LINKS: readonly SocialLink[] = [
-  { key: "instagram", href: "https://instagram.com/halatu", Icon: InstagramIcon },
-  { key: "tiktok", href: "https://tiktok.com/@halatu", Icon: TiktokIcon },
-  { key: "facebook", href: "https://facebook.com/halatu", Icon: FacebookIcon },
-];
-
-// WhatsApp is appended only when a contact phone is configured — unlike the
-// three static links above, there's nothing sensible to link to otherwise.
-export function getSocialLinks(contactPhone?: string | null): SocialLink[] {
-  return contactPhone
-    ? [...STATIC_SOCIAL_LINKS, { key: "whatsapp", href: buildWhatsAppLink(contactPhone), Icon: WhatsappIcon }]
-    : [...STATIC_SOCIAL_LINKS];
+// Builds the shared social link set from store settings — each entry is
+// included only once its URL is actually configured (or, for WhatsApp,
+// once either socialWhatsappUrl or contactPhone is), same "hide until set"
+// convention as the footer's phone/email/address buttons. Shared by
+// SiteFooter.tsx and ContactPage.tsx's "Follow us" row (the latter filters
+// out "whatsapp" itself, since that page already has its own WhatsApp CTA
+// button — a second icon would be a duplicate affordance).
+export function getSocialLinks(
+  settings: Pick<
+    PublicStoreSettings,
+    "socialInstagramUrl" | "socialTiktokUrl" | "socialFacebookUrl" | "socialWhatsappUrl" | "contactPhone"
+  >,
+): SocialLink[] {
+  const links: SocialLink[] = [];
+  if (settings.socialInstagramUrl) {
+    links.push({ key: "instagram", href: settings.socialInstagramUrl, Icon: InstagramIcon });
+  }
+  if (settings.socialTiktokUrl) {
+    links.push({ key: "tiktok", href: settings.socialTiktokUrl, Icon: TiktokIcon });
+  }
+  if (settings.socialFacebookUrl) {
+    links.push({ key: "facebook", href: settings.socialFacebookUrl, Icon: FacebookIcon });
+  }
+  const whatsappHref =
+    settings.socialWhatsappUrl || (settings.contactPhone ? buildWhatsAppLink(settings.contactPhone) : null);
+  if (whatsappHref) {
+    links.push({ key: "whatsapp", href: whatsappHref, Icon: WhatsappIcon });
+  }
+  return links;
 }

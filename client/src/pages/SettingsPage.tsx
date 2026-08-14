@@ -42,6 +42,10 @@ export default function SettingsPage() {
           contactPhone: settings.contactPhone ?? undefined,
           contactEmail: settings.contactEmail ?? undefined,
           contactAddress: settings.contactAddress ?? undefined,
+          socialInstagramUrl: settings.socialInstagramUrl ?? undefined,
+          socialTiktokUrl: settings.socialTiktokUrl ?? undefined,
+          socialFacebookUrl: settings.socialFacebookUrl ?? undefined,
+          socialWhatsappUrl: settings.socialWhatsappUrl ?? undefined,
         }
       : undefined,
   });
@@ -197,6 +201,74 @@ export default function SettingsPage() {
               </p>
               {errors.contactAddress && (
                 <p className="text-sm text-destructive">{errors.contactAddress.message}</p>
+              )}
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="settings-social-instagram">Instagram URL</Label>
+              <Input
+                id="settings-social-instagram"
+                type="url"
+                placeholder="https://instagram.com/yourstore"
+                aria-invalid={!!errors.socialInstagramUrl}
+                {...register("socialInstagramUrl")}
+              />
+              <p className="text-sm text-muted-foreground">
+                Shown as a social icon on the storefront footer and contact page. Leave blank to
+                hide it.
+              </p>
+              {errors.socialInstagramUrl && (
+                <p className="text-sm text-destructive">{errors.socialInstagramUrl.message}</p>
+              )}
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="settings-social-tiktok">TikTok URL</Label>
+              <Input
+                id="settings-social-tiktok"
+                type="url"
+                placeholder="https://tiktok.com/@yourstore"
+                aria-invalid={!!errors.socialTiktokUrl}
+                {...register("socialTiktokUrl")}
+              />
+              <p className="text-sm text-muted-foreground">
+                Shown as a social icon on the storefront footer and contact page. Leave blank to
+                hide it.
+              </p>
+              {errors.socialTiktokUrl && (
+                <p className="text-sm text-destructive">{errors.socialTiktokUrl.message}</p>
+              )}
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="settings-social-facebook">Facebook URL</Label>
+              <Input
+                id="settings-social-facebook"
+                type="url"
+                placeholder="https://facebook.com/yourstore"
+                aria-invalid={!!errors.socialFacebookUrl}
+                {...register("socialFacebookUrl")}
+              />
+              <p className="text-sm text-muted-foreground">
+                Shown as a social icon on the storefront footer and contact page. Leave blank to
+                hide it.
+              </p>
+              {errors.socialFacebookUrl && (
+                <p className="text-sm text-destructive">{errors.socialFacebookUrl.message}</p>
+              )}
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="settings-social-whatsapp">WhatsApp URL</Label>
+              <Input
+                id="settings-social-whatsapp"
+                type="url"
+                placeholder="https://wa.me/255700123456"
+                aria-invalid={!!errors.socialWhatsappUrl}
+                {...register("socialWhatsappUrl")}
+              />
+              <p className="text-sm text-muted-foreground">
+                Overrides the WhatsApp link normally derived from the contact phone above (e.g. to
+                add a preset message). Leave blank to keep using the contact phone.
+              </p>
+              {errors.socialWhatsappUrl && (
+                <p className="text-sm text-destructive">{errors.socialWhatsappUrl.message}</p>
               )}
             </div>
             {serverError && <p className="text-sm text-destructive">{serverError}</p>}

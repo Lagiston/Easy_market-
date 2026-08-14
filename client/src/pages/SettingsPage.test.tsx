@@ -23,6 +23,10 @@ const baseSettings = {
   contactPhone: "+255 700 123 456",
   contactEmail: "hello@es-market.co.tz",
   contactAddress: "12 Market Street, City Center",
+  socialInstagramUrl: null,
+  socialTiktokUrl: null,
+  socialFacebookUrl: null,
+  socialWhatsappUrl: null,
 };
 
 describe("SettingsPage", () => {
@@ -143,6 +147,61 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(mockedPut).toHaveBeenCalled());
     const [, body] = mockedPut.mock.calls[0]!;
     expect((body as { contactPhone?: string }).contactPhone).toBeUndefined();
+  });
+
+  it("loads configured social links into the form", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        settings: {
+          ...baseSettings,
+          socialInstagramUrl: "https://instagram.com/halatu",
+          socialTiktokUrl: "https://tiktok.com/@halatu",
+          socialFacebookUrl: "https://facebook.com/halatu",
+          socialWhatsappUrl: "https://wa.me/255700123456",
+        },
+      },
+    });
+    renderWithQuery(<SettingsPage />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Instagram URL")).toHaveValue("https://instagram.com/halatu"),
+    );
+    expect(screen.getByLabelText("TikTok URL")).toHaveValue("https://tiktok.com/@halatu");
+    expect(screen.getByLabelText("Facebook URL")).toHaveValue("https://facebook.com/halatu");
+    expect(screen.getByLabelText("WhatsApp URL")).toHaveValue("https://wa.me/255700123456");
+  });
+
+  it("saves a newly entered Instagram URL", async () => {
+    mockedGet.mockResolvedValue({ data: { settings: baseSettings } });
+    mockedPut.mockResolvedValueOnce({
+      data: { settings: { ...baseSettings, socialInstagramUrl: "https://instagram.com/halatu" } },
+    });
+    renderWithQuery(<SettingsPage />);
+
+    const instagramInput = await screen.findByLabelText("Instagram URL");
+    await userEvent.type(instagramInput, "https://instagram.com/halatu");
+    await userEvent.click(screen.getByRole("button", { name: "Save settings" }));
+
+    await waitFor(() =>
+      expect(mockedPut).toHaveBeenCalledWith(
+        "/api/settings",
+        expect.objectContaining({ socialInstagramUrl: "https://instagram.com/halatu" }),
+      ),
+    );
+  });
+
+  it("rejects an invalid social URL client-side", async () => {
+    mockedGet.mockResolvedValueOnce({ data: { settings: baseSettings } });
+    renderWithQuery(<SettingsPage />);
+
+    const instagramInput = await screen.findByLabelText("Instagram URL");
+    await userEvent.type(instagramInput, "not-a-url");
+    await userEvent.click(screen.getByRole("button", { name: "Save settings" }));
+
+    expect(
+      await screen.findByText("Enter a valid link (starting with http:// or https://)"),
+    ).toBeInTheDocument();
+    expect(mockedPut).not.toHaveBeenCalled();
   });
 
   it("shows an error when loading fails", async () => {

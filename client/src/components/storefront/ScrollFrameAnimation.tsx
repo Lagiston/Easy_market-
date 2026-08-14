@@ -239,12 +239,12 @@ export function ScrollFrameAnimation({
         {(endChildren || pillarsChildren) && (
           <div className="absolute inset-x-0 bottom-0 flex w-full flex-col items-center gap-4 p-4 md:contents">
             {endChildren && (
-              <div className="w-full md:absolute md:inset-auto md:top-1/2 md:left-0 md:block md:w-auto md:-translate-y-1/2">
+              <div className="w-full md:absolute md:inset-auto md:top-1/2 md:right-0 md:block md:w-auto md:-translate-y-1/2">
                 {endChildren}
               </div>
             )}
             {pillarsChildren && pillarsChildren.length > 0 && (
-              <div className="w-full space-y-4 md:absolute md:inset-auto md:right-0 md:bottom-[6%] md:block md:w-auto">
+              <div className="w-full space-y-4 md:absolute md:inset-auto md:bottom-[6%] md:left-0 md:block md:w-auto">
                 {pillarsChildren.map((pillar, i) => (
                   <div key={i}>{pillar}</div>
                 ))}
@@ -274,13 +274,13 @@ export function ScrollFrameAnimation({
             {endChildren && (
               <div
                 ref={endOverlayRef}
-                className="w-full opacity-0 md:absolute md:inset-auto md:top-1/2 md:left-0 md:block md:w-auto md:-translate-y-1/2"
+                className="w-full opacity-0 md:absolute md:inset-auto md:top-1/2 md:right-0 md:block md:w-auto md:-translate-y-1/2"
               >
                 {endChildren}
               </div>
             )}
             {pillarsChildren && pillarsChildren.length > 0 && (
-              <div className="w-full space-y-4 md:absolute md:inset-auto md:right-0 md:bottom-[6%] md:block md:w-auto">
+              <div className="w-full space-y-4 md:absolute md:inset-auto md:bottom-[6%] md:left-0 md:block md:w-auto">
                 {pillarsChildren.map((pillar, i) => (
                   <div
                     key={i}

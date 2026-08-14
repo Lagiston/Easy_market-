@@ -31,6 +31,18 @@ export async function getSettings(): Promise<StoreSettings> {
     if (row.key === "contactAddress") {
       settings.contactAddress = typeof row.value === "string" ? row.value : null;
     }
+    if (row.key === "socialInstagramUrl") {
+      settings.socialInstagramUrl = typeof row.value === "string" ? row.value : null;
+    }
+    if (row.key === "socialTiktokUrl") {
+      settings.socialTiktokUrl = typeof row.value === "string" ? row.value : null;
+    }
+    if (row.key === "socialFacebookUrl") {
+      settings.socialFacebookUrl = typeof row.value === "string" ? row.value : null;
+    }
+    if (row.key === "socialWhatsappUrl") {
+      settings.socialWhatsappUrl = typeof row.value === "string" ? row.value : null;
+    }
   }
   return settings;
 }

@@ -13,10 +13,29 @@ export const settingsRouter = Router();
 // callAttemptsBeforeCancel/defaultLowStockThreshold are internal ops settings,
 // not exposed here.
 settingsRouter.get("/storefront/settings", async (_req, res) => {
-  const { deliveryFee, freeDeliveryThreshold, contactPhone, contactEmail, contactAddress } =
-    await getSettings();
+  const {
+    deliveryFee,
+    freeDeliveryThreshold,
+    contactPhone,
+    contactEmail,
+    contactAddress,
+    socialInstagramUrl,
+    socialTiktokUrl,
+    socialFacebookUrl,
+    socialWhatsappUrl,
+  } = await getSettings();
   res.json({
-    settings: { deliveryFee, freeDeliveryThreshold, contactPhone, contactEmail, contactAddress },
+    settings: {
+      deliveryFee,
+      freeDeliveryThreshold,
+      contactPhone,
+      contactEmail,
+      contactAddress,
+      socialInstagramUrl,
+      socialTiktokUrl,
+      socialFacebookUrl,
+      socialWhatsappUrl,
+    },
   });
 });
 
@@ -40,6 +59,10 @@ settingsRouter.put("/settings", requireAuth, requireRole(Role.ADMIN), async (req
     contactPhone,
     contactEmail,
     contactAddress,
+    socialInstagramUrl,
+    socialTiktokUrl,
+    socialFacebookUrl,
+    socialWhatsappUrl,
   } = parsed.data;
 
   const entries = [
@@ -56,6 +79,10 @@ settingsRouter.put("/settings", requireAuth, requireRole(Role.ADMIN), async (req
     { key: "contactPhone", value: contactPhone ?? Prisma.JsonNull },
     { key: "contactEmail", value: contactEmail ?? Prisma.JsonNull },
     { key: "contactAddress", value: contactAddress ?? Prisma.JsonNull },
+    { key: "socialInstagramUrl", value: socialInstagramUrl ?? Prisma.JsonNull },
+    { key: "socialTiktokUrl", value: socialTiktokUrl ?? Prisma.JsonNull },
+    { key: "socialFacebookUrl", value: socialFacebookUrl ?? Prisma.JsonNull },
+    { key: "socialWhatsappUrl", value: socialWhatsappUrl ?? Prisma.JsonNull },
   ];
   await prisma.$transaction(
     entries.map(({ key, value }) =>
