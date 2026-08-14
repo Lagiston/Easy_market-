@@ -117,7 +117,7 @@ describe("SiteFooter", () => {
         (_, element) =>
           element?.tagName === "P" &&
           element.textContent ===
-            "Practical hardware and building supplies for Dar es Salaam — sourced honestly, priced fairly, delivered on time.",
+            "Practical hardware and building supplies for Dar es Salaam — sourced right, priced fairly, delivered when we say.",
       ),
     ).toBeInTheDocument();
   });
