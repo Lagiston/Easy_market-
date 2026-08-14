@@ -92,12 +92,7 @@ export default function SiteHeader() {
       >
         {/* Left — logo lockup */}
         <Link to="/" className="flex items-center gap-2 justify-self-start">
-          <span
-            aria-hidden
-            className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary"
-          >
-            <span className="absolute h-[150%] w-1.5 -rotate-45 bg-primary-foreground" />
-          </span>
+          <img src="/Logo/logo-mark.png" alt="" aria-hidden className="size-8 shrink-0 object-contain" />
           <span className="text-lg font-bold tracking-tight whitespace-nowrap text-foreground">
             {t("brand")}
           </span>

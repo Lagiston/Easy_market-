@@ -51,12 +51,7 @@ export default function SiteFooter() {
             {/* Left column */}
             <div className="flex max-w-[540px] flex-col items-start gap-6">
               <Link to="/" className="flex items-center gap-3">
-                <span
-                  aria-hidden
-                  className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-tl-xl rounded-tr-[3px] rounded-br-xl rounded-bl-[3px] bg-gradient-to-br from-[#4fb8ee] to-[#1a76ad] shadow-[0_8px_24px_-8px_rgba(58,167,222,0.8)]"
-                >
-                  <span className="absolute h-[150%] w-1.5 -rotate-45 bg-white" />
-                </span>
+                <img src="/Logo/logo-mark.png" alt="" aria-hidden className="size-10 shrink-0 object-contain" />
                 <span className="text-[28px] font-bold tracking-[-0.03em] whitespace-nowrap text-foreground dark:text-white">
                   {t("brand")}
                 </span>
