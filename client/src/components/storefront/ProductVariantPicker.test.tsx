@@ -15,6 +15,7 @@ const base: StorefrontProduct = {
   lowStockThreshold: 10,
   images: [],
   tags: [],
+  tagNames: {},
   size: null,
   color: null,
   category: { id: "c1", name: { en: "Clothing" } },

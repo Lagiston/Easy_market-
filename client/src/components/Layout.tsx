@@ -56,6 +56,7 @@ export default function Layout({ user }: { user: SessionUser }) {
     { to: "/admin/users", label: "Users", adminOnly: true },
     { to: "/admin/products", label: "Products", adminOnly: true },
     { to: "/admin/categories", label: "Categories", adminOnly: true },
+    { to: "/admin/tags", label: "Tags", adminOnly: true },
     { to: "/admin/kb-articles", label: "Knowledge base", adminOnly: true },
     { to: "/admin/promo-blocks", label: "Promo blocks", adminOnly: true },
     { to: "/admin/reviews", label: "Reviews", adminOnly: true },

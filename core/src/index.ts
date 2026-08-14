@@ -227,3 +227,8 @@ export {
   type UpdatePromoBlockFormInput,
 } from "./schemas/promo-block";
 export { SmsLogStatus } from "./schemas/sms-log";
+export {
+  upsertTagSchema,
+  type UpsertTagInput,
+  type UpsertTagFormInput,
+} from "./schemas/tag";

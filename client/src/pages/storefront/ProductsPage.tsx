@@ -73,8 +73,14 @@ export type StorefrontProduct = {
   // averageRating). Never the viewer's own wishlist membership — that's a
   // separate, signed-in-only signal (see WishlistButton's isWishlisted).
   wishlistCount: number;
+  // Each of this product's own `tags` resolved to its translated name,
+  // keyed by tag value — falls back to { en: value } for anything not yet
+  // translated (server/src/lib/tags.ts's resolveTagNames).
+  tagNames: Record<string, LocalizedName>;
   createdAt: string;
 };
+
+export type StorefrontTag = { value: string; name: LocalizedName };
 
 export type StorefrontCategory = {
   id: string;
@@ -269,7 +275,7 @@ export default function ProductsPage() {
   const { data: tagsData } = useQuery({
     queryKey: ["storefront", "tags"],
     queryFn: () =>
-      axios.get<{ tags: string[] }>("/api/storefront/tags").then((res) => res.data.tags),
+      axios.get<{ tags: StorefrontTag[] }>("/api/storefront/tags").then((res) => res.data.tags),
   });
 
   const { data, isPending, isError } = useQuery({
@@ -445,14 +451,21 @@ export default function ProductsPage() {
               <Select value={tag} onValueChange={(value) => setTag(value ?? ALL_TAGS)}>
                 <SelectTrigger id="tag-filter" className={SELECT_CONTROL_CLASS}>
                   <SelectValue className={tag !== ALL_TAGS ? "capitalize" : undefined}>
-                    {tag === ALL_TAGS ? t("products.filters.allTags") : tag}
+                    {tag === ALL_TAGS
+                      ? t("products.filters.allTags")
+                      : (localize(
+                          (tagsData ?? []).find((tagOption) => tagOption.value === tag)?.name ?? {
+                            en: tag,
+                          },
+                          language,
+                        ))}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL_TAGS}>{t("products.filters.allTags")}</SelectItem>
                   {(tagsData ?? []).map((tagOption) => (
-                    <SelectItem key={tagOption} value={tagOption} className="capitalize">
-                      {tagOption}
+                    <SelectItem key={tagOption.value} value={tagOption.value} className="capitalize">
+                      {localize(tagOption.name, language)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -759,7 +772,7 @@ export default function ProductsPage() {
                               onClick={() => setTag(productTag)}
                               className="rounded-full border border-foreground/10 bg-muted px-2.5 py-1 text-[11px] text-muted-foreground hover:text-foreground"
                             >
-                              {productTag}
+                              {localize(product.tagNames[productTag] ?? { en: productTag }, language)}
                             </button>
                           ))}
                         </div>

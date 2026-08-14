@@ -40,7 +40,7 @@ export default function SiteFooter() {
           so the footer card lines up edge-to-edge with the navbar pill,
           instead of the old mx-auto max-w-[1180px] cap which fell short of
           the header's width on wide viewports. */}
-      <div className="relative mx-4 rounded-[32px] bg-foreground/15 p-px shadow-lg dark:bg-[linear-gradient(160deg,rgba(120,200,240,0.38),rgba(255,255,255,0.06)_34%,rgba(255,255,255,0.03))] dark:shadow-[0_60px_120px_-60px_rgba(0,0,0,0.95)] md:mx-8">
+      <div className="relative mx-4 rounded-[32px] bg-foreground/15 p-px shadow-md transition-shadow duration-300 hover:shadow-lg motion-reduce:transition-none dark:bg-[linear-gradient(160deg,rgba(120,200,240,0.38),rgba(255,255,255,0.06)_34%,rgba(255,255,255,0.03))] dark:shadow-[0_60px_120px_-60px_rgba(0,0,0,0.95)] dark:hover:shadow-[0_60px_120px_-60px_rgba(0,0,0,0.95)] md:mx-8">
         <div className="relative flex flex-col gap-8 overflow-hidden rounded-[31px] bg-card px-6 pt-8 pb-5 dark:bg-[linear-gradient(165deg,#0c1a24,#081118_46%,#050a0e)] sm:px-[60px] sm:pt-9 sm:pb-4">
           <div
             aria-hidden
@@ -54,7 +54,7 @@ export default function SiteFooter() {
                 {/* See SiteHeader.tsx's own comment: the simplified
                     arrow-only crop, not the full leaf+arrow mark, which
                     blurs into a squiggle at on-page display sizes. */}
-                <img src="/Logo/logo-mark-small.png" alt="" aria-hidden className="h-7 w-auto shrink-0 object-contain" />
+                <img src="/Logo/logo-mark-small.png" alt="" aria-hidden className="h-10 w-auto shrink-0 object-contain sm:h-9" />
                 <span className="text-[28px] font-bold tracking-[-0.03em] whitespace-nowrap text-foreground dark:text-white">
                   {t("brand")}
                 </span>

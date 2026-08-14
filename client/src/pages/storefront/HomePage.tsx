@@ -252,7 +252,7 @@ export default function HomePage() {
             </p>
             <Link
               to="/products"
-              className="group relative isolate inline-flex h-[52px] items-center gap-2 rounded-[13px] border border-cyan-400/40 bg-[linear-gradient(135deg,#0b1f33_0%,#0b4f63_50%,#0f766e_100%)] px-7 font-bold text-hero-brand-ink shadow-[0_0_24px_rgba(14,165,233,0.55)] outline-none transition-[filter] duration-300 before:absolute before:inset-0 before:-z-10 before:rounded-[13px] before:shadow-[0_0_36px_rgba(14,165,233,0.9)] before:content-[''] before:animate-pulse hover:brightness-125 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-hero-fg motion-reduce:transition-none motion-reduce:before:animate-none"
+              className="group relative isolate inline-flex h-[52px] items-center gap-2 rounded-[13px] border border-cyan-400/40 bg-[linear-gradient(135deg,#0b1f33_0%,#0b4f63_50%,#0f766e_100%)] px-7 font-bold text-hero-brand-ink shadow-[0_0_14px_rgba(14,165,233,0.35)] outline-none transition-[filter] duration-300 before:absolute before:inset-0 before:-z-10 before:rounded-[13px] before:shadow-[0_0_20px_rgba(14,165,233,0.55)] before:content-[''] before:animate-pulse hover:brightness-125 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-hero-fg motion-reduce:transition-none motion-reduce:before:animate-none"
             >
               {t("home.cta")}
               <ArrowRight
@@ -294,27 +294,35 @@ export default function HomePage() {
           <main> px-6, and h-screen matches the hero's sticky viewport
           height so the two full-bleed sections read as the same size. */}
       <section className="-mx-6">
-        <div className="relative h-screen overflow-hidden rounded-t-3xl bg-neutral-950">
-          <video
-            className="absolute inset-0 size-full object-cover"
-            poster={VIDEO_SECTION_POSTER}
-            preload={prefersReducedMotion ? "metadata" : "auto"}
-            autoPlay={!prefersReducedMotion}
-            muted
-            loop
-            playsInline
-            aria-hidden
-          >
-            <source src={VIDEO_SECTION_SRC_MOBILE} media="(max-width: 767px)" type="video/mp4" />
-            <source src={VIDEO_SECTION_SRC} type="video/mp4" />
-          </video>
-          {/* Bottom-weighted scrim: fully opaque at the bottom (where the
-              copy sits) fading to transparent at the top, so the image
-              itself stays the focus rather than being darkened uniformly. */}
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"
-          />
+        {/* Now rounded on all four corners (was top-only) and carries the
+            same "dark arctic-paradise" bottom shadow as the hero — the
+            shadow has to live on this outer, unclipped box since box-shadow
+            is clipped by overflow-hidden on the same element; the video/scrim
+            keep their clipping on the inner wrapper below, same split as
+            ScrollFrameAnimation.tsx's hero sections. */}
+        <div className="relative h-screen rounded-3xl shadow-[0_20px_35px_-15px_rgba(11,31,51,0.4)] dark:shadow-[0_20px_35px_-15px_rgba(11,31,51,0.65)]">
+          <div className="absolute inset-0 overflow-hidden rounded-3xl bg-neutral-950">
+            <video
+              className="absolute inset-0 size-full object-cover"
+              poster={VIDEO_SECTION_POSTER}
+              preload={prefersReducedMotion ? "metadata" : "auto"}
+              autoPlay={!prefersReducedMotion}
+              muted
+              loop
+              playsInline
+              aria-hidden
+            >
+              <source src={VIDEO_SECTION_SRC_MOBILE} media="(max-width: 767px)" type="video/mp4" />
+              <source src={VIDEO_SECTION_SRC} type="video/mp4" />
+            </video>
+            {/* Bottom-weighted scrim: fully opaque at the bottom (where the
+                copy sits) fading to transparent at the top, so the image
+                itself stays the focus rather than being darkened uniformly. */}
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"
+            />
+          </div>
           <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
             <p className="font-dm-sans text-3xl font-bold text-white drop-shadow-lg md:text-5xl">
               {t("home.videoSection.headline")}
@@ -326,7 +334,7 @@ export default function HomePage() {
             </p>
             <Link
               to={beautyHref}
-              className="group relative isolate mt-6 inline-flex h-[52px] items-center gap-2 rounded-[13px] border border-cyan-400/40 bg-[linear-gradient(135deg,#0b1f33_0%,#0b4f63_50%,#0f766e_100%)] px-7 font-bold text-hero-brand-ink shadow-[0_0_24px_rgba(14,165,233,0.55)] outline-none transition-[filter] duration-300 before:absolute before:inset-0 before:-z-10 before:rounded-[13px] before:shadow-[0_0_36px_rgba(14,165,233,0.9)] before:content-[''] before:animate-pulse hover:brightness-125 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-hero-fg motion-reduce:transition-none motion-reduce:before:animate-none"
+              className="group relative isolate mt-6 inline-flex h-[52px] items-center gap-2 rounded-[13px] border border-cyan-400/40 bg-[linear-gradient(135deg,#0b1f33_0%,#0b4f63_50%,#0f766e_100%)] px-7 font-bold text-hero-brand-ink shadow-[0_0_14px_rgba(14,165,233,0.35)] outline-none transition-[filter] duration-300 before:absolute before:inset-0 before:-z-10 before:rounded-[13px] before:shadow-[0_0_20px_rgba(14,165,233,0.55)] before:content-[''] before:animate-pulse hover:brightness-125 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-hero-fg motion-reduce:transition-none motion-reduce:before:animate-none"
             >
               {t("home.videoSection.cta")}
               <ArrowRight

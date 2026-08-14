@@ -178,6 +178,25 @@ model Category {
   @@map("category")
 }
 
+// Per-language display name for a Product tag value (e.g. "rice" -> its
+// Arabic label). `value` is the tag itself (same lowercased string stored in
+// Product.tags/aiSuggestedTags) rather than a generated id — one row per
+// distinct tag, reused everywhere that tag appears, so translating "rice"
+// once applies to every product tagged with it. Tags with no Tag row (the
+// common case for anything an admin hasn't translated yet) fall back to
+// rendering the raw English value, same null-vs-untranslated convention as
+// elsewhere in this codebase. No deletedAt/soft-delete: nothing references a
+// Tag by id, so removing one just means future renders of that tag value
+// fall back to the raw string again.
+model Tag {
+  value     String   @id
+  name      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tag")
+}
+
 model Product {
   id                String    @id
   name              Json

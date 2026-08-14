@@ -30,6 +30,7 @@ const products: StorefrontProduct[] = [
     lowStockThreshold: 10,
     images: [],
     tags: ["organic"],
+    tagNames: { organic: { en: "organic" } },
     size: null,
     color: null,
     category: { id: "c1", name: { en: "Groceries" } },
@@ -48,6 +49,7 @@ const products: StorefrontProduct[] = [
     lowStockThreshold: 10,
     images: [],
     tags: [],
+    tagNames: {},
     size: null,
     color: null,
     category: { id: "c2", name: { en: "Beverages" } },
@@ -69,12 +71,15 @@ function mockApi(overrides?: {
   total?: number;
   tags?: string[];
 }) {
+  const tagValues = overrides?.tags ?? ["organic"];
   mockedAxios.get.mockImplementation((url: string) => {
     if (url === "/api/storefront/categories") {
       return Promise.resolve({ data: { categories } });
     }
     if (url === "/api/storefront/tags") {
-      return Promise.resolve({ data: { tags: overrides?.tags ?? ["organic"] } });
+      return Promise.resolve({
+        data: { tags: tagValues.map((value) => ({ value, name: { en: value } })) },
+      });
     }
     return Promise.resolve({
       data: {

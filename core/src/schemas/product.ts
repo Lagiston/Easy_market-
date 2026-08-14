@@ -14,7 +14,10 @@ const VARIANT_LABEL_ERROR = "Must be 50 characters or fewer";
 // Lowercased so "Rice" and "rice" collapse to the same tag — otherwise the
 // storefront tag filter and admin tag list fragment over near-duplicates that
 // differ only in casing.
-const tagSchema = z
+// Exported for reuse by tag.ts's own value schema — Tag.value must be
+// normalized identically to Product.tags entries, since it's matched
+// against them by exact string.
+export const tagSchema = z
   .string()
   .trim()
   .min(1, TAG_ERROR)

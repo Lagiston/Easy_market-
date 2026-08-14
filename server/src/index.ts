@@ -20,6 +20,7 @@ import {
 import { usersRouter } from "./routes/users";
 import { productsRouter } from "./routes/products";
 import { categoriesRouter } from "./routes/categories";
+import { tagsRouter } from "./routes/tags";
 import { storefrontRouter } from "./routes/storefront";
 import { ordersRouter } from "./routes/orders";
 import { customerRouter } from "./routes/customer";
@@ -89,6 +90,7 @@ app.get("/api/health", async (_req, res) => {
 app.use("/api", usersRouter);
 app.use("/api", productsRouter);
 app.use("/api", categoriesRouter);
+app.use("/api", tagsRouter);
 app.use("/api", storefrontRouter);
 app.use("/api", ordersRouter);
 app.use("/api", customerRouter);

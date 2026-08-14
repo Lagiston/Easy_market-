@@ -4,6 +4,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import { OrderStatus, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { customerAuth } from "../lib/customer-auth";
+import { resolveTagNames } from "../lib/tags";
 import {
   storefrontProductListQuerySchema,
   createReviewSchema,
@@ -11,6 +12,7 @@ import {
   REVIEWS_PAGE_SIZE,
   STOREFRONT_PAGE_SIZE,
   LANGUAGES,
+  type LocalizedName,
   type StorefrontProductSort,
   type ReviewSort,
 } from "@es-market/core";
@@ -47,15 +49,25 @@ export const publicProductSelect = {
 // plain number. wishlistCount is social proof only — how many *other*
 // customers have this saved — never the viewer's own wishlist membership
 // (that's WishlistButton's isWishlisted, a separate signed-in-only signal).
-type ProductSummary = { averageRating: number | null; reviewCount: number; wishlistCount: number };
+type ProductSummary = {
+  averageRating: number | null;
+  reviewCount: number;
+  wishlistCount: number;
+  // Each product's own tags, resolved to their translated names in one
+  // shared query (see resolveTagNames) — keyed by tag value so the client
+  // can look up `tagNames[tag]` per chip without a second request. Falls
+  // back to { en: value } for a tag with no Tag row yet.
+  tagNames: Record<string, LocalizedName>;
+};
 
 // Exported for reuse by the customer wishlist route in customer.ts, which
 // returns the same StorefrontProduct-shaped objects and needs the same
 // review/wishlist summary fields — see that route for details.
-export async function attachProductSummaries<T extends { id: string }>(
+export async function attachProductSummaries<T extends { id: string; tags: string[] }>(
   products: T[],
 ): Promise<(T & ProductSummary)[]> {
   const summaries = new Map<string, ProductSummary>();
+  const tagNames = await resolveTagNames(products.flatMap((product) => product.tags));
   if (products.length > 0) {
     const productIds = products.map((product) => product.id);
     const [reviewGroups, wishlistGroups] = await Promise.all([
@@ -76,6 +88,7 @@ export async function attachProductSummaries<T extends { id: string }>(
         averageRating: group._avg.rating,
         reviewCount: group._count,
         wishlistCount: summaries.get(group.productId)?.wishlistCount ?? 0,
+        tagNames,
       });
     }
     for (const group of wishlistGroups) {
@@ -83,12 +96,18 @@ export async function attachProductSummaries<T extends { id: string }>(
         averageRating: summaries.get(group.productId)?.averageRating ?? null,
         reviewCount: summaries.get(group.productId)?.reviewCount ?? 0,
         wishlistCount: group._count,
+        tagNames,
       });
     }
   }
   return products.map((product) => ({
     ...product,
-    ...(summaries.get(product.id) ?? { averageRating: null, reviewCount: 0, wishlistCount: 0 }),
+    ...(summaries.get(product.id) ?? {
+      averageRating: null,
+      reviewCount: 0,
+      wishlistCount: 0,
+      tagNames,
+    }),
   }));
 }
 
@@ -384,14 +403,18 @@ storefrontRouter.get("/storefront/categories", async (_req, res) => {
 // filter dropdown. v1 simplification: flattened/deduped in JS rather than a
 // dedicated SQL DISTINCT-on-array-elements query — fine at this catalog's
 // expected scale (mirrors the same tradeoff already flagged for the AI
-// classification prompt in product-classification.ts).
+// classification prompt in product-classification.ts). Each value is
+// resolved to its translated name (see resolveTagNames) so the dropdown can
+// show the label in the visitor's language, falling back to the raw
+// English value for anything not yet translated.
 storefrontRouter.get("/storefront/tags", async (_req, res) => {
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
     select: { tags: true },
   });
-  const tags = [...new Set(products.flatMap((product) => product.tags))].sort();
-  res.json({ tags });
+  const values = [...new Set(products.flatMap((product) => product.tags))].sort();
+  const tagNames = await resolveTagNames(values);
+  res.json({ tags: values.map((value) => ({ value, name: tagNames[value] })) });
 });
 
 // Active promo blocks for the storefront homepage, ordered for display.

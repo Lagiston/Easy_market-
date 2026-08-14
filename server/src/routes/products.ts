@@ -10,6 +10,7 @@ import { productImagesDir } from "../lib/uploads";
 import { requireAuth, requireRole } from "../middleware/require-auth";
 import { boss, CLASSIFY_PRODUCT_QUEUE } from "../lib/queue";
 import { acquireReclassifyLock } from "../lib/product-reclassify-lock";
+import { ensureTagRows } from "../lib/tags";
 import {
   createProductSchema,
   updateProductSchema,
@@ -236,6 +237,7 @@ productsRouter.post("/products", requireAuth, requireRole(Role.ADMIN), async (re
     },
     include: productInclude,
   });
+  await ensureTagRows(tags);
   res.status(201).json({ product });
 });
 
@@ -369,6 +371,7 @@ productsRouter.put<{ id: string }>("/products/:id", requireAuth, requireRole(Rol
     },
     include: productInclude,
   });
+  await ensureTagRows(tags);
   res.json({ product });
 });
 
