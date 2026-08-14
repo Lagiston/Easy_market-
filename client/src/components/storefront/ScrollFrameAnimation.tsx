@@ -228,9 +228,18 @@ export function ScrollFrameAnimation({
 
   if (reducedMotionRef.current) {
     return (
-      <div ref={containerRef} className="relative h-screen w-full overflow-hidden rounded-b-3xl">
-        <canvas ref={canvasRef} className="h-full w-full" />
-        <HeroScrim />
+      <div
+        ref={containerRef}
+        className="relative h-screen w-full rounded-b-3xl shadow-[0_20px_35px_-15px_rgba(11,31,51,0.4)] dark:shadow-[0_20px_35px_-15px_rgba(11,31,51,0.65)]"
+      >
+        {/* Photo/canvas clipping lives on this inner wrapper, not the outer
+            box — box-shadow is clipped by overflow-hidden on the same
+            element, so the "dark arctic-paradise" shadow below has to sit
+            on an unclipped ancestor instead. */}
+        <div className="absolute inset-0 overflow-hidden rounded-b-3xl">
+          <canvas ref={canvasRef} className="h-full w-full" />
+          <HeroScrim />
+        </div>
         {children && (
           <div className="absolute inset-y-0 start-0 flex w-full max-w-2xl items-center px-8 pt-30 pb-15 md:px-16">
             {children}
@@ -258,9 +267,14 @@ export function ScrollFrameAnimation({
 
   return (
     <div ref={containerRef} style={{ height: `${SCROLL_HEIGHT_VH}vh` }} className="relative">
-      <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden rounded-b-3xl animate-[navbar-enter_0.6s_ease-out_0.15s_both] motion-reduce:animate-none">
-        <canvas ref={canvasRef} className="h-full w-full" />
-        <HeroScrim />
+      <div className="sticky top-0 flex h-screen w-full items-center rounded-b-3xl shadow-[0_20px_35px_-15px_rgba(11,31,51,0.4)] animate-[navbar-enter_0.6s_ease-out_0.15s_both] motion-reduce:animate-none dark:shadow-[0_20px_35px_-15px_rgba(11,31,51,0.65)]">
+        {/* Same clip-on-inner-wrapper split as the reduced-motion branch
+            above, so the box-shadow isn't clipped by the photo's own
+            overflow-hidden. */}
+        <div className="absolute inset-0 overflow-hidden rounded-b-3xl">
+          <canvas ref={canvasRef} className="h-full w-full" />
+          <HeroScrim />
+        </div>
         {children && (
           <div
             ref={overlayRef}

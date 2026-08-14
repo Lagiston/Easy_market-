@@ -356,7 +356,11 @@
   "footer": {
     "copyright": "© {{year}} Halatu. All rights reserved.",
     "nav": "Footer navigation",
-    "mission": "Practical hardware and building supplies for Dar es Salaam — sourced honestly, priced fairly, delivered on time."
+    "missionLead": "Practical hardware and building supplies for Dar es Salaam",
+    "missionRest": "— sourced honestly, priced fairly, delivered on time.",
+    "getInTouch": "Get in touch",
+    "callCaption": "Call the shop",
+    "emailCaption": "Email us at"
   },
   "validation": {
     "orderLookupCode": "Order code is required",
