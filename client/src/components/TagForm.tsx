@@ -2,6 +2,7 @@ import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { upsertTagSchema, type UpsertTagFormInput, type UpsertTagInput } from "@es-market/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +15,21 @@ import type { TagRow } from "@/components/TagsTable";
 // four languages — tags were scoped as an all-languages feature (unlike the
 // "launch content is English + Arabic only" convention elsewhere), since
 // there's no separate content-authoring effort involved, just a short label.
-const LANGUAGE_TABS = [
-  { key: "en", label: "English", dir: "ltr" },
-  { key: "ar", label: "Arabic", dir: "rtl" },
-  { key: "sw", label: "Swahili", dir: "ltr" },
-  { key: "fr", label: "French", dir: "ltr" },
-] as const;
+const NAME_LABEL_KEYS = {
+  en: "englishName",
+  ar: "arabicName",
+  sw: "swahiliName",
+  fr: "frenchName",
+} as const;
 
 export default function TagForm({ tag, onSuccess }: { tag: TagRow; onSuccess?: (tag: TagRow) => void }) {
+  const { t } = useTranslation();
+  const LANGUAGE_TABS = [
+    { key: "en", label: t("admin.products.form.english"), dir: "ltr" },
+    { key: "ar", label: t("admin.products.form.arabic"), dir: "rtl" },
+    { key: "sw", label: t("admin.products.detail.languageLabels.sw"), dir: "ltr" },
+    { key: "fr", label: t("admin.products.detail.languageLabels.fr"), dir: "ltr" },
+  ] as const;
   const queryClient = useQueryClient();
 
   const {
@@ -53,7 +61,7 @@ export default function TagForm({ tag, onSuccess }: { tag: TagRow; onSuccess?: (
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not update the tag. Please try again."
+      : t("admin.tags.form.error")
     : null;
 
   return (
@@ -74,10 +82,12 @@ export default function TagForm({ tag, onSuccess }: { tag: TagRow; onSuccess?: (
             </TabsTrigger>
           ))}
         </TabsList>
-        {LANGUAGE_TABS.map(({ key, label, dir }) => (
+        {LANGUAGE_TABS.map(({ key, dir }) => (
           <TabsContent key={key} value={key} className="grid gap-4 pt-2">
             <div className="grid gap-1.5">
-              <Label htmlFor={`tag-form-name-${key}`}>{label} name</Label>
+              <Label htmlFor={`tag-form-name-${key}`}>
+                {t(`admin.tags.form.${NAME_LABEL_KEYS[key]}`)}
+              </Label>
               <Input
                 id={`tag-form-name-${key}`}
                 dir={dir}
@@ -95,7 +105,7 @@ export default function TagForm({ tag, onSuccess }: { tag: TagRow; onSuccess?: (
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
       <DialogFooter showCloseButton>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving…" : "Save changes"}
+          {mutation.isPending ? t("admin.tags.form.saving") : t("admin.tags.form.save")}
         </Button>
       </DialogFooter>
     </form>

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { ReviewRow } from "@/components/ReviewsTable";
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ export default function DeleteReviewDialog({
   review: ReviewRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,7 +34,7 @@ export default function DeleteReviewDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not delete the review. Please try again."
+      : t("admin.reviews.deleteDialog.error")
     : null;
 
   return (
@@ -46,21 +48,22 @@ export default function DeleteReviewDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Delete {review?.authorName}&apos;s review of {review?.product.name.en}?
+            {t("admin.reviews.deleteDialog.title", {
+              author: review?.authorName,
+              product: review?.product.name.en,
+            })}
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            This permanently removes the review and can&apos;t be undone.
-          </AlertDialogDescription>
+          <AlertDialogDescription>{t("admin.reviews.deleteDialog.description")}</AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("admin.common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Deleting…" : "Delete"}
+            {mutation.isPending ? t("admin.common.deleting") : t("admin.common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

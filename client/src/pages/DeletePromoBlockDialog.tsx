@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { PromoBlockRow } from "@/components/PromoBlocksTable";
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ export default function DeletePromoBlockDialog({
   promoBlock: PromoBlockRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,7 +34,7 @@ export default function DeletePromoBlockDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not delete the promo block. Please try again."
+      : t("admin.promoBlocks.deleteDialog.error")
     : null;
 
   return (
@@ -45,20 +47,20 @@ export default function DeletePromoBlockDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {promoBlock?.headline.en}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This removes the promo block and can&apos;t be undone.
-          </AlertDialogDescription>
+          <AlertDialogTitle>
+            {t("admin.promoBlocks.deleteDialog.title", { headline: promoBlock?.headline.en })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>{t("admin.promoBlocks.deleteDialog.description")}</AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("admin.common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Deleting…" : "Delete"}
+            {mutation.isPending ? t("admin.common.deleting") : t("admin.common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

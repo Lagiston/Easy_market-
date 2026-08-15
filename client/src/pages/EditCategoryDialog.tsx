@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import CategoryForm from "@/components/CategoryForm";
 import type { CategoryRow } from "@/components/CategoriesTable";
 import {
@@ -15,12 +16,13 @@ export default function EditCategoryDialog({
   category: CategoryRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={category !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit category</DialogTitle>
-          <DialogDescription>Update the category name.</DialogDescription>
+          <DialogTitle>{t("admin.categories.editDialog.title")}</DialogTitle>
+          <DialogDescription>{t("admin.categories.editDialog.description")}</DialogDescription>
         </DialogHeader>
         {category && (
           <CategoryForm category={category} onSuccess={() => onOpenChange(false)} />

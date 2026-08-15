@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pencil, Trash2 } from "lucide-react";
 import type { KbArticleBody, LocalizedName } from "@es-market/core";
 import { Button } from "@/components/ui/button";
@@ -27,14 +28,15 @@ export default function KbArticlesTable({
   onEdit: (kbArticle: KbArticleRow) => void;
   onDelete: (kbArticle: KbArticleRow) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Title</TableHead>
-          <TableHead>Topic</TableHead>
+          <TableHead>{t("admin.kbArticles.table.title")}</TableHead>
+          <TableHead>{t("admin.kbArticles.table.topic")}</TableHead>
           <TableHead>
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{t("admin.kbArticles.table.actionsSr")}</span>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -57,14 +59,14 @@ export default function KbArticlesTable({
               <TableRow key={kbArticle.id}>
                 <TableCell className="font-medium">{kbArticle.title.en}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {kbArticle.topic ?? "—"}
+                  {kbArticle.topic ?? t("admin.kbArticles.table.noTopic")}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Edit ${kbArticle.title.en}`}
+                      aria-label={t("admin.kbArticles.table.editAria", { title: kbArticle.title.en })}
                       onClick={() => onEdit(kbArticle)}
                     >
                       <Pencil />
@@ -72,7 +74,7 @@ export default function KbArticlesTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Delete ${kbArticle.title.en}`}
+                      aria-label={t("admin.kbArticles.table.deleteAria", { title: kbArticle.title.en })}
                       onClick={() => onDelete(kbArticle)}
                     >
                       <Trash2 />

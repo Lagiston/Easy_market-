@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import { Pencil, Trash2 } from "lucide-react";
 import type { LocalizedDescription, LocalizedName } from "@es-market/core";
 import { Badge } from "@/components/ui/badge";
@@ -28,13 +30,6 @@ export type PromoBlockRow = {
 
 export type EffectivePromoBlockStatus = "inactive" | "scheduled" | "expired" | "live";
 
-const STATUS_LABEL: Record<EffectivePromoBlockStatus, string> = {
-  inactive: "Inactive",
-  scheduled: "Scheduled",
-  expired: "Expired",
-  live: "Live",
-};
-
 const STATUS_VARIANT: Record<EffectivePromoBlockStatus, "default" | "secondary" | "outline"> = {
   inactive: "outline",
   scheduled: "secondary",
@@ -58,9 +53,9 @@ export function getEffectiveStatus(
   return "live";
 }
 
-function formatSchedule(promoBlock: Pick<PromoBlockRow, "startsAt" | "endsAt">) {
+function formatSchedule(t: TFunction, promoBlock: Pick<PromoBlockRow, "startsAt" | "endsAt">) {
   const { startsAt, endsAt } = promoBlock;
-  if (!startsAt && !endsAt) return "—";
+  if (!startsAt && !endsAt) return t("admin.promoBlocks.table.noSchedule");
   // toLocaleDateString() renders in the viewer's local timezone, but endsAt
   // is deliberately stored at 23:59:59.999 UTC (see promoBlockSchema's
   // end-of-day transform) — for any positive UTC offset that pushes display
@@ -71,9 +66,14 @@ function formatSchedule(promoBlock: Pick<PromoBlockRow, "startsAt" | "endsAt">) 
   // actually picked, regardless of viewer timezone.
   const format = (value: string) =>
     new Date(value).toLocaleDateString(undefined, { timeZone: "UTC" });
-  if (startsAt && endsAt) return `${format(startsAt)} – ${format(endsAt)}`;
-  if (startsAt) return `From ${format(startsAt)}`;
-  return `Until ${format(endsAt!)}`;
+  if (startsAt && endsAt) {
+    return t("admin.promoBlocks.table.scheduleRange", {
+      start: format(startsAt),
+      end: format(endsAt),
+    });
+  }
+  if (startsAt) return t("admin.promoBlocks.table.scheduleFrom", { start: format(startsAt) });
+  return t("admin.promoBlocks.table.scheduleUntil", { end: format(endsAt!) });
 }
 
 export default function PromoBlocksTable({
@@ -85,17 +85,24 @@ export default function PromoBlocksTable({
   onEdit: (promoBlock: PromoBlockRow) => void;
   onDelete: (promoBlock: PromoBlockRow) => void;
 }) {
+  const { t } = useTranslation();
+  const STATUS_LABEL: Record<EffectivePromoBlockStatus, string> = {
+    inactive: t("admin.promoBlocks.statusLabels.inactive"),
+    scheduled: t("admin.promoBlocks.statusLabels.scheduled"),
+    expired: t("admin.promoBlocks.statusLabels.expired"),
+    live: t("admin.promoBlocks.statusLabels.live"),
+  };
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Headline</TableHead>
-          <TableHead>CTA</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Schedule</TableHead>
-          <TableHead className="text-right">Order</TableHead>
+          <TableHead>{t("admin.promoBlocks.table.headline")}</TableHead>
+          <TableHead>{t("admin.promoBlocks.table.cta")}</TableHead>
+          <TableHead>{t("admin.promoBlocks.table.status")}</TableHead>
+          <TableHead>{t("admin.promoBlocks.table.schedule")}</TableHead>
+          <TableHead className="text-right">{t("admin.promoBlocks.table.order")}</TableHead>
           <TableHead>
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{t("admin.promoBlocks.table.actionsSr")}</span>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -127,7 +134,7 @@ export default function PromoBlocksTable({
               <TableRow key={promoBlock.id}>
                 <TableCell className="font-medium">{promoBlock.headline.en}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {promoBlock.ctaLabel ?? "—"}
+                  {promoBlock.ctaLabel ?? t("admin.promoBlocks.table.noCta")}
                 </TableCell>
                 <TableCell>
                   {(() => {
@@ -138,7 +145,7 @@ export default function PromoBlocksTable({
                   })()}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {formatSchedule(promoBlock)}
+                  {formatSchedule(t, promoBlock)}
                 </TableCell>
                 <TableCell className="text-right">{promoBlock.sortOrder}</TableCell>
                 <TableCell>
@@ -146,7 +153,7 @@ export default function PromoBlocksTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Edit ${promoBlock.headline.en}`}
+                      aria-label={t("admin.promoBlocks.table.editAria", { headline: promoBlock.headline.en })}
                       onClick={() => onEdit(promoBlock)}
                     >
                       <Pencil />
@@ -154,7 +161,7 @@ export default function PromoBlocksTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Delete ${promoBlock.headline.en}`}
+                      aria-label={t("admin.promoBlocks.table.deleteAria", { headline: promoBlock.headline.en })}
                       onClick={() => onDelete(promoBlock)}
                     >
                       <Trash2 />

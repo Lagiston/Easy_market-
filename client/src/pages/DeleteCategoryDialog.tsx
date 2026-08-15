@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { CategoryRow } from "@/components/CategoriesTable";
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ export default function DeleteCategoryDialog({
   category: CategoryRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,7 +34,7 @@ export default function DeleteCategoryDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not delete the category. Please try again."
+      : t("admin.categories.deleteDialog.error")
     : null;
 
   return (
@@ -45,21 +47,22 @@ export default function DeleteCategoryDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {category?.name.en}?</AlertDialogTitle>
+          <AlertDialogTitle>
+            {t("admin.categories.deleteDialog.title", { name: category?.name.en })}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            This removes the category and can&apos;t be undone. Products already assigned to
-            it keep their existing category.
+            {t("admin.categories.deleteDialog.description")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("admin.common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Deleting…" : "Delete"}
+            {mutation.isPending ? t("admin.common.deleting") : t("admin.common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

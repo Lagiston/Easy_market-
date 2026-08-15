@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useSearchParams } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ORDER_STATUSES, type OrderStatus } from "@es-market/core";
 import OrdersTable, { type OrderRow } from "@/components/OrdersTable";
-import { STATUS_LABELS } from "@/components/OrderStatusBadge";
+import { getOrderStatusLabel } from "@/components/OrderStatusBadge";
 import CancelUnreachableOrderDialog from "./CancelUnreachableOrderDialog";
 import CancelOrderDialog from "./CancelOrderDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +24,7 @@ function extractServerError(error: unknown, fallback: string) {
 }
 
 export default function OrdersPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   // Read-once (like the storefront's own ?tag= deep-link pattern), not
   // two-way synced — lets a dashboard KPI card land here pre-filtered
@@ -70,28 +72,25 @@ export default function OrdersPage() {
   });
 
   const serverError = logCallMutation.isError
-    ? extractServerError(logCallMutation.error, "Could not log the call. Please try again.")
+    ? extractServerError(logCallMutation.error, t("admin.orders.logCallError"))
     : confirmMutation.isError
-      ? extractServerError(confirmMutation.error, "Could not confirm the order. Please try again.")
+      ? extractServerError(confirmMutation.error, t("admin.orders.confirmError"))
       : outForDeliveryMutation.isError
-        ? extractServerError(
-            outForDeliveryMutation.error,
-            "Could not mark the order out for delivery. Please try again.",
-          )
+        ? extractServerError(outForDeliveryMutation.error, t("admin.orders.outForDeliveryError"))
         : completeMutation.isError
-          ? extractServerError(
-              completeMutation.error,
-              "Could not complete the order. Please try again.",
-            )
+          ? extractServerError(completeMutation.error, t("admin.orders.completeError"))
           : null;
 
   return (
     <Card className="mx-auto max-w-5xl">
       <CardHeader>
-        <CardTitle>Orders</CardTitle>
+        <CardTitle>{t("admin.orders.title")}</CardTitle>
         <CardDescription>
-          {orders ? `${orders.length} order${orders.length === 1 ? "" : "s"}` : "Customer orders"}
-          {" — "}call the customer to confirm each received order.
+          {orders
+            ? t("admin.orders.subtitleCount", { count: orders.length })
+            : t("admin.orders.subtitleFallback")}
+          {" — "}
+          {t("admin.orders.subtitleSuffix")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -101,18 +100,16 @@ export default function OrdersPage() {
           className="mb-4"
         >
           <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="all">{t("admin.orders.all")}</TabsTrigger>
             {ORDER_STATUSES.map((status) => (
               <TabsTrigger key={status} value={status}>
-                {STATUS_LABELS[status]}
+                {getOrderStatusLabel(t, status)}
               </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
         {isError ? (
-          <p className="py-8 text-center text-sm text-destructive">
-            Could not load orders. Please try again.
-          </p>
+          <p className="py-8 text-center text-sm text-destructive">{t("admin.orders.loadError")}</p>
         ) : (
           <>
             {serverError && <p className="mb-3 text-sm text-destructive">{serverError}</p>}

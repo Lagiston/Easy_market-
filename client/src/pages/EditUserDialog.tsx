@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import UserForm from "@/components/UserForm";
 import type { UserRow } from "@/components/UsersTable";
 import {
@@ -15,14 +16,13 @@ export default function EditUserDialog({
   user: UserRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={user !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit user</DialogTitle>
-          <DialogDescription>
-            Update the account details. Leave the password blank to keep it unchanged.
-          </DialogDescription>
+          <DialogTitle>{t("admin.users.editDialog.title")}</DialogTitle>
+          <DialogDescription>{t("admin.users.editDialog.description")}</DialogDescription>
         </DialogHeader>
         {user && <UserForm user={user} onSuccess={() => onOpenChange(false)} />}
       </DialogContent>

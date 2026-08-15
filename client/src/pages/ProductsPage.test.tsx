@@ -1,3 +1,4 @@
+import "@/i18n";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -151,9 +152,9 @@ describe("ProductsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Edit Rice 5kg" }));
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByLabelText("Name")).toHaveValue("Rice 5kg");
+    expect(within(dialog).getByLabelText("Name (English)")).toHaveValue("Rice 5kg");
 
-    const nameInput = within(dialog).getByLabelText("Name");
+    const nameInput = within(dialog).getByLabelText("Name (English)");
     await user.clear(nameInput);
     await user.type(nameInput, "Rice 10kg");
     await user.click(within(dialog).getByRole("button", { name: "Save changes" }));

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { ImageOff, X } from "lucide-react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,6 +43,7 @@ export default function ProductForm({
   product?: ProductRow;
   onSuccess?: (product: ProductRow) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { defaultLowStockThreshold } = useStoreSettings();
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -151,7 +153,9 @@ export default function ProductForm({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : `Could not ${product ? "update" : "create"} the product. Please try again.`
+      : product
+        ? t("admin.products.form.updateError")
+        : t("admin.products.form.createError")
     : null;
 
   const enHasError = !!errors.name?.en || !!errors.description?.en;
@@ -162,7 +166,7 @@ export default function ProductForm({
       noValidate
       onSubmit={handleSubmit((input) => {
         if (!product && imageFiles.length === 0) {
-          setImageError("At least one image is required");
+          setImageError(t("admin.products.form.imageRequired"));
           return;
         }
         mutation.mutate(input);
@@ -172,13 +176,13 @@ export default function ProductForm({
       <Tabs defaultValue="en">
         <TabsList>
           <TabsTrigger value="en">
-            English
+            {t("admin.products.form.english")}
             {enHasError && (
               <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
             )}
           </TabsTrigger>
           <TabsTrigger value="ar">
-            Arabic
+            {t("admin.products.form.arabic")}
             {arHasError && (
               <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
             )}
@@ -186,7 +190,7 @@ export default function ProductForm({
         </TabsList>
         <TabsContent value="en" className="grid gap-4 pt-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="product-form-name-en">Name</Label>
+            <Label htmlFor="product-form-name-en">{t("admin.products.form.nameEn")}</Label>
             <Input
               id="product-form-name-en"
               autoComplete="off"
@@ -198,7 +202,9 @@ export default function ProductForm({
             )}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="product-form-description-en">Description</Label>
+            <Label htmlFor="product-form-description-en">
+              {t("admin.products.form.descriptionEn")}
+            </Label>
             <Textarea
               id="product-form-description-en"
               rows={3}
@@ -212,7 +218,7 @@ export default function ProductForm({
         </TabsContent>
         <TabsContent value="ar" className="grid gap-4 pt-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="product-form-name-ar">Name</Label>
+            <Label htmlFor="product-form-name-ar">{t("admin.products.form.nameAr")}</Label>
             <Input
               id="product-form-name-ar"
               dir="rtl"
@@ -225,7 +231,9 @@ export default function ProductForm({
             )}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="product-form-description-ar">Description</Label>
+            <Label htmlFor="product-form-description-ar">
+              {t("admin.products.form.descriptionAr")}
+            </Label>
             <Textarea
               id="product-form-description-ar"
               dir="rtl"
@@ -240,7 +248,7 @@ export default function ProductForm({
         </TabsContent>
       </Tabs>
       <div className="grid gap-1.5">
-        <Label htmlFor="product-form-price">Price</Label>
+        <Label htmlFor="product-form-price">{t("admin.products.form.price")}</Label>
         <Input
           id="product-form-price"
           type="number"
@@ -254,13 +262,13 @@ export default function ProductForm({
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="product-form-sale-price">Sale price (optional)</Label>
+        <Label htmlFor="product-form-sale-price">{t("admin.products.form.salePrice")}</Label>
         <Input
           id="product-form-sale-price"
           type="number"
           min={0}
           step={1}
-          placeholder="No sale"
+          placeholder={t("admin.products.form.salePricePlaceholder")}
           aria-invalid={!!errors.salePrice}
           {...register("salePrice", { valueAsNumber: true })}
         />
@@ -269,7 +277,7 @@ export default function ProductForm({
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="product-form-stock">Stock</Label>
+        <Label htmlFor="product-form-stock">{t("admin.products.form.stock")}</Label>
         <Input
           id="product-form-stock"
           type="number"
@@ -283,7 +291,9 @@ export default function ProductForm({
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="product-form-low-stock-threshold">Low stock threshold</Label>
+        <Label htmlFor="product-form-low-stock-threshold">
+          {t("admin.products.form.lowStockThreshold")}
+        </Label>
         <Input
           id="product-form-low-stock-threshold"
           type="number"
@@ -298,7 +308,7 @@ export default function ProductForm({
       </div>
       <div className="grid gap-2 rounded-md border p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium">AI suggestions</p>
+          <p className="text-sm font-medium">{t("admin.products.form.aiSuggestionsHeading")}</p>
           <div className="flex gap-2">
             {classifyMutation.isSuccess && (
               <Button
@@ -307,7 +317,7 @@ export default function ProductForm({
                 size="sm"
                 onClick={() => classifyMutation.reset()}
               >
-                Dismiss
+                {t("admin.products.form.dismiss")}
               </Button>
             )}
             <Button
@@ -317,7 +327,9 @@ export default function ProductForm({
               disabled={!nameEn?.trim() || classifyMutation.isPending}
               onClick={() => classifyMutation.mutate()}
             >
-              {classifyMutation.isPending ? "Suggesting…" : "Suggest with AI"}
+              {classifyMutation.isPending
+                ? t("admin.products.form.suggesting")
+                : t("admin.products.form.suggestWithAi")}
             </Button>
           </div>
         </div>
@@ -326,13 +338,15 @@ export default function ProductForm({
             {axios.isAxiosError(classifyMutation.error) &&
             classifyMutation.error.response?.data?.error
               ? String(classifyMutation.error.response.data.error)
-              : "Could not get AI suggestions. Please try again."}
+              : t("admin.products.form.aiError")}
           </p>
         )}
         {classifyMutation.isSuccess && (
           <div className="grid gap-2">
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Category:</span>
+              <span className="text-muted-foreground">
+                {t("admin.products.table.categoryPrefix")}
+              </span>
               {classifyMutation.data.categoryId ? (
                 <>
                   <span>
@@ -354,16 +368,18 @@ export default function ProductForm({
                       pingClassificationAccepted("category");
                     }}
                   >
-                    Apply
+                    {t("admin.products.form.apply")}
                   </Button>
                 </>
               ) : (
-                <span className="text-muted-foreground">No confident match</span>
+                <span className="text-muted-foreground">
+                  {t("admin.products.form.noConfidentMatch")}
+                </span>
               )}
             </div>
             {classifyMutation.data.tags.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5 text-sm">
-                <span className="text-muted-foreground">Tags:</span>
+                <span className="text-muted-foreground">{t("admin.products.form.tagsLabel")}</span>
                 {classifyMutation.data.tags.map((tag) => {
                   const alreadyAdded = watchedTags.includes(tag);
                   return (
@@ -392,7 +408,7 @@ export default function ProductForm({
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="product-form-category">Category</Label>
+        <Label htmlFor="product-form-category">{t("admin.products.form.category")}</Label>
         <Controller
           name="categoryId"
           control={control}
@@ -403,7 +419,7 @@ export default function ProductForm({
                 className="w-full"
                 aria-invalid={!!errors.categoryId}
               >
-                <SelectValue placeholder="Select a category">
+                <SelectValue placeholder={t("admin.products.form.categoryPlaceholder")}>
                   {(value: string) =>
                     categories?.find((category) => category.id === value)?.name.en ?? ""
                   }
@@ -424,7 +440,7 @@ export default function ProductForm({
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="product-form-tag-input">Tags</Label>
+        <Label htmlFor="product-form-tag-input">{t("admin.products.form.tags")}</Label>
         <Controller
           name="tags"
           control={control}
@@ -439,7 +455,7 @@ export default function ProductForm({
                         {tag}
                         <button
                           type="button"
-                          aria-label={`Remove ${tag}`}
+                          aria-label={t("admin.products.form.removeTagAria", { tag })}
                           onClick={() => field.onChange(tags.filter((t) => t !== tag))}
                         >
                           <X className="size-3" />
@@ -450,7 +466,7 @@ export default function ProductForm({
                 )}
                 <Input
                   id="product-form-tag-input"
-                  placeholder="Type a tag and press Enter"
+                  placeholder={t("admin.products.form.tagInputPlaceholder")}
                   aria-invalid={!!errors.tags}
                   onKeyDown={(event) => {
                     if (event.key !== "Enter") return;
@@ -470,20 +486,20 @@ export default function ProductForm({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-1.5">
-          <Label htmlFor="product-form-size">Size</Label>
+          <Label htmlFor="product-form-size">{t("admin.products.form.size")}</Label>
           <Input
             id="product-form-size"
-            placeholder="e.g. M"
+            placeholder={t("admin.products.form.sizePlaceholder")}
             aria-invalid={!!errors.size}
             {...register("size")}
           />
           {errors.size && <p className="text-sm text-destructive">{errors.size.message}</p>}
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="product-form-color">Color</Label>
+          <Label htmlFor="product-form-color">{t("admin.products.form.color")}</Label>
           <Input
             id="product-form-color"
-            placeholder="e.g. Red"
+            placeholder={t("admin.products.form.colorPlaceholder")}
             aria-invalid={!!errors.color}
             {...register("color")}
           />
@@ -491,7 +507,9 @@ export default function ProductForm({
         </div>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="product-form-assigned-agent">Assigned agent</Label>
+        <Label htmlFor="product-form-assigned-agent">
+          {t("admin.products.form.assignedAgent")}
+        </Label>
         <Controller
           name="assignedAgentId"
           control={control}
@@ -505,14 +523,15 @@ export default function ProductForm({
                 className="w-full"
                 aria-invalid={!!errors.assignedAgentId}
               >
-                <SelectValue placeholder="Unassigned">
+                <SelectValue placeholder={t("admin.products.form.unassigned")}>
                   {(value: string) =>
-                    agents?.find((agent) => agent.id === value)?.name ?? "Unassigned"
+                    agents?.find((agent) => agent.id === value)?.name ??
+                    t("admin.products.form.unassigned")
                   }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
+                <SelectItem value="unassigned">{t("admin.products.form.unassigned")}</SelectItem>
                 {agents?.map((agent) => (
                   <SelectItem key={agent.id} value={agent.id}>
                     {agent.name}
@@ -528,7 +547,7 @@ export default function ProductForm({
       </div>
       {!product && (
         <div className="grid gap-1.5">
-          <Label htmlFor="product-form-images">Images</Label>
+          <Label htmlFor="product-form-images">{t("admin.products.form.images")}</Label>
           {imageFiles.length > 0 && (
             <ul className="flex flex-wrap gap-1.5">
               {imageFiles.map((file, index) => (
@@ -540,7 +559,7 @@ export default function ProductForm({
                   <span className="max-w-40 truncate">{file.name}</span>
                   <button
                     type="button"
-                    aria-label={`Remove ${file.name}`}
+                    aria-label={t("admin.products.form.removeImageAria", { name: file.name })}
                     onClick={() => setImageFiles((files) => files.filter((_, i) => i !== index))}
                   >
                     <X className="size-3" />
@@ -567,7 +586,7 @@ export default function ProductForm({
             }}
           />
           <p className="text-xs text-muted-foreground">
-            The first image is the product's primary photo. Up to {MAX_PRODUCT_IMAGES} images.
+            {t("admin.products.form.imagesHint", { max: MAX_PRODUCT_IMAGES })}
           </p>
           {imageError && <p className="text-sm text-destructive">{imageError}</p>}
         </div>
@@ -577,11 +596,11 @@ export default function ProductForm({
         <Button type="submit" disabled={mutation.isPending}>
           {product
             ? mutation.isPending
-              ? "Saving…"
-              : "Save changes"
+              ? t("admin.products.form.saving")
+              : t("admin.products.form.save")
             : mutation.isPending
-              ? "Creating…"
-              : "Create product"}
+              ? t("admin.products.form.creating")
+              : t("admin.products.form.create")}
         </Button>
       </DialogFooter>
     </form>

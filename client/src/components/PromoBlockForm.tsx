@@ -2,6 +2,7 @@ import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import {
   createPromoBlockSchema,
   updatePromoBlockSchema,
@@ -30,6 +31,7 @@ export default function PromoBlockForm({
   promoBlock?: PromoBlockRow;
   onSuccess?: (promoBlock: PromoBlockRow) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const {
@@ -80,7 +82,9 @@ export default function PromoBlockForm({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : `Could not ${promoBlock ? "update" : "create"} the promo block. Please try again.`
+      : promoBlock
+        ? t("admin.promoBlocks.form.updateError")
+        : t("admin.promoBlocks.form.createError")
     : null;
 
   const enHasError = !!errors.headline?.en || !!errors.copy?.en;
@@ -95,13 +99,13 @@ export default function PromoBlockForm({
       <Tabs defaultValue="en">
         <TabsList>
           <TabsTrigger value="en">
-            English
+            {t("admin.products.form.english")}
             {enHasError && (
               <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
             )}
           </TabsTrigger>
           <TabsTrigger value="ar">
-            Arabic
+            {t("admin.products.form.arabic")}
             {arHasError && (
               <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
             )}
@@ -109,7 +113,7 @@ export default function PromoBlockForm({
         </TabsList>
         <TabsContent value="en" className="grid gap-4 pt-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="promo-block-form-headline-en">Headline</Label>
+            <Label htmlFor="promo-block-form-headline-en">{t("admin.promoBlocks.form.headlineEn")}</Label>
             <Input
               id="promo-block-form-headline-en"
               autoComplete="off"
@@ -121,7 +125,7 @@ export default function PromoBlockForm({
             )}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="promo-block-form-copy-en">Copy</Label>
+            <Label htmlFor="promo-block-form-copy-en">{t("admin.promoBlocks.form.copyEn")}</Label>
             <Textarea
               id="promo-block-form-copy-en"
               rows={3}
@@ -135,7 +139,7 @@ export default function PromoBlockForm({
         </TabsContent>
         <TabsContent value="ar" className="grid gap-4 pt-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="promo-block-form-headline-ar">Headline</Label>
+            <Label htmlFor="promo-block-form-headline-ar">{t("admin.promoBlocks.form.headlineAr")}</Label>
             <Input
               id="promo-block-form-headline-ar"
               dir="rtl"
@@ -148,7 +152,7 @@ export default function PromoBlockForm({
             )}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="promo-block-form-copy-ar">Copy</Label>
+            <Label htmlFor="promo-block-form-copy-ar">{t("admin.promoBlocks.form.copyAr")}</Label>
             <Textarea
               id="promo-block-form-copy-ar"
               dir="rtl"
@@ -164,11 +168,11 @@ export default function PromoBlockForm({
       </Tabs>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
-          <Label htmlFor="promo-block-form-cta-label">CTA label</Label>
+          <Label htmlFor="promo-block-form-cta-label">{t("admin.promoBlocks.form.ctaLabel")}</Label>
           <Input
             id="promo-block-form-cta-label"
             autoComplete="off"
-            placeholder="Shop now"
+            placeholder={t("admin.promoBlocks.form.ctaLabelPlaceholder")}
             aria-invalid={!!errors.ctaLabel}
             {...register("ctaLabel")}
           />
@@ -177,11 +181,11 @@ export default function PromoBlockForm({
           )}
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="promo-block-form-cta-url">CTA link</Label>
+          <Label htmlFor="promo-block-form-cta-url">{t("admin.promoBlocks.form.ctaUrl")}</Label>
           <Input
             id="promo-block-form-cta-url"
             autoComplete="off"
-            placeholder="https://example.com/sale"
+            placeholder={t("admin.promoBlocks.form.ctaUrlPlaceholder")}
             aria-invalid={!!errors.ctaUrl}
             {...register("ctaUrl")}
           />
@@ -190,33 +194,33 @@ export default function PromoBlockForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
-          <Label htmlFor="promo-block-form-starts-at">Start date</Label>
+          <Label htmlFor="promo-block-form-starts-at">{t("admin.promoBlocks.form.startDate")}</Label>
           <Input
             id="promo-block-form-starts-at"
             type="date"
             aria-invalid={!!errors.startsAt}
             {...register("startsAt")}
           />
-          <p className="text-sm text-muted-foreground">Leave blank to show right away.</p>
+          <p className="text-sm text-muted-foreground">{t("admin.promoBlocks.form.startDateHint")}</p>
           {errors.startsAt && (
             <p className="text-sm text-destructive">{errors.startsAt.message}</p>
           )}
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="promo-block-form-ends-at">End date</Label>
+          <Label htmlFor="promo-block-form-ends-at">{t("admin.promoBlocks.form.endDate")}</Label>
           <Input
             id="promo-block-form-ends-at"
             type="date"
             aria-invalid={!!errors.endsAt}
             {...register("endsAt")}
           />
-          <p className="text-sm text-muted-foreground">Leave blank to never expire.</p>
+          <p className="text-sm text-muted-foreground">{t("admin.promoBlocks.form.endDateHint")}</p>
           {errors.endsAt && <p className="text-sm text-destructive">{errors.endsAt.message}</p>}
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
-          <Label htmlFor="promo-block-form-sort-order">Order</Label>
+          <Label htmlFor="promo-block-form-sort-order">{t("admin.promoBlocks.form.order")}</Label>
           <Input
             id="promo-block-form-sort-order"
             type="number"
@@ -240,7 +244,7 @@ export default function PromoBlockForm({
               />
             )}
           />
-          Active (shown on the storefront)
+          {t("admin.promoBlocks.form.active")}
         </Label>
       </div>
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
@@ -248,11 +252,11 @@ export default function PromoBlockForm({
         <Button type="submit" disabled={mutation.isPending}>
           {promoBlock
             ? mutation.isPending
-              ? "Saving…"
-              : "Save changes"
+              ? t("admin.promoBlocks.form.saving")
+              : t("admin.promoBlocks.form.save")
             : mutation.isPending
-              ? "Creating…"
-              : "Create promo block"}
+              ? t("admin.promoBlocks.form.creating")
+              : t("admin.promoBlocks.form.create")}
         </Button>
       </DialogFooter>
     </form>

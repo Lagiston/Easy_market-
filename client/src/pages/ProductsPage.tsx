@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SortingState } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import { LayoutGrid, List, Sparkles } from "lucide-react";
 import CreateProductDialog from "./CreateProductDialog";
 import EditProductDialog from "./EditProductDialog";
@@ -41,23 +42,28 @@ type ReclassifyBatch = { total: number; since: string };
 // table), so it gets an explicit Select instead — offering the same
 // sortable columns the table headers already expose (name/category/price/
 // stock), nothing more.
-const CARD_SORT_OPTIONS = [
-  { id: "name", desc: false, label: "Name (A–Z)" },
-  { id: "name", desc: true, label: "Name (Z–A)" },
-  { id: "category", desc: false, label: "Category (A–Z)" },
-  { id: "category", desc: true, label: "Category (Z–A)" },
-  { id: "price", desc: false, label: "Price (low to high)" },
-  { id: "price", desc: true, label: "Price (high to low)" },
-  { id: "stock", desc: false, label: "Stock (low to high)" },
-  { id: "stock", desc: true, label: "Stock (high to low)" },
+const CARD_SORT_IDS = [
+  { id: "name", desc: false, key: "nameAsc" },
+  { id: "name", desc: true, key: "nameDesc" },
+  { id: "category", desc: false, key: "categoryAsc" },
+  { id: "category", desc: true, key: "categoryDesc" },
+  { id: "price", desc: false, key: "priceAsc" },
+  { id: "price", desc: true, key: "priceDesc" },
+  { id: "stock", desc: false, key: "stockAsc" },
+  { id: "stock", desc: true, key: "stockDesc" },
 ] as const;
 
 function cardSortValue(sort: { id: string; desc: boolean }) {
-  const match = CARD_SORT_OPTIONS.find((o) => o.id === sort.id && o.desc === sort.desc);
+  const match = CARD_SORT_IDS.find((o) => o.id === sort.id && o.desc === sort.desc);
   return match ? `${match.id}-${match.desc}` : undefined;
 }
 
 export default function ProductsPage() {
+  const { t } = useTranslation();
+  const CARD_SORT_OPTIONS = CARD_SORT_IDS.map((o) => ({
+    ...o,
+    label: t(`admin.products.sort.${o.key}`),
+  }));
   const queryClient = useQueryClient();
   const [editingProduct, setEditingProduct] = useState<ProductRow | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductRow | null>(null);
@@ -146,9 +152,9 @@ export default function ProductsPage() {
     <Card className="mx-auto max-w-4xl">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <CardTitle>Products</CardTitle>
+          <CardTitle>{t("admin.products.title")}</CardTitle>
           <CardDescription>
-            {data ? `${total} product${total === 1 ? "" : "s"}` : "Catalog"}
+            {data ? t("admin.products.subtitleCount", { count: total }) : t("admin.products.subtitleFallback")}
           </CardDescription>
         </div>
         <div className="flex gap-2">
@@ -157,7 +163,7 @@ export default function ProductsPage() {
             disabled={batch !== null || reclassifyMutation.isPending}
             onClick={() => reclassifyMutation.mutate()}
           >
-            <Sparkles /> Reclassify all
+            <Sparkles /> {t("admin.products.reclassifyAll")}
           </Button>
           <CreateProductDialog />
         </div>
@@ -165,8 +171,8 @@ export default function ProductsPage() {
       <CardContent>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <Input
-            placeholder="Search by name, category, or tag…"
-            aria-label="Search products"
+            placeholder={t("admin.products.searchPlaceholder")}
+            aria-label={t("admin.products.searchAria")}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="sm:max-w-xs"
@@ -181,11 +187,11 @@ export default function ProductsPage() {
                   setSorting([{ id: id!, desc: desc === "true" }]);
                 }}
               >
-                <SelectTrigger aria-label="Sort by" className="w-44">
-                  <SelectValue placeholder="Sort by…">
+                <SelectTrigger aria-label={t("admin.products.sortByAria")} className="w-44">
+                  <SelectValue placeholder={t("admin.products.sortByPlaceholder")}>
                     {(value: string) =>
                       CARD_SORT_OPTIONS.find((o) => `${o.id}-${o.desc}` === value)?.label ??
-                      "Sort by…"
+                      t("admin.products.sortByPlaceholder")
                     }
                   </SelectValue>
                 </SelectTrigger>
@@ -200,10 +206,10 @@ export default function ProductsPage() {
             )}
             <Tabs value={view} onValueChange={(value) => setView(value as "table" | "card")}>
               <TabsList>
-                <TabsTrigger value="table" aria-label="Table view">
+                <TabsTrigger value="table" aria-label={t("admin.products.tableView")}>
                   <List />
                 </TabsTrigger>
-                <TabsTrigger value="card" aria-label="Card view">
+                <TabsTrigger value="card" aria-label={t("admin.products.cardView")}>
                   <LayoutGrid />
                 </TabsTrigger>
               </TabsList>
@@ -212,7 +218,10 @@ export default function ProductsPage() {
         </div>
         {batch && (
           <p className="mb-4 text-sm text-muted-foreground">
-            Reclassifying products… {reclassifyStatus?.completed ?? 0}/{batch.total}
+            {t("admin.products.reclassifyingProgress", {
+              completed: reclassifyStatus?.completed ?? 0,
+              total: batch.total,
+            })}
           </p>
         )}
         {reclassifyMutation.isError && (
@@ -220,12 +229,12 @@ export default function ProductsPage() {
             {axios.isAxiosError(reclassifyMutation.error) &&
             reclassifyMutation.error.response?.data?.error
               ? String(reclassifyMutation.error.response.data.error)
-              : "Could not start reclassification. Please try again."}
+              : t("admin.products.reclassifyStartError")}
           </p>
         )}
         {error ? (
           <p className="py-8 text-center text-sm text-destructive">
-            Could not load products. Please try again.
+            {t("admin.products.loadError")}
           </p>
         ) : (
           <>
@@ -259,7 +268,7 @@ export default function ProductsPage() {
                 </PaginationItem>
                 <PaginationItem>
                   <span className="px-2 text-sm text-muted-foreground">
-                    Page {page} of {totalPages}
+                    {t("admin.products.page", { page, totalPages })}
                   </span>
                 </PaginationItem>
                 <PaginationItem>

@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import { ArrowUpRight, Heart, RefreshCw, Star, TriangleAlert } from "lucide-react";
 import { InquiryStatus, OrderStatus, Role } from "@es-market/core";
@@ -102,6 +103,7 @@ function StatCard({
   href?: string;
   note?: ReactNode;
 }) {
+  const { t } = useTranslation();
   const body = (
     <>
       <p className="line-clamp-2 min-h-[2.7em] text-[12.5px] text-muted-foreground">{label}</p>
@@ -112,7 +114,7 @@ function StatCard({
       ) : (
         <div className="mt-auto">
           {value === null ? (
-            <p className="text-[13px] font-medium text-muted-foreground">No data yet</p>
+            <p className="text-[13px] font-medium text-muted-foreground">{t("admin.dashboard.noDataYet")}</p>
           ) : (
             <p
               className={cn(
@@ -167,6 +169,7 @@ function Panel({
   viewAllHref?: string;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-[18px] border border-foreground/10 bg-card/50 p-5">
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -179,7 +182,7 @@ function Panel({
             to={viewAllHref}
             className="shrink-0 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground"
           >
-            View all →
+            {t("admin.dashboard.viewAll")}
           </Link>
         )}
       </div>
@@ -287,11 +290,15 @@ function ListRow({
 // Stock indicator — "N left / M" plus a progress bar filled to current/threshold.
 // ---------------------------------------------------------------------------
 function StockIndicator({ stock, threshold }: { stock: number; threshold: number }) {
+  const { t } = useTranslation();
   const percent = threshold > 0 ? Math.min(100, (stock / threshold) * 100) : 0;
   return (
     <div className="w-24 shrink-0 text-end">
       <p className="text-xs text-muted-foreground">
-        <span className="font-bold text-amber-700 dark:text-amber-400">{stock} left</span> / {threshold}
+        <span className="font-bold text-amber-700 dark:text-amber-400">
+          {t("admin.dashboard.stockLeft", { count: stock })}
+        </span>{" "}
+        / {threshold}
       </p>
       <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-foreground/[0.07]">
         <div className="h-full rounded-full bg-amber-500" style={{ width: `${percent}%` }} />
@@ -306,6 +313,7 @@ function oldestDate<T>(items: T[] | null | undefined, getDate: (item: T) => stri
 }
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user.role === Role.ADMIN;
   const { callAttemptsBeforeCancel } = useStoreSettings();
@@ -430,7 +438,7 @@ export default function HomePage() {
       toast.error(
         axios.isAxiosError(error) && error.response?.data?.error
           ? String(error.response.data.error)
-          : "Could not confirm the order. Please try again.",
+          : t("admin.dashboard.confirmOrderError"),
       );
     } finally {
       setConfirmingId(null);
@@ -446,7 +454,7 @@ export default function HomePage() {
       toast.error(
         axios.isAxiosError(error) && error.response?.data?.error
           ? String(error.response.data.error)
-          : "Could not claim the inquiry. Please try again.",
+          : t("admin.dashboard.claimInquiryError"),
       );
     } finally {
       setClaimingId(null);
@@ -490,29 +498,32 @@ export default function HomePage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-[28px] font-extrabold tracking-[-0.03em] text-foreground">
-              Dashboard
+              {t("admin.dashboard.title")}
             </h1>
             <p className="text-[13px] text-muted-foreground">
               {statsQuery.dataUpdatedAt
-                ? `Updated ${formatRelativeAge(new Date(statsQuery.dataUpdatedAt))} · ${new Date(
-                    statsQuery.dataUpdatedAt,
-                  ).toLocaleDateString()}`
-                : "Loading…"}
+                ? t("admin.dashboard.updated", {
+                    relative: formatRelativeAge(new Date(statsQuery.dataUpdatedAt)),
+                    date: new Date(statsQuery.dataUpdatedAt).toLocaleDateString(),
+                  })
+                : t("admin.dashboard.loading")}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={dateRange} onValueChange={(value) => value && setDateRange(value)}>
-              <SelectTrigger className="h-[38px] w-44" aria-label="Date range">
+              <SelectTrigger className="h-[38px] w-44" aria-label={t("admin.dashboard.dateRangeLabel")}>
                 <SelectValue>
-                  {{ "7d": "Last 7 days", "30d": "Last 30 days", quarter: "This quarter" }[
-                    dateRange
-                  ] ?? "Last 7 days"}
+                  {{
+                    "7d": t("admin.dashboard.range7d"),
+                    "30d": t("admin.dashboard.range30d"),
+                    quarter: t("admin.dashboard.rangeQuarter"),
+                  }[dateRange] ?? t("admin.dashboard.range7d")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7d">Last 7 days</SelectItem>
-                <SelectItem value="30d">Last 30 days</SelectItem>
-                <SelectItem value="quarter">This quarter</SelectItem>
+                <SelectItem value="7d">{t("admin.dashboard.range7d")}</SelectItem>
+                <SelectItem value="30d">{t("admin.dashboard.range30d")}</SelectItem>
+                <SelectItem value="quarter">{t("admin.dashboard.rangeQuarter")}</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -522,7 +533,7 @@ export default function HomePage() {
               onClick={handleRefresh}
             >
               <RefreshCw className={cn("size-4", isRefreshing && "animate-spin")} />
-              Refresh
+              {t("admin.dashboard.refresh")}
             </Button>
           </div>
         </div>
@@ -530,46 +541,62 @@ export default function HomePage() {
 
       {isAdmin && (
         <div className="space-y-3">
-          <SectionHeader label="Needs attention" />
+          <SectionHeader label={t("admin.dashboard.sectionNeedsAttention")} />
           <div className="grid grid-cols-[repeat(auto-fit,minmax(178px,1fr))] gap-3">
             <StatCard
-              label="Low-stock items"
+              label={t("admin.dashboard.lowStockItems")}
               value={stats?.lowStock}
               attention={(stats?.lowStock ?? 0) > 0 ? "warn" : "none"}
               href="/admin/products?sortBy=stock&sortOrder=asc"
               note={
                 lowStockProductsLimited && lowStockProductsLimited.length > 0
-                  ? `worst: ${lowStockProductsLimited[0]!.stock} left`
+                  ? t("admin.dashboard.lowStockNoteWorst", { count: lowStockProductsLimited[0]!.stock })
                   : undefined
               }
             />
             <StatCard
-              label="Orders awaiting confirmation"
+              label={t("admin.dashboard.ordersAwaitingConfirmation")}
               value={receivedOrders?.length}
               attention={(receivedOrders?.length ?? 0) > 0 ? "warn" : "none"}
               href="/admin/orders?status=RECEIVED"
-              note={oldestOrderAge ? `oldest ${formatRelativeAge(oldestOrderAge)}` : undefined}
+              note={
+                oldestOrderAge
+                  ? t("admin.dashboard.oldestNote", { relative: formatRelativeAge(oldestOrderAge) })
+                  : undefined
+              }
             />
             <StatCard
-              label="Open inquiries"
+              label={t("admin.dashboard.openInquiries")}
               value={stats?.openInquiries}
               attention={(stats?.openInquiries ?? 0) > 0 ? "warn" : "none"}
               href="/admin/inquiries?status=OPEN"
-              note={oldestOpenInquiryAge ? `oldest ${formatRelativeAge(oldestOpenInquiryAge)}` : undefined}
+              note={
+                oldestOpenInquiryAge
+                  ? t("admin.dashboard.oldestNote", { relative: formatRelativeAge(oldestOpenInquiryAge) })
+                  : undefined
+              }
             />
             <StatCard
-              label="Reviews needing a reply"
+              label={t("admin.dashboard.reviewsNeedingReply")}
               value={unrepliedLowRatings?.length}
               attention={(unrepliedLowRatings?.length ?? 0) > 0 ? "bad" : "none"}
               href="/admin/reviews"
-              note={oldestReviewAge ? `oldest ${formatRelativeAge(oldestReviewAge)}` : undefined}
+              note={
+                oldestReviewAge
+                  ? t("admin.dashboard.oldestNote", { relative: formatRelativeAge(oldestReviewAge) })
+                  : undefined
+              }
             />
             <StatCard
-              label="Escalated inquiries"
+              label={t("admin.dashboard.escalatedInquiries")}
               value={stats?.escalatedInquiries}
               attention={(stats?.escalatedInquiries ?? 0) > 0 ? "bad" : "none"}
               href="/admin/inquiries?status=OPEN"
-              note={oldestEscalationAge ? `oldest ${formatRelativeAge(oldestEscalationAge)}` : undefined}
+              note={
+                oldestEscalationAge
+                  ? t("admin.dashboard.oldestNote", { relative: formatRelativeAge(oldestEscalationAge) })
+                  : undefined
+              }
             />
           </div>
         </div>
@@ -577,37 +604,41 @@ export default function HomePage() {
 
       {isAdmin && (
         <div className="space-y-3">
-          <SectionHeader label="Store" />
+          <SectionHeader label={t("admin.dashboard.sectionStore")} />
           <div className="grid grid-cols-[repeat(auto-fit,minmax(178px,1fr))] gap-3">
-            <StatCard label="Products" value={stats?.products} />
-            <StatCard label="Orders (all time)" value={stats?.orders} />
-            <StatCard label="Orders this week" value={stats?.ordersThisWeek} />
+            <StatCard label={t("admin.dashboard.products")} value={stats?.products} />
+            <StatCard label={t("admin.dashboard.ordersAllTime")} value={stats?.orders} />
+            <StatCard label={t("admin.dashboard.ordersThisWeek")} value={stats?.ordersThisWeek} />
           </div>
         </div>
       )}
 
       {isAdmin && (
         <div className="space-y-3">
-          <SectionHeader label="Support & AI quality" />
+          <SectionHeader label={t("admin.dashboard.sectionSupportAi")} />
           <div className="grid grid-cols-[repeat(auto-fit,minmax(178px,1fr))] gap-3">
             <StatCard
-              label="Avg first-response time"
+              label={t("admin.dashboard.avgFirstResponseTime")}
               value={stats?.avgFirstResponseMinutes}
-              suffix=" min"
+              suffix={t("admin.dashboard.minSuffix")}
             />
-            <StatCard label="Draft success rate" value={stats?.draftSuccessRate} suffix="%" />
             <StatCard
-              label="Drafts sent with little/no edit"
+              label={t("admin.dashboard.draftSuccessRate")}
+              value={stats?.draftSuccessRate}
+              suffix="%"
+            />
+            <StatCard
+              label={t("admin.dashboard.draftLittleEditRate")}
               value={stats?.draftLittleEditRate}
               suffix="%"
             />
             <StatCard
-              label="Category suggestion acceptance"
+              label={t("admin.dashboard.categorySuggestionAcceptance")}
               value={stats?.categorySuggestionAcceptanceRate}
               suffix="%"
             />
             <StatCard
-              label="Tag suggestion acceptance"
+              label={t("admin.dashboard.tagSuggestionAcceptance")}
               value={stats?.tagSuggestionAcceptanceRate}
               suffix="%"
             />
@@ -621,12 +652,12 @@ export default function HomePage() {
       />
 
       <div className="space-y-3">
-        <SectionHeader label="Work queues and inventory & feedback" />
+        <SectionHeader label={t("admin.dashboard.sectionQueues")} />
         <div className="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] items-start gap-3.5">
           {isAdmin && (
             <Panel
-              title="Sold-out products"
-              description="Products with zero stock, per day — last 30 days."
+              title={t("admin.dashboard.soldOutProductsTitle")}
+              description={t("admin.dashboard.soldOutProductsDescription")}
             >
               <SoldOutChart
                 series={soldOutHistory?.series ?? null}
@@ -637,14 +668,14 @@ export default function HomePage() {
           )}
 
           <Panel
-            title="Orders awaiting confirmation"
-            description="Received orders, oldest first — call to confirm."
+            title={t("admin.dashboard.ordersAwaitingCallTitle")}
+            description={t("admin.dashboard.ordersAwaitingCallDescription")}
             viewAllHref="/admin/orders?status=RECEIVED"
           >
             {ordersAwaitingCallLimited === null ? (
               <LoadingRows />
             ) : ordersAwaitingCallLimited.length === 0 ? (
-              <EmptyState message="No orders waiting on a call." />
+              <EmptyState message={t("admin.dashboard.noOrdersWaiting")} />
             ) : (
               <div className="space-y-2">
                 {ordersAwaitingCallLimited.map((order) => (
@@ -658,14 +689,17 @@ export default function HomePage() {
                       <div className="flex shrink-0 items-center gap-2">
                         {order.callAttempts > 0 && (
                           <Badge className="border-red-500/30 bg-red-500/[0.14] text-red-700 dark:text-red-400">
-                            {order.callAttempts}/{callAttemptsBeforeCancel} calls
+                            {t("admin.dashboard.callsBadge", {
+                              count: order.callAttempts,
+                              max: callAttemptsBeforeCancel,
+                            })}
                           </Badge>
                         )}
                         <OrderStatusBadge status={order.status} />
                       </div>
                     }
                     action={{
-                      label: "Confirm",
+                      label: t("admin.dashboard.confirm"),
                       pending: confirmingId === order.id,
                       onClick: () => void handleConfirmOrder(order),
                     }}
@@ -676,14 +710,14 @@ export default function HomePage() {
           </Panel>
 
           <Panel
-            title="Unassigned inquiries"
-            description="Open inquiries nobody has claimed yet."
+            title={t("admin.dashboard.unassignedInquiriesTitle")}
+            description={t("admin.dashboard.unassignedInquiriesDescription")}
             viewAllHref="/admin/inquiries?queue=unassigned&status=OPEN"
           >
             {unassignedInquiries === null ? (
               <LoadingRows />
             ) : unassignedInquiries.length === 0 ? (
-              <EmptyState message="Nothing unassigned." />
+              <EmptyState message={t("admin.dashboard.nothingUnassigned")} />
             ) : (
               <div className="space-y-2">
                 {unassignedInquiries.map((inquiry) => (
@@ -691,13 +725,13 @@ export default function HomePage() {
                     key={inquiry.id}
                     href={`/admin/inquiries/${inquiry.id}`}
                     title={inquiry.customerName}
-                    meta="Unassigned"
+                    meta={t("admin.dashboard.unassignedMeta")}
                     date={inquiry.createdAt}
                     badge={<InquiryStatusBadge status={inquiry.status} />}
                     action={
                       canClaim(inquiry)
                         ? {
-                            label: "Claim",
+                            label: t("admin.dashboard.claim"),
                             pending: claimingId === inquiry.id,
                             onClick: () => void handleClaimInquiry(inquiry),
                           }
@@ -710,14 +744,14 @@ export default function HomePage() {
           </Panel>
 
           <Panel
-            title="Escalated inquiries"
-            description="Flagged for admin attention."
+            title={t("admin.dashboard.escalatedInquiriesTitle")}
+            description={t("admin.dashboard.escalatedInquiriesDescription")}
             viewAllHref="/admin/inquiries?status=OPEN"
           >
             {escalatedInquiries === null ? (
               <LoadingRows />
             ) : escalatedInquiries.length === 0 ? (
-              <EmptyState message="Nothing escalated." />
+              <EmptyState message={t("admin.dashboard.nothingEscalated")} />
             ) : (
               <div className="space-y-2">
                 {escalatedInquiries.map((inquiry) => (
@@ -726,7 +760,9 @@ export default function HomePage() {
                     href={`/admin/inquiries/${inquiry.id}`}
                     title={inquiry.customerName}
                     meta={
-                      inquiry.assignedAgent ? `Assigned to ${inquiry.assignedAgent.name}` : "Unassigned"
+                      inquiry.assignedAgent
+                        ? t("admin.dashboard.assignedToMeta", { name: inquiry.assignedAgent.name })
+                        : t("admin.dashboard.unassignedMeta")
                     }
                     date={inquiry.escalatedAt ?? inquiry.createdAt}
                     badge={
@@ -742,16 +778,16 @@ export default function HomePage() {
           </Panel>
 
           <Panel
-            title="My queue"
-            description="Open inquiries assigned to you."
+            title={t("admin.dashboard.myQueueTitle")}
+            description={t("admin.dashboard.myQueueDescription")}
             viewAllHref="/admin/inquiries?queue=mine&status=OPEN"
           >
             {myOpenInquiries === null ? (
               <LoadingRows />
             ) : myOpenInquiries.length === 0 ? (
               <EmptyState
-                message="Nothing in your queue."
-                actionLabel="Claim an unassigned inquiry"
+                message={t("admin.dashboard.nothingInQueue")}
+                actionLabel={t("admin.dashboard.claimUnassigned")}
                 actionHref="/admin/inquiries?queue=unassigned&status=OPEN"
               />
             ) : (
@@ -761,7 +797,7 @@ export default function HomePage() {
                     key={inquiry.id}
                     href={`/admin/inquiries/${inquiry.id}`}
                     title={inquiry.customerName}
-                    meta="Assigned to you"
+                    meta={t("admin.dashboard.assignedToYouMeta")}
                     date={inquiry.createdAt}
                     badge={<InquiryStatusBadge status={inquiry.status} />}
                   />
@@ -772,14 +808,14 @@ export default function HomePage() {
 
           {isAdmin && (
             <Panel
-              title="Low-stock products"
-              description="Below their restock threshold, lowest first."
+              title={t("admin.dashboard.lowStockProductsTitle")}
+              description={t("admin.dashboard.lowStockProductsDescription")}
               viewAllHref="/admin/products?sortBy=stock&sortOrder=asc"
             >
               {lowStockProductsLimited === null ? (
                 <LoadingRows />
               ) : lowStockProductsLimited.length === 0 ? (
-                <EmptyState message="Nothing low on stock." />
+                <EmptyState message={t("admin.dashboard.nothingLowOnStock")} />
               ) : (
                 <div className="space-y-2">
                   {lowStockProductsLimited.map((product) => (
@@ -792,7 +828,7 @@ export default function HomePage() {
                         <StockIndicator stock={product.stock} threshold={product.lowStockThreshold} />
                       }
                       action={{
-                        label: "Restock",
+                        label: t("admin.dashboard.restock"),
                         href: `/admin/products/${product.id}`,
                       }}
                     />
@@ -804,14 +840,14 @@ export default function HomePage() {
 
           {isAdmin && (
             <Panel
-              title="Low-rated reviews"
-              description="1-2 star reviews with no store response yet."
+              title={t("admin.dashboard.lowRatedReviewsTitle")}
+              description={t("admin.dashboard.lowRatedReviewsDescription")}
               viewAllHref="/admin/reviews"
             >
               {unrepliedLowRatingsLimited === null ? (
                 <LoadingRows />
               ) : unrepliedLowRatingsLimited.length === 0 ? (
-                <EmptyState message="Nothing needs a reply." />
+                <EmptyState message={t("admin.dashboard.nothingNeedsReply")} />
               ) : (
                 <div className="space-y-2">
                   {unrepliedLowRatingsLimited.map((review) => (
@@ -819,7 +855,7 @@ export default function HomePage() {
                       key={review.id}
                       href="/admin/reviews"
                       title={review.product.name.en}
-                      meta={`by ${review.authorName}`}
+                      meta={t("admin.dashboard.byAuthorMeta", { name: review.authorName })}
                       date={review.createdAt}
                       badge={
                         <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
@@ -827,7 +863,7 @@ export default function HomePage() {
                           {review.rating}
                         </span>
                       }
-                      action={{ label: "Reply", href: "/admin/reviews" }}
+                      action={{ label: t("admin.dashboard.reply"), href: "/admin/reviews" }}
                     />
                   ))}
                 </div>
@@ -837,14 +873,14 @@ export default function HomePage() {
 
           {isAdmin && (
             <Panel
-              title="Most wishlisted products"
-              description="All-time, by customer saves."
+              title={t("admin.dashboard.mostWishlistedTitle")}
+              description={t("admin.dashboard.mostWishlistedDescription")}
               viewAllHref="/admin/products"
             >
               {mostWishlisted === undefined ? (
                 <LoadingRows />
               ) : mostWishlisted.length === 0 ? (
-                <EmptyState message="Nothing wishlisted yet." />
+                <EmptyState message={t("admin.dashboard.nothingWishlisted")} />
               ) : (
                 <div className="space-y-2">
                   {mostWishlisted.map((product) => (
@@ -852,7 +888,7 @@ export default function HomePage() {
                       key={product.id}
                       href={`/admin/products/${product.id}`}
                       title={product.name}
-                      meta="Wishlisted"
+                      meta={t("admin.dashboard.wishlistedMeta")}
                       badge={
                         <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
                           <Heart aria-hidden className="size-3.5 fill-pink-500 text-pink-500" />

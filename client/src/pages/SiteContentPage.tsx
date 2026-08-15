@@ -2,6 +2,7 @@ import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import {
   updateSiteContentSchema,
   type SiteContent,
@@ -18,55 +19,55 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const SECTIONS: {
-  title: string;
-  description: string;
-  fields: { key: SiteContentKey; label: string }[];
-}[] = [
-  {
-    title: "About page — Our story",
-    description: "The two paragraphs under \"Our story\" on the storefront's About page.",
-    fields: [
-      { key: "about_storyBody1", label: "Story, paragraph 1" },
-      { key: "about_storyBody2", label: "Story, paragraph 2" },
-    ],
-  },
-  {
-    title: "About page — What we stand for",
-    description: "The body text of each of the three value cards.",
-    fields: [
-      { key: "about_valueQualityBody", label: "\"Real stock, real prices\"" },
-      { key: "about_valueServiceBody", label: "\"People, not just a form\"" },
-      { key: "about_valueCommunityBody", label: "\"Built for our community\"" },
-    ],
-  },
-  {
-    title: "Policy page — Returns & refunds",
-    description: "The two paragraphs under the Returns & refunds section.",
-    fields: [
-      { key: "policy_returnsBody1", label: "Returns, paragraph 1" },
-      { key: "policy_returnsBody2", label: "Returns, paragraph 2" },
-    ],
-  },
-  {
-    title: "Policy page — Privacy",
-    description: "The two paragraphs under the Privacy section.",
-    fields: [
-      { key: "policy_privacyBody1", label: "Privacy, paragraph 1" },
-      { key: "policy_privacyBody2", label: "Privacy, paragraph 2" },
-    ],
-  },
-  {
-    title: "Policy page — Terms of service",
-    description: "The two paragraphs under the Terms of service section.",
-    fields: [
-      { key: "policy_termsBody1", label: "Terms, paragraph 1" },
-      { key: "policy_termsBody2", label: "Terms, paragraph 2" },
-    ],
-  },
-];
-
 export default function SiteContentPage() {
+  const { t } = useTranslation();
+  const SECTIONS: {
+    title: string;
+    description: string;
+    fields: { key: SiteContentKey; label: string }[];
+  }[] = [
+    {
+      title: t("admin.siteContent.sections.aboutStory.title"),
+      description: t("admin.siteContent.sections.aboutStory.description"),
+      fields: [
+        { key: "about_storyBody1", label: t("admin.siteContent.sections.aboutStory.fields.about_storyBody1") },
+        { key: "about_storyBody2", label: t("admin.siteContent.sections.aboutStory.fields.about_storyBody2") },
+      ],
+    },
+    {
+      title: t("admin.siteContent.sections.aboutValues.title"),
+      description: t("admin.siteContent.sections.aboutValues.description"),
+      fields: [
+        { key: "about_valueQualityBody", label: t("admin.siteContent.sections.aboutValues.fields.about_valueQualityBody") },
+        { key: "about_valueServiceBody", label: t("admin.siteContent.sections.aboutValues.fields.about_valueServiceBody") },
+        { key: "about_valueCommunityBody", label: t("admin.siteContent.sections.aboutValues.fields.about_valueCommunityBody") },
+      ],
+    },
+    {
+      title: t("admin.siteContent.sections.policyReturns.title"),
+      description: t("admin.siteContent.sections.policyReturns.description"),
+      fields: [
+        { key: "policy_returnsBody1", label: t("admin.siteContent.sections.policyReturns.fields.policy_returnsBody1") },
+        { key: "policy_returnsBody2", label: t("admin.siteContent.sections.policyReturns.fields.policy_returnsBody2") },
+      ],
+    },
+    {
+      title: t("admin.siteContent.sections.policyPrivacy.title"),
+      description: t("admin.siteContent.sections.policyPrivacy.description"),
+      fields: [
+        { key: "policy_privacyBody1", label: t("admin.siteContent.sections.policyPrivacy.fields.policy_privacyBody1") },
+        { key: "policy_privacyBody2", label: t("admin.siteContent.sections.policyPrivacy.fields.policy_privacyBody2") },
+      ],
+    },
+    {
+      title: t("admin.siteContent.sections.policyTerms.title"),
+      description: t("admin.siteContent.sections.policyTerms.description"),
+      fields: [
+        { key: "policy_termsBody1", label: t("admin.siteContent.sections.policyTerms.fields.policy_termsBody1") },
+        { key: "policy_termsBody2", label: t("admin.siteContent.sections.policyTerms.fields.policy_termsBody2") },
+      ],
+    },
+  ];
   const queryClient = useQueryClient();
 
   const { data: content, isError } = useQuery({
@@ -96,24 +97,20 @@ export default function SiteContentPage() {
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not save the content. Please try again."
+      : t("admin.siteContent.saveError")
     : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Site content</CardTitle>
-          <CardDescription>
-            Edit the body text on the storefront's About and Policy pages. Headings and layout
-            stay fixed — only the paragraphs below are editable. English only; other languages
-            keep their existing translated text.
-          </CardDescription>
+          <CardTitle>{t("admin.siteContent.title")}</CardTitle>
+          <CardDescription>{t("admin.siteContent.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           {isError ? (
             <p className="py-8 text-center text-sm text-destructive">
-              Could not load site content. Please try again.
+              {t("admin.siteContent.loadError")}
             </p>
           ) : (
             <form
@@ -146,12 +143,12 @@ export default function SiteContentPage() {
 
               {serverError && <p className="text-sm text-destructive">{serverError}</p>}
               {mutation.isSuccess && !mutation.isPending && (
-                <p className="text-sm text-muted-foreground">Content saved.</p>
+                <p className="text-sm text-muted-foreground">{t("admin.siteContent.saved")}</p>
               )}
 
               <div>
                 <Button type="submit" disabled={mutation.isPending}>
-                  {mutation.isPending ? "Saving…" : "Save content"}
+                  {mutation.isPending ? t("admin.siteContent.saving") : t("admin.siteContent.save")}
                 </Button>
               </div>
             </form>

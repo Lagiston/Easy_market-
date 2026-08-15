@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { UserRow } from "@/components/UsersTable";
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ export default function DeleteUserDialog({
   user: UserRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,7 +34,7 @@ export default function DeleteUserDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not delete the user. Please try again."
+      : t("admin.users.deleteDialog.error")
     : null;
 
   return (
@@ -45,21 +47,20 @@ export default function DeleteUserDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {user?.name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This revokes their access immediately. You can reactivate them later from the
-            Deactivated tab.
-          </AlertDialogDescription>
+          <AlertDialogTitle>
+            {t("admin.users.deleteDialog.title", { name: user?.name })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>{t("admin.users.deleteDialog.description")}</AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("admin.common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Deleting…" : "Delete"}
+            {mutation.isPending ? t("admin.common.deleting") : t("admin.common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

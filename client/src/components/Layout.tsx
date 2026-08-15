@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Menu } from "lucide-react";
 import { Role } from "@es-market/core";
 import { authClient, type SessionUser } from "@/lib/auth-client";
@@ -16,12 +17,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/storefront/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { useHideOnScroll } from "@/lib/use-hide-on-scroll";
 
 const ATTENTION_POLL_MS = 30000;
 
 export default function Layout({ user }: { user: SessionUser }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   // Kept visible while the mobile menu sheet is open — its own trigger
@@ -51,17 +54,17 @@ export default function Layout({ user }: { user: SessionUser }) {
   // Driven as data so the same list renders in both the desktop row and the
   // mobile sheet without duplicating each Link's JSX.
   const navLinks = [
-    { to: "/admin/orders", label: "Orders" },
-    { to: "/admin/inquiries", label: "Inquiries", badge: attentionCount },
-    { to: "/admin/users", label: "Users", adminOnly: true },
-    { to: "/admin/products", label: "Products", adminOnly: true },
-    { to: "/admin/categories", label: "Categories", adminOnly: true },
-    { to: "/admin/tags", label: "Tags", adminOnly: true },
-    { to: "/admin/kb-articles", label: "Knowledge base", adminOnly: true },
-    { to: "/admin/promo-blocks", label: "Promo blocks", adminOnly: true },
-    { to: "/admin/reviews", label: "Reviews", adminOnly: true },
-    { to: "/admin/settings", label: "Settings", adminOnly: true },
-    { to: "/admin/site-content", label: "Site content", adminOnly: true },
+    { to: "/admin/orders", label: t("admin.layout.orders") },
+    { to: "/admin/inquiries", label: t("admin.layout.inquiries"), badge: attentionCount },
+    { to: "/admin/users", label: t("admin.layout.users"), adminOnly: true },
+    { to: "/admin/products", label: t("admin.layout.products"), adminOnly: true },
+    { to: "/admin/categories", label: t("admin.layout.categories"), adminOnly: true },
+    { to: "/admin/tags", label: t("admin.layout.tags"), adminOnly: true },
+    { to: "/admin/kb-articles", label: t("admin.layout.kbArticles"), adminOnly: true },
+    { to: "/admin/promo-blocks", label: t("admin.layout.promoBlocks"), adminOnly: true },
+    { to: "/admin/reviews", label: t("admin.layout.reviews"), adminOnly: true },
+    { to: "/admin/settings", label: t("admin.layout.settings"), adminOnly: true },
+    { to: "/admin/site-content", label: t("admin.layout.siteContent"), adminOnly: true },
   ].filter((item) => !item.adminOnly || user.role === Role.ADMIN);
 
   return (
@@ -88,7 +91,7 @@ export default function Layout({ user }: { user: SessionUser }) {
               {!!item.badge && (
                 <Badge
                   variant="destructive"
-                  aria-label={`${item.badge} inquiries need attention`}
+                  aria-label={t("admin.layout.inquiriesNeedAttention", { count: item.badge })}
                 >
                   {item.badge}
                 </Badge>
@@ -97,10 +100,11 @@ export default function Layout({ user }: { user: SessionUser }) {
           ))}
         </div>
         <div className="hidden items-center gap-4 lg:flex">
+          <LanguageSwitcher />
           <ThemeToggle />
           <span className="text-sm text-muted-foreground">{user.name}</span>
           <Button type="button" variant="outline" size="sm" onClick={handleSignOut}>
-            Sign out
+            {t("admin.layout.signOut")}
           </Button>
         </div>
 
@@ -111,7 +115,7 @@ export default function Layout({ user }: { user: SessionUser }) {
         </Link>
         <div className="lg:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger render={<Button variant="ghost" size="icon" aria-label="Menu" />}>
+            <SheetTrigger render={<Button variant="ghost" size="icon" aria-label={t("admin.layout.menu")} />}>
               <Menu className="size-5" />
             </SheetTrigger>
             <SheetContent side="right" className="flex flex-col">
@@ -133,7 +137,7 @@ export default function Layout({ user }: { user: SessionUser }) {
                     {!!item.badge && (
                       <Badge
                         variant="destructive"
-                        aria-label={`${item.badge} inquiries need attention`}
+                        aria-label={t("admin.layout.inquiriesNeedAttention", { count: item.badge })}
                       >
                         {item.badge}
                       </Badge>
@@ -145,8 +149,11 @@ export default function Layout({ user }: { user: SessionUser }) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{user.name}</span>
                   {/* Deliberately not wrapped in SheetClose — toggling theme
-                      isn't a navigation, so the sheet should stay open. */}
-                  <ThemeToggle />
+                      or language isn't a navigation, so the sheet should stay open. */}
+                  <div className="flex items-center gap-2">
+                    <LanguageSwitcher />
+                    <ThemeToggle />
+                  </div>
                 </div>
                 <SheetClose
                   render={
@@ -158,7 +165,7 @@ export default function Layout({ user }: { user: SessionUser }) {
                     />
                   }
                 >
-                  Sign out
+                  {t("admin.layout.signOut")}
                 </SheetClose>
               </div>
             </SheetContent>

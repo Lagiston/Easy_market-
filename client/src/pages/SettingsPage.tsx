@@ -2,6 +2,7 @@ import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import {
   updateSettingsSchema,
   type StoreSettings,
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/card";
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: settings, isError } = useQuery({
@@ -62,22 +64,19 @@ export default function SettingsPage() {
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not save the settings. Please try again."
+      : t("admin.settings.saveError")
     : null;
 
   return (
     <Card className="mx-auto max-w-xl">
       <CardHeader>
-        <CardTitle>Settings</CardTitle>
-        <CardDescription>
-          Store-wide delivery pricing, order handling, catalog defaults, and storefront contact
-          info.
-        </CardDescription>
+        <CardTitle>{t("admin.settings.title")}</CardTitle>
+        <CardDescription>{t("admin.settings.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isError ? (
           <p className="py-8 text-center text-sm text-destructive">
-            Could not load settings. Please try again.
+            {t("admin.settings.loadError")}
           </p>
         ) : (
           <form
@@ -86,7 +85,7 @@ export default function SettingsPage() {
             className="grid gap-4"
           >
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-delivery-fee">Delivery fee</Label>
+              <Label htmlFor="settings-delivery-fee">{t("admin.settings.deliveryFee")}</Label>
               <Input
                 id="settings-delivery-fee"
                 type="number"
@@ -94,15 +93,15 @@ export default function SettingsPage() {
                 aria-invalid={!!errors.deliveryFee}
                 {...register("deliveryFee", { valueAsNumber: true })}
               />
-              <p className="text-sm text-muted-foreground">
-                Flat fee added to delivery orders. Pickup is always free.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("admin.settings.deliveryFeeHint")}</p>
               {errors.deliveryFee && (
                 <p className="text-sm text-destructive">{errors.deliveryFee.message}</p>
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-free-threshold">Free delivery threshold</Label>
+              <Label htmlFor="settings-free-threshold">
+                {t("admin.settings.freeDeliveryThreshold")}
+              </Label>
               <Input
                 id="settings-free-threshold"
                 type="number"
@@ -111,7 +110,7 @@ export default function SettingsPage() {
                 {...register("freeDeliveryThreshold", { valueAsNumber: true })}
               />
               <p className="text-sm text-muted-foreground">
-                Orders at or above this total get free delivery. Leave blank to disable.
+                {t("admin.settings.freeDeliveryThresholdHint")}
               </p>
               {errors.freeDeliveryThreshold && (
                 <p className="text-sm text-destructive">
@@ -121,7 +120,7 @@ export default function SettingsPage() {
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="settings-call-attempts">
-                Failed call attempts before cancel offer
+                {t("admin.settings.callAttemptsBeforeCancel")}
               </Label>
               <Input
                 id="settings-call-attempts"
@@ -131,8 +130,7 @@ export default function SettingsPage() {
                 {...register("callAttemptsBeforeCancel", { valueAsNumber: true })}
               />
               <p className="text-sm text-muted-foreground">
-                After this many logged failed calls on a received order, staff are offered the
-                option to cancel it as unreachable.
+                {t("admin.settings.callAttemptsBeforeCancelHint")}
               </p>
               {errors.callAttemptsBeforeCancel && (
                 <p className="text-sm text-destructive">
@@ -141,7 +139,9 @@ export default function SettingsPage() {
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-default-low-stock">Default low stock threshold</Label>
+              <Label htmlFor="settings-default-low-stock">
+                {t("admin.settings.defaultLowStockThreshold")}
+              </Label>
               <Input
                 id="settings-default-low-stock"
                 type="number"
@@ -150,8 +150,7 @@ export default function SettingsPage() {
                 {...register("defaultLowStockThreshold", { valueAsNumber: true })}
               />
               <p className="text-sm text-muted-foreground">
-                Pre-filled low stock threshold when creating a new product. Existing products keep
-                their own value.
+                {t("admin.settings.defaultLowStockThresholdHint")}
               </p>
               {errors.defaultLowStockThreshold && (
                 <p className="text-sm text-destructive">
@@ -160,51 +159,47 @@ export default function SettingsPage() {
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-contact-phone">Contact phone</Label>
+              <Label htmlFor="settings-contact-phone">{t("admin.settings.contactPhone")}</Label>
               <Input
                 id="settings-contact-phone"
                 type="tel"
                 aria-invalid={!!errors.contactPhone}
                 {...register("contactPhone")}
               />
-              <p className="text-sm text-muted-foreground">
-                Shown on the storefront contact page. Leave blank to hide it.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("admin.settings.contactPhoneHint")}</p>
               {errors.contactPhone && (
                 <p className="text-sm text-destructive">{errors.contactPhone.message}</p>
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-contact-email">Contact email</Label>
+              <Label htmlFor="settings-contact-email">{t("admin.settings.contactEmail")}</Label>
               <Input
                 id="settings-contact-email"
                 type="email"
                 aria-invalid={!!errors.contactEmail}
                 {...register("contactEmail")}
               />
-              <p className="text-sm text-muted-foreground">
-                Shown on the storefront contact page. Leave blank to hide it.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("admin.settings.contactEmailHint")}</p>
               {errors.contactEmail && (
                 <p className="text-sm text-destructive">{errors.contactEmail.message}</p>
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-contact-address">Contact address</Label>
+              <Label htmlFor="settings-contact-address">{t("admin.settings.contactAddress")}</Label>
               <Input
                 id="settings-contact-address"
                 aria-invalid={!!errors.contactAddress}
                 {...register("contactAddress")}
               />
               <p className="text-sm text-muted-foreground">
-                Shown on the storefront contact page, linked to a map. Leave blank to hide it.
+                {t("admin.settings.contactAddressHint")}
               </p>
               {errors.contactAddress && (
                 <p className="text-sm text-destructive">{errors.contactAddress.message}</p>
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-social-instagram">Instagram URL</Label>
+              <Label htmlFor="settings-social-instagram">{t("admin.settings.socialInstagram")}</Label>
               <Input
                 id="settings-social-instagram"
                 type="url"
@@ -212,16 +207,13 @@ export default function SettingsPage() {
                 aria-invalid={!!errors.socialInstagramUrl}
                 {...register("socialInstagramUrl")}
               />
-              <p className="text-sm text-muted-foreground">
-                Shown as a social icon on the storefront footer and contact page. Leave blank to
-                hide it.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("admin.settings.socialHint")}</p>
               {errors.socialInstagramUrl && (
                 <p className="text-sm text-destructive">{errors.socialInstagramUrl.message}</p>
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-social-tiktok">TikTok URL</Label>
+              <Label htmlFor="settings-social-tiktok">{t("admin.settings.socialTiktok")}</Label>
               <Input
                 id="settings-social-tiktok"
                 type="url"
@@ -229,16 +221,13 @@ export default function SettingsPage() {
                 aria-invalid={!!errors.socialTiktokUrl}
                 {...register("socialTiktokUrl")}
               />
-              <p className="text-sm text-muted-foreground">
-                Shown as a social icon on the storefront footer and contact page. Leave blank to
-                hide it.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("admin.settings.socialHint")}</p>
               {errors.socialTiktokUrl && (
                 <p className="text-sm text-destructive">{errors.socialTiktokUrl.message}</p>
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-social-facebook">Facebook URL</Label>
+              <Label htmlFor="settings-social-facebook">{t("admin.settings.socialFacebook")}</Label>
               <Input
                 id="settings-social-facebook"
                 type="url"
@@ -246,16 +235,13 @@ export default function SettingsPage() {
                 aria-invalid={!!errors.socialFacebookUrl}
                 {...register("socialFacebookUrl")}
               />
-              <p className="text-sm text-muted-foreground">
-                Shown as a social icon on the storefront footer and contact page. Leave blank to
-                hide it.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("admin.settings.socialHint")}</p>
               {errors.socialFacebookUrl && (
                 <p className="text-sm text-destructive">{errors.socialFacebookUrl.message}</p>
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="settings-social-whatsapp">WhatsApp URL</Label>
+              <Label htmlFor="settings-social-whatsapp">{t("admin.settings.socialWhatsapp")}</Label>
               <Input
                 id="settings-social-whatsapp"
                 type="url"
@@ -264,8 +250,7 @@ export default function SettingsPage() {
                 {...register("socialWhatsappUrl")}
               />
               <p className="text-sm text-muted-foreground">
-                Overrides the WhatsApp link normally derived from the contact phone above (e.g. to
-                add a preset message). Leave blank to keep using the contact phone.
+                {t("admin.settings.socialWhatsappHint")}
               </p>
               {errors.socialWhatsappUrl && (
                 <p className="text-sm text-destructive">{errors.socialWhatsappUrl.message}</p>
@@ -273,11 +258,11 @@ export default function SettingsPage() {
             </div>
             {serverError && <p className="text-sm text-destructive">{serverError}</p>}
             {mutation.isSuccess && !mutation.isPending && (
-              <p className="text-sm text-muted-foreground">Settings saved.</p>
+              <p className="text-sm text-muted-foreground">{t("admin.settings.saved")}</p>
             )}
             <div>
               <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Saving…" : "Save settings"}
+                {mutation.isPending ? t("admin.settings.saving") : t("admin.settings.save")}
               </Button>
             </div>
           </form>

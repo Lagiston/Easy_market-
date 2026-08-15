@@ -1,12 +1,12 @@
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import type { InquiryStatus } from "@es-market/core";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export const INQUIRY_STATUS_LABELS: Record<InquiryStatus, string> = {
-  OPEN: "Open",
-  RESOLVED: "Resolved",
-  CLOSED: "Closed",
-};
+export function getInquiryStatusLabel(t: TFunction, status: InquiryStatus): string {
+  return t(`admin.inquiryStatus.${status}`);
+}
 
 // Color semantics: unhandled/needs-action is amber, resolved/good is
 // emerald, neutral/terminal is gray — an unhandled OPEN inquiry must never
@@ -22,9 +22,10 @@ export const INQUIRY_STATUS_TONE_CLASS: Record<InquiryStatus, string> = {
 };
 
 export default function InquiryStatusBadge({ status }: { status: InquiryStatus }) {
+  const { t } = useTranslation();
   return (
     <Badge variant="outline" className={cn(INQUIRY_STATUS_TONE_CLASS[status])}>
-      {INQUIRY_STATUS_LABELS[status]}
+      {getInquiryStatusLabel(t, status)}
     </Badge>
   );
 }

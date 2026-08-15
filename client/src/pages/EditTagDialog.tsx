@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import TagForm from "@/components/TagForm";
 import type { TagRow } from "@/components/TagsTable";
 import {
@@ -15,14 +16,14 @@ export default function EditTagDialog({
   tag: TagRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={tag !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit tag</DialogTitle>
+          <DialogTitle>{t("admin.tags.editDialog.title")}</DialogTitle>
           <DialogDescription>
-            Translate &ldquo;{tag?.value}&rdquo; — used everywhere this tag appears on the
-            storefront.
+            {t("admin.tags.editDialog.description", { value: tag?.value })}
           </DialogDescription>
         </DialogHeader>
         {tag && <TagForm tag={tag} onSuccess={() => onOpenChange(false)} />}

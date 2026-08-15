@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { KbArticleRow } from "@/components/KbArticlesTable";
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ export default function DeleteKbArticleDialog({
   kbArticle: KbArticleRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,7 +34,7 @@ export default function DeleteKbArticleDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not delete the article. Please try again."
+      : t("admin.kbArticles.deleteDialog.error")
     : null;
 
   return (
@@ -45,20 +47,20 @@ export default function DeleteKbArticleDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {kbArticle?.title.en}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This removes the article and can&apos;t be undone.
-          </AlertDialogDescription>
+          <AlertDialogTitle>
+            {t("admin.kbArticles.deleteDialog.title", { title: kbArticle?.title.en })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>{t("admin.kbArticles.deleteDialog.description")}</AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("admin.common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Deleting…" : "Delete"}
+            {mutation.isPending ? t("admin.common.deleting") : t("admin.common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

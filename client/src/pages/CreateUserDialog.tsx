@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserForm from "@/components/UserForm";
@@ -12,19 +13,18 @@ import {
 } from "@/components/ui/dialog";
 
 export default function CreateUserDialog() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button size="sm" />}>
-        <Plus /> Create user
+        <Plus /> {t("admin.users.createDialog.trigger")}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create user</DialogTitle>
-          <DialogDescription>
-            Add a staff account. New users are created as agents.
-          </DialogDescription>
+          <DialogTitle>{t("admin.users.createDialog.title")}</DialogTitle>
+          <DialogDescription>{t("admin.users.createDialog.description")}</DialogDescription>
         </DialogHeader>
         <UserForm onSuccess={() => setOpen(false)} />
       </DialogContent>

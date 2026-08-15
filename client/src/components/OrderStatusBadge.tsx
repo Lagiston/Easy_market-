@@ -1,14 +1,16 @@
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import type { CancelReason, OrderStatus } from "@es-market/core";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export const STATUS_LABELS: Record<OrderStatus, string> = {
-  RECEIVED: "Received",
-  CONFIRMED: "Confirmed",
-  OUT_FOR_DELIVERY: "Out for delivery",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
+export function getOrderStatusLabel(t: TFunction, status: OrderStatus): string {
+  return t(`admin.orderStatus.${status}`);
+}
+
+export function getCancelReasonLabel(t: TFunction, reason: CancelReason): string {
+  return t(`admin.cancelReason.${reason}`);
+}
 
 // Color semantics: unhandled/needs-action (RECEIVED, awaiting the
 // confirmation call) is amber; a confirmed/completed order is emerald;
@@ -27,17 +29,11 @@ export const ORDER_STATUS_TONE_CLASS: Record<OrderStatus, string> = {
   CANCELLED: "border-red-500/30 bg-red-500/[0.14] text-red-700 dark:text-red-400",
 };
 
-export const CANCEL_REASON_LABELS: Record<CancelReason, string> = {
-  CUSTOMER_UNREACHABLE: "Customer unreachable",
-  OUTSIDE_DELIVERY_AREA: "Outside delivery area",
-  CUSTOMER_REQUEST: "Customer request",
-  OTHER: "Other",
-};
-
 export default function OrderStatusBadge({ status }: { status: OrderStatus }) {
+  const { t } = useTranslation();
   return (
     <Badge variant="outline" className={cn(ORDER_STATUS_TONE_CLASS[status])}>
-      {STATUS_LABELS[status]}
+      {getOrderStatusLabel(t, status)}
     </Badge>
   );
 }

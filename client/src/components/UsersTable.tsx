@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { Role } from "@es-market/core";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,7 @@ export default function UsersTable({
   onEdit,
   onDelete,
   onReactivate,
-  emptyMessage = "No users found.",
+  emptyMessage,
 }: {
   users: UserRow[] | null;
   status: "active" | "deactivated";
@@ -50,15 +51,16 @@ export default function UsersTable({
   onReactivate: (user: UserRow) => void;
   emptyMessage?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>User</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead className="text-right">Joined</TableHead>
+          <TableHead>{t("admin.users.table.user")}</TableHead>
+          <TableHead>{t("admin.users.table.role")}</TableHead>
+          <TableHead className="text-right">{t("admin.users.table.joined")}</TableHead>
           <TableHead>
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{t("admin.users.table.actionsSr")}</span>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -66,7 +68,7 @@ export default function UsersTable({
         {users !== null && users.length === 0 && (
           <TableRow>
             <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
-              {emptyMessage}
+              {emptyMessage ?? t("admin.users.table.empty")}
             </TableCell>
           </TableRow>
         )}
@@ -108,7 +110,7 @@ export default function UsersTable({
                 </TableCell>
                 <TableCell>
                   <Badge variant={user.role === Role.ADMIN ? "default" : "secondary"}>
-                    {user.role === Role.ADMIN ? "Admin" : "Agent"}
+                    {t(`admin.users.roleLabels.${user.role}`)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
@@ -121,7 +123,7 @@ export default function UsersTable({
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          aria-label={`Edit ${user.name}`}
+                          aria-label={t("admin.users.table.editAria", { name: user.name })}
                           onClick={() => onEdit(user)}
                         >
                           <Pencil />
@@ -130,7 +132,7 @@ export default function UsersTable({
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            aria-label={`Delete ${user.name}`}
+                            aria-label={t("admin.users.table.deleteAria", { name: user.name })}
                             onClick={() => onDelete(user)}
                           >
                             <Trash2 />
@@ -141,7 +143,7 @@ export default function UsersTable({
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label={`Reactivate ${user.name}`}
+                        aria-label={t("admin.users.table.reactivateAria", { name: user.name })}
                         onClick={() => onReactivate(user)}
                       >
                         <RotateCcw />

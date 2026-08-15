@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import EditTagDialog from "./EditTagDialog";
 import DeleteTagDialog from "./DeleteTagDialog";
 import TagsTable, { type TagRow } from "@/components/TagsTable";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/card";
 
 export default function TagsPage() {
+  const { t } = useTranslation();
   const [editingTag, setEditingTag] = useState<TagRow | null>(null);
   const [deletingTag, setDeletingTag] = useState<TagRow | null>(null);
   const { data, isError } = useQuery({
@@ -24,17 +26,17 @@ export default function TagsPage() {
   return (
     <Card className="mx-auto max-w-4xl">
       <CardHeader>
-        <CardTitle>Tags</CardTitle>
+        <CardTitle>{t("admin.tags.title")}</CardTitle>
         <CardDescription>
           {tags
-            ? `${tags.length} tag${tags.length === 1 ? "" : "s"} — translate how each reads on the storefront`
-            : "Product tag translations"}
+            ? t("admin.tags.subtitleCount", { count: tags.length })
+            : t("admin.tags.subtitleFallback")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {isError ? (
           <p className="py-8 text-center text-sm text-destructive">
-            Could not load tags. Please try again.
+            {t("admin.tags.loadError")}
           </p>
         ) : (
           <TagsTable tags={tags} onEdit={setEditingTag} onDelete={setDeletingTag} />

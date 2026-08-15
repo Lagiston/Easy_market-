@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { Ban, CheckCircle2, RotateCcw, TriangleAlert, UserPlus } from "lucide-react";
 import { InquiryStatus, type InquiryChannel } from "@es-market/core";
 import InquiryStatusBadge from "@/components/InquiryStatusBadge";
@@ -68,16 +69,17 @@ export default function InquiriesTable({
   onReopen: (inquiry: InquiryRow) => void;
   actionsPending: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Customer</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Assigned to</TableHead>
-          <TableHead>Updated</TableHead>
+          <TableHead>{t("admin.inquiries.table.customer")}</TableHead>
+          <TableHead>{t("admin.inquiries.table.status")}</TableHead>
+          <TableHead>{t("admin.inquiries.table.assignedTo")}</TableHead>
+          <TableHead>{t("admin.inquiries.table.updated")}</TableHead>
           <TableHead>
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{t("admin.inquiries.table.actionsSr")}</span>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -95,7 +97,7 @@ export default function InquiriesTable({
         ) : inquiries.length === 0 ? (
           <TableRow>
             <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-              No inquiries yet.
+              {t("admin.inquiries.table.empty")}
             </TableCell>
           </TableRow>
         ) : (
@@ -112,17 +114,21 @@ export default function InquiriesTable({
                   {inquiry.escalatedAt !== null && (
                     <TriangleAlert
                       role="img"
-                      aria-label="Escalated"
+                      aria-label={t("admin.inquiries.table.escalated")}
                       className="size-3.5 text-destructive"
                     />
                   )}
                 </div>
-                <div className="text-muted-foreground">{inquiry.customerEmail ?? "—"}</div>
+                <div className="text-muted-foreground">
+                  {inquiry.customerEmail ?? t("admin.inquiries.table.noEmail")}
+                </div>
               </TableCell>
               <TableCell>
                 <InquiryStatusBadge status={inquiry.status} />
               </TableCell>
-              <TableCell>{inquiry.assignedAgent?.name ?? "Unassigned"}</TableCell>
+              <TableCell>
+                {inquiry.assignedAgent?.name ?? t("admin.inquiries.table.unassigned")}
+              </TableCell>
               <TableCell>{new Date(inquiry.updatedAt).toLocaleDateString()}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
@@ -130,7 +136,7 @@ export default function InquiriesTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Claim inquiry from ${inquiry.customerName}`}
+                      aria-label={t("admin.inquiries.table.claimAria", { name: inquiry.customerName })}
                       disabled={actionsPending}
                       onClick={() => onClaim(inquiry)}
                     >
@@ -141,7 +147,7 @@ export default function InquiriesTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Resolve inquiry from ${inquiry.customerName}`}
+                      aria-label={t("admin.inquiries.table.resolveAria", { name: inquiry.customerName })}
                       disabled={actionsPending}
                       onClick={() => onResolve(inquiry)}
                     >
@@ -153,7 +159,7 @@ export default function InquiriesTable({
                       variant="ghost"
                       size="icon-sm"
                       className="text-destructive"
-                      aria-label={`Close inquiry from ${inquiry.customerName}`}
+                      aria-label={t("admin.inquiries.table.closeAria", { name: inquiry.customerName })}
                       disabled={actionsPending}
                       onClick={() => onClose(inquiry)}
                     >
@@ -164,7 +170,7 @@ export default function InquiriesTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Reopen inquiry from ${inquiry.customerName}`}
+                      aria-label={t("admin.inquiries.table.reopenAria", { name: inquiry.customerName })}
                       disabled={actionsPending}
                       onClick={() => onReopen(inquiry)}
                     >

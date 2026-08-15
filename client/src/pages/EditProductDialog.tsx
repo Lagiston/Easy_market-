@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import ProductForm from "@/components/ProductForm";
 import ProductImageUpload from "@/components/ProductImageUpload";
 import ProductVariantLinks from "@/components/ProductVariantLinks";
@@ -23,12 +24,13 @@ export default function EditProductDialog({
   // reopened, since it doesn't itself re-read the products query cache.
   onProductChange?: (product: ProductRow) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={product !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit product</DialogTitle>
-          <DialogDescription>Update the product details.</DialogDescription>
+          <DialogTitle>{t("admin.products.editDialog.title")}</DialogTitle>
+          <DialogDescription>{t("admin.products.editDialog.description")}</DialogDescription>
         </DialogHeader>
         {product && (
           <>

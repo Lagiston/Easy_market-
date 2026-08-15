@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   createColumnHelper,
   flexRender,
@@ -65,6 +66,7 @@ type Category = { id: string; name: LocalizedName };
 // the suggestion fields), Dismiss just clears them without changing the
 // product. Self-contained so it doesn't need to touch ProductForm.tsx.
 export function SuggestionBadge({ product }: { product: ProductRow }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -122,7 +124,7 @@ export function SuggestionBadge({ product }: { product: ProductRow }) {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label={`Pending AI suggestion for ${product.name.en}`}
+            aria-label={t("admin.products.table.suggestionAria", { name: product.name.en })}
           />
         }
       >
@@ -130,10 +132,11 @@ export function SuggestionBadge({ product }: { product: ProductRow }) {
       </PopoverTrigger>
       <PopoverContent>
         <div className="space-y-2 text-sm">
-          <p className="font-medium">Suggested</p>
+          <p className="font-medium">{t("admin.products.table.suggested")}</p>
           {suggestedCategory && (
             <p>
-              Category: <span className="text-muted-foreground">{suggestedCategory.name.en}</span>
+              {t("admin.products.table.categoryPrefix")}{" "}
+              <span className="text-muted-foreground">{suggestedCategory.name.en}</span>
             </p>
           )}
           {product.aiSuggestedTags.length > 0 && (
@@ -147,7 +150,7 @@ export function SuggestionBadge({ product }: { product: ProductRow }) {
           )}
           <div className="flex gap-2 pt-1">
             <Button size="sm" onClick={() => applyMutation.mutate()} disabled={applyMutation.isPending}>
-              Apply
+              {t("admin.products.table.apply")}
             </Button>
             <Button
               size="sm"
@@ -155,7 +158,7 @@ export function SuggestionBadge({ product }: { product: ProductRow }) {
               onClick={() => dismissMutation.mutate()}
               disabled={dismissMutation.isPending}
             >
-              Dismiss
+              {t("admin.products.table.dismiss")}
             </Button>
           </div>
         </div>
@@ -191,16 +194,17 @@ export default function ProductsTable({
   onEdit: (product: ProductRow) => void;
   onDelete: (product: ProductRow) => void;
 }) {
+  const { t } = useTranslation();
   const columns = useMemo(
     () => [
       columnHelper.display({
         id: "image",
-        header: () => <span className="sr-only">Image</span>,
+        header: () => <span className="sr-only">{t("admin.products.table.image")}</span>,
         enableSorting: false,
         cell: ({ row }) => (
           <Avatar>
             {row.original.images[0] && <AvatarImage src={row.original.images[0]} alt="" />}
-            <AvatarFallback aria-label="No image">
+            <AvatarFallback aria-label={t("admin.products.table.noImageAria")}>
               <ImageOff className="size-4" />
             </AvatarFallback>
           </Avatar>
@@ -208,7 +212,7 @@ export default function ProductsTable({
       }),
       columnHelper.accessor((row) => row.name.en, {
         id: "name",
-        header: "Name",
+        header: t("admin.products.table.name"),
         cell: ({ row }) => (
           <Link
             to={`/admin/products/${row.original.id}`}
@@ -220,14 +224,14 @@ export default function ProductsTable({
       }),
       columnHelper.accessor((row) => row.category.name.en, {
         id: "category",
-        header: "Category",
+        header: t("admin.products.table.category"),
         cell: ({ row }) => (
           <span className="text-muted-foreground">{row.original.category.name.en}</span>
         ),
       }),
       columnHelper.display({
         id: "tags",
-        header: "Tags",
+        header: t("admin.products.table.tags"),
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-1">
@@ -241,23 +245,23 @@ export default function ProductsTable({
       }),
       columnHelper.display({
         id: "suggestion",
-        header: () => <span className="sr-only">AI suggestion</span>,
+        header: () => <span className="sr-only">{t("admin.products.table.suggested")}</span>,
         enableSorting: false,
         cell: ({ row }) => <SuggestionBadge product={row.original} />,
       }),
       columnHelper.accessor((row) => row.assignedAgent?.name ?? "", {
         id: "agent",
-        header: "Agent",
+        header: t("admin.products.table.agent"),
         enableSorting: false,
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {row.original.assignedAgent?.name ?? "Unassigned"}
+            {row.original.assignedAgent?.name ?? t("admin.products.table.unassigned")}
           </span>
         ),
       }),
       columnHelper.accessor("price", {
         id: "price",
-        header: "Price",
+        header: t("admin.products.table.price"),
         cell: ({ getValue, row }) => {
           const salePrice = row.original.salePrice;
           if (salePrice === null) {
@@ -266,7 +270,7 @@ export default function ProductsTable({
           return (
             <div className="flex items-center justify-end gap-1.5">
               <Badge variant="secondary" className="shrink-0">
-                Sale
+                {t("admin.products.table.sale")}
               </Badge>
               <span className="text-muted-foreground line-through">{getValue()}</span>
               <span className="font-medium">{salePrice}</span>
@@ -276,19 +280,19 @@ export default function ProductsTable({
       }),
       columnHelper.accessor("stock", {
         id: "stock",
-        header: "Stock",
+        header: t("admin.products.table.stock"),
         cell: ({ getValue }) => <div className="text-right">{getValue()}</div>,
       }),
       columnHelper.display({
         id: "actions",
-        header: () => <span className="sr-only">Actions</span>,
+        header: () => <span className="sr-only">{t("admin.products.table.actionsSr")}</span>,
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label={`Edit ${row.original.name.en}`}
+              aria-label={t("admin.products.table.editAria", { name: row.original.name.en })}
               onClick={() => onEdit(row.original)}
             >
               <Pencil />
@@ -296,7 +300,7 @@ export default function ProductsTable({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label={`Delete ${row.original.name.en}`}
+              aria-label={t("admin.products.table.deleteAria", { name: row.original.name.en })}
               onClick={() => onDelete(row.original)}
             >
               <Trash2 />
@@ -305,7 +309,7 @@ export default function ProductsTable({
         ),
       }),
     ],
-    [onEdit, onDelete],
+    [onEdit, onDelete, t],
   );
 
   const table = useReactTable({

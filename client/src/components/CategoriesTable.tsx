@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pencil, Trash2 } from "lucide-react";
 import type { LocalizedName } from "@es-market/core";
 import { Button } from "@/components/ui/button";
@@ -27,13 +28,14 @@ export default function CategoriesTable({
   onEdit: (category: CategoryRow) => void;
   onDelete: (category: CategoryRow) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
+          <TableHead>{t("admin.categories.table.name")}</TableHead>
           <TableHead>
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{t("admin.categories.table.actionsSr")}</span>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -57,7 +59,7 @@ export default function CategoriesTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Edit ${category.name.en}`}
+                      aria-label={t("admin.categories.table.editAria", { name: category.name.en })}
                       onClick={() => onEdit(category)}
                     >
                       <Pencil />
@@ -65,7 +67,7 @@ export default function CategoriesTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Delete ${category.name.en}`}
+                      aria-label={t("admin.categories.table.deleteAria", { name: category.name.en })}
                       onClick={() => onDelete(category)}
                     >
                       <Trash2 />

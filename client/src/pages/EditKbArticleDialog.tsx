@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import KbArticleForm from "@/components/KbArticleForm";
 import type { KbArticleRow } from "@/components/KbArticlesTable";
 import {
@@ -15,12 +16,13 @@ export default function EditKbArticleDialog({
   kbArticle: KbArticleRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={kbArticle !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit article</DialogTitle>
-          <DialogDescription>Update the article content.</DialogDescription>
+          <DialogTitle>{t("admin.kbArticles.editDialog.title")}</DialogTitle>
+          <DialogDescription>{t("admin.kbArticles.editDialog.description")}</DialogDescription>
         </DialogHeader>
         {kbArticle && (
           <KbArticleForm kbArticle={kbArticle} onSuccess={() => onOpenChange(false)} />

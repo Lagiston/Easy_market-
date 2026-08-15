@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { ProductRow } from "@/components/ProductsTable";
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ export default function DeleteProductDialog({
   product: ProductRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,7 +34,7 @@ export default function DeleteProductDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not delete the product. Please try again."
+      : t("admin.products.deleteDialog.error")
     : null;
 
   return (
@@ -45,20 +47,22 @@ export default function DeleteProductDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {product?.name.en}?</AlertDialogTitle>
+          <AlertDialogTitle>
+            {t("admin.products.deleteDialog.title", { name: product?.name.en })}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            This removes the product from the catalog and can&apos;t be undone.
+            {t("admin.products.deleteDialog.description")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("admin.common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Deleting…" : "Delete"}
+            {mutation.isPending ? t("admin.common.deleting") : t("admin.common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -2,9 +2,10 @@ import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { cancelOrderSchema, CANCEL_REASONS, type CancelOrderInput } from "@es-market/core";
 import type { OrderRow } from "@/components/OrdersTable";
-import { CANCEL_REASON_LABELS } from "@/components/OrderStatusBadge";
+import { getCancelReasonLabel } from "@/components/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,6 +31,7 @@ export default function CancelOrderDialog({
   order: OrderRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const {
@@ -53,7 +55,7 @@ export default function CancelOrderDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not cancel the order. Please try again."
+      : t("admin.orders.cancelDialog.error")
     : null;
 
   return (
@@ -69,10 +71,8 @@ export default function CancelOrderDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cancel order {order?.code}?</DialogTitle>
-          <DialogDescription>
-            Cancelling records the reason and restores the items&apos; stock.
-          </DialogDescription>
+          <DialogTitle>{t("admin.orders.cancelDialog.title", { code: order?.code })}</DialogTitle>
+          <DialogDescription>{t("admin.orders.cancelDialog.description")}</DialogDescription>
         </DialogHeader>
         <form
           noValidate
@@ -80,7 +80,7 @@ export default function CancelOrderDialog({
           className="grid gap-4"
         >
           <div className="grid gap-1.5">
-            <Label htmlFor="cancel-order-reason">Reason</Label>
+            <Label htmlFor="cancel-order-reason">{t("admin.orders.cancelDialog.reason")}</Label>
             <Controller
               name="reason"
               control={control}
@@ -91,16 +91,16 @@ export default function CancelOrderDialog({
                     className="w-full"
                     aria-invalid={!!errors.reason}
                   >
-                    <SelectValue placeholder="Select a reason">
+                    <SelectValue placeholder={t("admin.orders.cancelDialog.reasonPlaceholder")}>
                       {(value: string | null) =>
-                        value ? CANCEL_REASON_LABELS[value as keyof typeof CANCEL_REASON_LABELS] : ""
+                        value ? getCancelReasonLabel(t, value as CancelOrderInput["reason"]) : ""
                       }
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {CANCEL_REASONS.map((reason) => (
                       <SelectItem key={reason} value={reason}>
-                        {CANCEL_REASON_LABELS[reason]}
+                        {getCancelReasonLabel(t, reason)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -114,7 +114,9 @@ export default function CancelOrderDialog({
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}
           <DialogFooter showCloseButton>
             <Button type="submit" variant="destructive" disabled={mutation.isPending}>
-              {mutation.isPending ? "Cancelling…" : "Cancel order"}
+              {mutation.isPending
+                ? t("admin.orders.cancelDialog.cancelling")
+                : t("admin.orders.cancelDialog.submit")}
             </Button>
           </DialogFooter>
         </form>

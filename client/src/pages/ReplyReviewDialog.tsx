@@ -2,6 +2,7 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { staffReplySchema, type StaffReplyFormInput } from "@es-market/core";
 import type { ReviewRow } from "@/components/ReviewsTable";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export default function ReplyReviewDialog({
   review: ReviewRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const {
     register,
@@ -54,7 +56,7 @@ export default function ReplyReviewDialog({
   const serverError = saveMutation.isError
     ? axios.isAxiosError(saveMutation.error) && saveMutation.error.response?.data?.error
       ? String(saveMutation.error.response.data.error)
-      : "Could not save the reply. Please try again."
+      : t("admin.reviews.replyDialog.saveError")
     : null;
 
   return (
@@ -71,9 +73,9 @@ export default function ReplyReviewDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Reply to {review?.authorName}&apos;s review</DialogTitle>
+          <DialogTitle>{t("admin.reviews.replyDialog.title", { author: review?.authorName })}</DialogTitle>
           <DialogDescription>
-            Visible publicly under the review on {review?.product.name.en}&apos;s page.
+            {t("admin.reviews.replyDialog.description", { product: review?.product.name.en })}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -81,7 +83,7 @@ export default function ReplyReviewDialog({
           className="grid gap-4"
         >
           <div className="grid gap-1.5">
-            <Label htmlFor="staff-reply">Reply</Label>
+            <Label htmlFor="staff-reply">{t("admin.reviews.replyDialog.reply")}</Label>
             <Textarea id="staff-reply" rows={4} {...register("reply")} />
             {errors.reply && (
               <p className="text-sm text-destructive">{errors.reply.message}</p>
@@ -89,9 +91,7 @@ export default function ReplyReviewDialog({
           </div>
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}
           {clearMutation.isError && (
-            <p className="text-sm text-destructive">
-              Could not clear the reply. Please try again.
-            </p>
+            <p className="text-sm text-destructive">{t("admin.reviews.replyDialog.clearError")}</p>
           )}
           <DialogFooter>
             {review?.staffReply && (
@@ -101,11 +101,15 @@ export default function ReplyReviewDialog({
                 disabled={clearMutation.isPending || saveMutation.isPending}
                 onClick={() => clearMutation.mutate()}
               >
-                {clearMutation.isPending ? "Clearing…" : "Clear reply"}
+                {clearMutation.isPending
+                  ? t("admin.reviews.replyDialog.clearing")
+                  : t("admin.reviews.replyDialog.clear")}
               </Button>
             )}
             <Button type="submit" disabled={saveMutation.isPending || clearMutation.isPending}>
-              {saveMutation.isPending ? "Saving…" : "Save reply"}
+              {saveMutation.isPending
+                ? t("admin.reviews.replyDialog.saving")
+                : t("admin.reviews.replyDialog.save")}
             </Button>
           </DialogFooter>
         </form>

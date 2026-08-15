@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import type { LocalizedName } from "@es-market/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,6 +30,7 @@ function variantLabel(variant: Pick<VariantSummary, "size" | "color">) {
 // from the products table (the same staleness class of bug fixed for the
 // image gallery previously).
 export default function ProductVariantLinks({ productId }: { productId: string }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -82,16 +84,16 @@ export default function ProductVariantLinks({ productId }: { productId: string }
   const error = linkMutation.isError
     ? axios.isAxiosError(linkMutation.error) && linkMutation.error.response?.data?.error
       ? String(linkMutation.error.response.data.error)
-      : "Could not link that product. Please try again."
+      : t("admin.products.variantLinks.linkError")
     : unlinkMutation.isError
       ? axios.isAxiosError(unlinkMutation.error) && unlinkMutation.error.response?.data?.error
         ? String(unlinkMutation.error.response.data.error)
-        : "Could not remove that variant. Please try again."
+        : t("admin.products.variantLinks.unlinkError")
       : null;
 
   return (
     <div className="grid gap-3">
-      <p className="text-sm font-medium">Variants</p>
+      <p className="text-sm font-medium">{t("admin.products.variantLinks.title")}</p>
       {variants.length > 0 && (
         <ul className="grid gap-1.5">
           {variants.map((variant) => (
@@ -113,7 +115,7 @@ export default function ProductVariantLinks({ productId }: { productId: string }
               </span>
               <button
                 type="button"
-                aria-label={`Remove ${variant.name.en}`}
+                aria-label={t("admin.products.variantLinks.removeAria", { name: variant.name.en })}
                 disabled={unlinkMutation.isPending}
                 onClick={() => unlinkMutation.mutate(variant.id)}
                 className="text-muted-foreground hover:text-destructive"
@@ -127,8 +129,8 @@ export default function ProductVariantLinks({ productId }: { productId: string }
       <div className="relative">
         <Search className="absolute top-1/2 start-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
-          aria-label="Search products to link as a variant"
-          placeholder="Search products to link as a variant…"
+          aria-label={t("admin.products.variantLinks.searchAria")}
+          placeholder={t("admin.products.variantLinks.searchPlaceholder")}
           className="ps-8"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -162,7 +164,7 @@ export default function ProductVariantLinks({ productId }: { productId: string }
         </ul>
       )}
       {debouncedSearch && searchResults && candidates.length === 0 && (
-        <p className="text-sm text-muted-foreground">No matching products found.</p>
+        <p className="text-sm text-muted-foreground">{t("admin.products.variantLinks.noResults")}</p>
       )}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

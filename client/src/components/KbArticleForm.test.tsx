@@ -1,3 +1,4 @@
+import "@/i18n";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -30,8 +31,8 @@ describe("KbArticleForm", () => {
       </Dialog>,
     );
 
-    expect(screen.getByLabelText("Title")).toHaveValue("How to track my order");
-    expect(screen.getByLabelText("Body")).toHaveValue("Use the order status page.");
+    expect(screen.getByLabelText("Title (English)")).toHaveValue("How to track my order");
+    expect(screen.getByLabelText("Body (English)")).toHaveValue("Use the order status page.");
     expect(screen.getByLabelText("Topic")).toHaveValue("orders");
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
   });

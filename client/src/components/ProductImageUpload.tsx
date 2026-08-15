@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ImageOff, X } from "lucide-react";
 import { MAX_PRODUCT_IMAGES } from "@es-market/core";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ export default function ProductImageUpload({
   images: string[];
   onUploaded?: (product: ProductRow) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,11 +48,11 @@ export default function ProductImageUpload({
   const error = uploadMutation.isError
     ? axios.isAxiosError(uploadMutation.error) && uploadMutation.error.response?.data?.error
       ? String(uploadMutation.error.response.data.error)
-      : "Could not upload the image. Please try again."
+      : t("admin.products.imageUpload.uploadError")
     : deleteMutation.isError
       ? axios.isAxiosError(deleteMutation.error) && deleteMutation.error.response?.data?.error
         ? String(deleteMutation.error.response.data.error)
-        : "Could not remove the image. Please try again."
+        : t("admin.products.imageUpload.removeError")
       : null;
 
   const atLimit = images.length >= MAX_PRODUCT_IMAGES;
@@ -67,7 +69,7 @@ export default function ProductImageUpload({
             />
             <button
               type="button"
-              aria-label="Remove image"
+              aria-label={t("admin.products.imageUpload.removeAria")}
               disabled={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate(imageUrl)}
               className="absolute -end-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-destructive"
@@ -78,7 +80,7 @@ export default function ProductImageUpload({
         ))}
         {images.length === 0 && (
           <div
-            aria-label="No image"
+            aria-label={t("admin.products.imageUpload.noImageAria")}
             className="flex size-16 items-center justify-center rounded-md border bg-muted"
           >
             <ImageOff className="size-5 text-muted-foreground" />
@@ -91,7 +93,7 @@ export default function ProductImageUpload({
           type="file"
           multiple
           accept="image/jpeg,image/png,image/webp"
-          aria-label="Product images"
+          aria-label={t("admin.products.imageUpload.productImagesAria")}
           className="sr-only"
           onChange={(event) => {
             const files = Array.from(event.target.files ?? []);
@@ -107,10 +109,10 @@ export default function ProductImageUpload({
           onClick={() => inputRef.current?.click()}
         >
           {uploadMutation.isPending
-            ? "Uploading…"
+            ? t("admin.products.imageUpload.uploading")
             : atLimit
-              ? `Maximum ${MAX_PRODUCT_IMAGES} images`
-              : "Add images"}
+              ? t("admin.products.imageUpload.maxReached", { max: MAX_PRODUCT_IMAGES })
+              : t("admin.products.imageUpload.addImages")}
         </Button>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

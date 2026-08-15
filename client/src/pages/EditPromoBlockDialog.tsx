@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import PromoBlockForm from "@/components/PromoBlockForm";
 import type { PromoBlockRow } from "@/components/PromoBlocksTable";
 import {
@@ -15,12 +16,13 @@ export default function EditPromoBlockDialog({
   promoBlock: PromoBlockRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={promoBlock !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit promo block</DialogTitle>
-          <DialogDescription>Update the promo block content.</DialogDescription>
+          <DialogTitle>{t("admin.promoBlocks.editDialog.title")}</DialogTitle>
+          <DialogDescription>{t("admin.promoBlocks.editDialog.description")}</DialogDescription>
         </DialogHeader>
         {promoBlock && (
           <PromoBlockForm promoBlock={promoBlock} onSuccess={() => onOpenChange(false)} />

@@ -1,3 +1,4 @@
+import "@/i18n";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -64,7 +65,7 @@ describe("CategoriesPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Create category" }));
     const dialog = await screen.findByRole("dialog");
-    await user.type(screen.getByLabelText("Name"), "Snacks");
+    await user.type(screen.getByLabelText("Name (English)"), "Snacks");
     await user.click(screen.getByRole("button", { name: "Create category" }));
 
     await waitFor(() =>
@@ -89,7 +90,7 @@ describe("CategoriesPage", () => {
     await screen.findByText("Groceries");
 
     await user.click(screen.getByRole("button", { name: "Create category" }));
-    await user.type(screen.getByLabelText("Name"), "Groceries");
+    await user.type(screen.getByLabelText("Name (English)"), "Groceries");
     await user.click(screen.getByRole("button", { name: "Create category" }));
 
     expect(
@@ -108,9 +109,9 @@ describe("CategoriesPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Edit Groceries" }));
     const dialog = await screen.findByRole("dialog");
-    expect(screen.getByLabelText("Name")).toHaveValue("Groceries");
+    expect(screen.getByLabelText("Name (English)")).toHaveValue("Groceries");
 
-    const nameInput = screen.getByLabelText("Name");
+    const nameInput = screen.getByLabelText("Name (English)");
     await user.clear(nameInput);
     await user.type(nameInput, "Groceries & Produce");
     await user.click(screen.getByRole("button", { name: "Save changes" }));

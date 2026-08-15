@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { ImageOff, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,15 +12,6 @@ import { SuggestionBadge, getStockStatus, type ProductRow } from "@/components/P
 // dense table. Reuses ProductsTable's exported SuggestionBadge/getStockStatus
 // rather than duplicating the bulk-reclassify and stock-status logic.
 
-const STOCK_BADGE: Record<
-  ReturnType<typeof getStockStatus>,
-  { label: string; variant: "destructive" | "secondary" | undefined }
-> = {
-  "out-of-stock": { label: "Out of stock", variant: "destructive" },
-  "low-stock": { label: "Low stock", variant: "secondary" },
-  "in-stock": { label: "", variant: undefined },
-};
-
 export default function ProductsCardGrid({
   products,
   onEdit,
@@ -29,6 +21,15 @@ export default function ProductsCardGrid({
   onEdit: (product: ProductRow) => void;
   onDelete: (product: ProductRow) => void;
 }) {
+  const { t } = useTranslation();
+  const STOCK_BADGE: Record<
+    ReturnType<typeof getStockStatus>,
+    { label: string; variant: "destructive" | "secondary" | undefined }
+  > = {
+    "out-of-stock": { label: t("admin.products.table.outOfStock"), variant: "destructive" },
+    "low-stock": { label: t("admin.products.table.lowStock"), variant: "secondary" },
+    "in-stock": { label: "", variant: undefined },
+  };
   if (products === null) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -61,7 +62,7 @@ export default function ProductsCardGrid({
                 />
               ) : (
                 <div
-                  aria-label="No image"
+                  aria-label={t("admin.products.table.noImageAria")}
                   className="flex aspect-square w-full items-center justify-center bg-muted"
                 >
                   <ImageOff className="size-8 text-muted-foreground" />
@@ -93,13 +94,13 @@ export default function ProductsCardGrid({
                 {stockBadge.variant && <Badge variant={stockBadge.variant}>{stockBadge.label}</Badge>}
               </div>
               <p className="text-sm text-muted-foreground">
-                {product.assignedAgent?.name ?? "Unassigned"}
+                {product.assignedAgent?.name ?? t("admin.products.table.unassigned")}
               </p>
               <div className="flex items-center justify-end gap-1 border-t pt-2">
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Edit ${product.name.en}`}
+                  aria-label={t("admin.products.table.editAria", { name: product.name.en })}
                   onClick={() => onEdit(product)}
                 >
                   <Pencil />
@@ -107,7 +108,7 @@ export default function ProductsCardGrid({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Delete ${product.name.en}`}
+                  aria-label={t("admin.products.table.deleteAria", { name: product.name.en })}
                   onClick={() => onDelete(product)}
                 >
                   <Trash2 />

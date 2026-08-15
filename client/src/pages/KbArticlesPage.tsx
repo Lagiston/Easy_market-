@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import CreateKbArticleDialog from "./CreateKbArticleDialog";
 import EditKbArticleDialog from "./EditKbArticleDialog";
 import DeleteKbArticleDialog from "./DeleteKbArticleDialog";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/card";
 
 export default function KbArticlesPage() {
+  const { t } = useTranslation();
   const [editingKbArticle, setEditingKbArticle] = useState<KbArticleRow | null>(null);
   const [deletingKbArticle, setDeletingKbArticle] = useState<KbArticleRow | null>(null);
   const { data, isError } = useQuery({
@@ -30,11 +32,11 @@ export default function KbArticlesPage() {
     <Card className="mx-auto max-w-4xl">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <CardTitle>Knowledge base</CardTitle>
+          <CardTitle>{t("admin.kbArticles.title")}</CardTitle>
           <CardDescription>
             {kbArticles
-              ? `${kbArticles.length} article${kbArticles.length === 1 ? "" : "s"}`
-              : "Support articles"}
+              ? t("admin.kbArticles.subtitleCount", { count: kbArticles.length })
+              : t("admin.kbArticles.subtitleFallback")}
           </CardDescription>
         </div>
         <CreateKbArticleDialog />
@@ -42,7 +44,7 @@ export default function KbArticlesPage() {
       <CardContent>
         {error ? (
           <p className="py-8 text-center text-sm text-destructive">
-            Could not load articles. Please try again.
+            {t("admin.kbArticles.loadError")}
           </p>
         ) : (
           <KbArticlesTable

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import CreatePromoBlockDialog from "./CreatePromoBlockDialog";
 import EditPromoBlockDialog from "./EditPromoBlockDialog";
 import DeletePromoBlockDialog from "./DeletePromoBlockDialog";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/card";
 
 export default function PromoBlocksPage() {
+  const { t } = useTranslation();
   const [editingPromoBlock, setEditingPromoBlock] = useState<PromoBlockRow | null>(null);
   const [deletingPromoBlock, setDeletingPromoBlock] = useState<PromoBlockRow | null>(null);
   const { data, isError } = useQuery({
@@ -30,11 +32,11 @@ export default function PromoBlocksPage() {
     <Card className="mx-auto max-w-4xl">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <CardTitle>Promo blocks</CardTitle>
+          <CardTitle>{t("admin.promoBlocks.title")}</CardTitle>
           <CardDescription>
             {promoBlocks
-              ? `${promoBlocks.length} block${promoBlocks.length === 1 ? "" : "s"}`
-              : "Storefront homepage promotions"}
+              ? t("admin.promoBlocks.subtitleCount", { count: promoBlocks.length })
+              : t("admin.promoBlocks.subtitleFallback")}
           </CardDescription>
         </div>
         <CreatePromoBlockDialog />
@@ -42,7 +44,7 @@ export default function PromoBlocksPage() {
       <CardContent>
         {error ? (
           <p className="py-8 text-center text-sm text-destructive">
-            Could not load promo blocks. Please try again.
+            {t("admin.promoBlocks.loadError")}
           </p>
         ) : (
           <PromoBlocksTable

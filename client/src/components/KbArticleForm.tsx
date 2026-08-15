@@ -2,6 +2,7 @@ import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import {
   createKbArticleSchema,
   updateKbArticleSchema,
@@ -23,6 +24,7 @@ export default function KbArticleForm({
   kbArticle?: KbArticleRow;
   onSuccess?: (kbArticle: KbArticleRow) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const {
@@ -58,7 +60,9 @@ export default function KbArticleForm({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : `Could not ${kbArticle ? "update" : "create"} the article. Please try again.`
+      : kbArticle
+        ? t("admin.kbArticles.form.updateError")
+        : t("admin.kbArticles.form.createError")
     : null;
 
   const enHasError = !!errors.title?.en || !!errors.body?.en;
@@ -73,13 +77,13 @@ export default function KbArticleForm({
       <Tabs defaultValue="en">
         <TabsList>
           <TabsTrigger value="en">
-            English
+            {t("admin.products.form.english")}
             {enHasError && (
               <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
             )}
           </TabsTrigger>
           <TabsTrigger value="ar">
-            Arabic
+            {t("admin.products.form.arabic")}
             {arHasError && (
               <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
             )}
@@ -87,7 +91,7 @@ export default function KbArticleForm({
         </TabsList>
         <TabsContent value="en" className="grid gap-4 pt-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="kb-article-form-title-en">Title</Label>
+            <Label htmlFor="kb-article-form-title-en">{t("admin.kbArticles.form.titleEn")}</Label>
             <Input
               id="kb-article-form-title-en"
               autoComplete="off"
@@ -99,7 +103,7 @@ export default function KbArticleForm({
             )}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="kb-article-form-body-en">Body</Label>
+            <Label htmlFor="kb-article-form-body-en">{t("admin.kbArticles.form.bodyEn")}</Label>
             <Textarea
               id="kb-article-form-body-en"
               rows={10}
@@ -113,7 +117,7 @@ export default function KbArticleForm({
         </TabsContent>
         <TabsContent value="ar" className="grid gap-4 pt-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="kb-article-form-title-ar">Title</Label>
+            <Label htmlFor="kb-article-form-title-ar">{t("admin.kbArticles.form.titleAr")}</Label>
             <Input
               id="kb-article-form-title-ar"
               dir="rtl"
@@ -126,7 +130,7 @@ export default function KbArticleForm({
             )}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="kb-article-form-body-ar">Body</Label>
+            <Label htmlFor="kb-article-form-body-ar">{t("admin.kbArticles.form.bodyAr")}</Label>
             <Textarea
               id="kb-article-form-body-ar"
               dir="rtl"
@@ -141,7 +145,7 @@ export default function KbArticleForm({
         </TabsContent>
       </Tabs>
       <div className="grid gap-1.5">
-        <Label htmlFor="kb-article-form-topic">Topic</Label>
+        <Label htmlFor="kb-article-form-topic">{t("admin.kbArticles.form.topic")}</Label>
         <Input
           id="kb-article-form-topic"
           autoComplete="off"
@@ -155,11 +159,11 @@ export default function KbArticleForm({
         <Button type="submit" disabled={mutation.isPending}>
           {kbArticle
             ? mutation.isPending
-              ? "Saving…"
-              : "Save changes"
+              ? t("admin.kbArticles.form.saving")
+              : t("admin.kbArticles.form.save")
             : mutation.isPending
-              ? "Creating…"
-              : "Create article"}
+              ? t("admin.kbArticles.form.creating")
+              : t("admin.kbArticles.form.create")}
         </Button>
       </DialogFooter>
     </form>

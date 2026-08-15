@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { TagRow } from "@/components/TagsTable";
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ export default function DeleteTagDialog({
   tag: TagRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,7 +34,7 @@ export default function DeleteTagDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not delete the tag. Please try again."
+      : t("admin.tags.deleteDialog.error")
     : null;
 
   return (
@@ -45,21 +47,20 @@ export default function DeleteTagDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete translation for &ldquo;{tag?.value}&rdquo;?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Products keep this tag — it just goes back to showing the raw English word until
-            someone translates it again.
-          </AlertDialogDescription>
+          <AlertDialogTitle>
+            {t("admin.tags.deleteDialog.title", { value: tag?.value })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>{t("admin.tags.deleteDialog.description")}</AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("admin.common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Deleting…" : "Delete"}
+            {mutation.isPending ? t("admin.common.deleting") : t("admin.common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { SmsLogStatus } from "@es-market/core";
 import { formatRelativeAge } from "@/lib/relative-time";
 import { Badge } from "@/components/ui/badge";
@@ -19,19 +20,19 @@ const STATUS_TONE_CLASS: Record<SmsLogStatus, string> = {
   [SmsLogStatus.SKIPPED]: "border-border bg-muted text-muted-foreground",
 };
 
-const STATUS_LABEL: Record<SmsLogStatus, string> = {
-  [SmsLogStatus.SENT]: "Sent",
-  [SmsLogStatus.FAILED]: "Failed",
-  [SmsLogStatus.SKIPPED]: "Not sent (no SMS provider configured)",
-};
-
 // Shared by OrderDetailPage.tsx and InquiryDetailPage.tsx — both entities'
 // staff detail routes now include a smsLogs array (most-recent-first) so
 // staff can see whether a customer was actually notified, since every
 // order-status/inquiry-reply SMS is fire-and-forget from the caller's side.
 export default function SmsLogList({ logs }: { logs: SmsLogRow[] }) {
+  const { t } = useTranslation();
+  const STATUS_LABEL: Record<SmsLogStatus, string> = {
+    [SmsLogStatus.SENT]: t("admin.smsLog.statusSent"),
+    [SmsLogStatus.FAILED]: t("admin.smsLog.statusFailed"),
+    [SmsLogStatus.SKIPPED]: t("admin.smsLog.statusSkipped"),
+  };
   if (logs.length === 0) {
-    return <p className="text-sm text-muted-foreground">No SMS sent yet.</p>;
+    return <p className="text-sm text-muted-foreground">{t("admin.smsLog.empty")}</p>;
   }
   return (
     <ul className="space-y-2">

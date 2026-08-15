@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ export default function SoldOutProductsDialog({
   date: string | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const { data } = useQuery({
     queryKey: ["dashboard-sold-out-products", date],
     queryFn: () =>
@@ -34,8 +36,8 @@ export default function SoldOutProductsDialog({
     <Dialog open={date !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Sold out on {date}</DialogTitle>
-          <DialogDescription>Products with zero stock that day.</DialogDescription>
+          <DialogTitle>{t("admin.soldOutDialog.title", { date })}</DialogTitle>
+          <DialogDescription>{t("admin.soldOutDialog.description")}</DialogDescription>
         </DialogHeader>
         {data === undefined ? (
           <div className="space-y-2">
@@ -43,7 +45,7 @@ export default function SoldOutProductsDialog({
             <Skeleton className="h-8 w-full" />
           </div>
         ) : data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No products were sold out that day.</p>
+          <p className="text-sm text-muted-foreground">{t("admin.soldOutDialog.empty")}</p>
         ) : (
           <ul className="space-y-2">
             {data.map((product) => (

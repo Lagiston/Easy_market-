@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pencil, Trash2 } from "lucide-react";
 import type { LocalizedName } from "@es-market/core";
 import { Button } from "@/components/ui/button";
@@ -25,14 +26,15 @@ export default function TagsTable({
   onEdit: (tag: TagRow) => void;
   onDelete: (tag: TagRow) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Tag</TableHead>
-          <TableHead>Arabic</TableHead>
+          <TableHead>{t("admin.tags.table.tag")}</TableHead>
+          <TableHead>{t("admin.tags.table.arabic")}</TableHead>
           <TableHead>
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{t("admin.tags.table.actionsSr")}</span>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -62,7 +64,7 @@ export default function TagsTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Edit ${tag.value}`}
+                      aria-label={t("admin.tags.table.editAria", { value: tag.value })}
                       onClick={() => onEdit(tag)}
                     >
                       <Pencil />
@@ -70,7 +72,7 @@ export default function TagsTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Delete ${tag.value}`}
+                      aria-label={t("admin.tags.table.deleteAria", { value: tag.value })}
                       onClick={() => onDelete(tag)}
                     >
                       <Trash2 />

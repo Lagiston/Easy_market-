@@ -1,8 +1,9 @@
 import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ImageOff } from "lucide-react";
-import { LANGUAGES } from "@es-market/core";
+import { LANGUAGES, type Language } from "@es-market/core";
 import { type ProductRow } from "@/components/ProductsTable";
 import {
   Card,
@@ -15,8 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type ProductDetail = ProductRow & { createdAt: string; updatedAt: string };
 
-const LANGUAGE_LABELS = { en: "English", ar: "Arabic", sw: "Swahili", fr: "French" } as const;
-
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4 py-2">
@@ -27,6 +26,13 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function ProductDetailPage() {
+  const { t } = useTranslation();
+  const LANGUAGE_LABELS: Record<Language, string> = {
+    en: t("admin.products.detail.languageLabels.en"),
+    ar: t("admin.products.detail.languageLabels.ar"),
+    sw: t("admin.products.detail.languageLabels.sw"),
+    fr: t("admin.products.detail.languageLabels.fr"),
+  };
   const { id } = useParams<{ id: string }>();
   const { data: product, isPending, error } = useQuery({
     queryKey: ["products", id],
@@ -45,7 +51,7 @@ export default function ProductDetailPage() {
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        Back to products
+        {t("admin.products.detail.backToProducts")}
       </Link>
       {isPending ? (
         <Card>
@@ -60,10 +66,12 @@ export default function ProductDetailPage() {
           </CardContent>
         </Card>
       ) : notFound ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Product not found.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          {t("admin.products.detail.notFound")}
+        </p>
       ) : error ? (
         <p className="py-8 text-center text-sm text-destructive">
-          Could not load product. Please try again.
+          {t("admin.products.detail.loadError")}
         </p>
       ) : (
         <Card>
@@ -85,22 +93,31 @@ export default function ProductDetailPage() {
               </div>
             ) : (
               <div
-                aria-label="No image"
+                aria-label={t("admin.products.detail.noImageAria")}
                 className="flex size-40 items-center justify-center rounded-md border bg-muted"
               >
                 <ImageOff className="size-8 text-muted-foreground" />
               </div>
             )}
             <dl className="divide-y">
-              <DetailRow label="Price" value={String(product.price)} />
-              <DetailRow label="Stock" value={String(product.stock)} />
-              <DetailRow label="Low stock threshold" value={String(product.lowStockThreshold)} />
-              <DetailRow label="Category" value={product.category.name.en} />
-              <DetailRow label="Created" value={new Date(product.createdAt).toLocaleString()} />
-              <DetailRow label="Updated" value={new Date(product.updatedAt).toLocaleString()} />
+              <DetailRow label={t("admin.products.detail.price")} value={String(product.price)} />
+              <DetailRow label={t("admin.products.detail.stock")} value={String(product.stock)} />
+              <DetailRow
+                label={t("admin.products.detail.lowStockThreshold")}
+                value={String(product.lowStockThreshold)}
+              />
+              <DetailRow label={t("admin.products.detail.category")} value={product.category.name.en} />
+              <DetailRow
+                label={t("admin.products.detail.created")}
+                value={new Date(product.createdAt).toLocaleString()}
+              />
+              <DetailRow
+                label={t("admin.products.detail.updated")}
+                value={new Date(product.updatedAt).toLocaleString()}
+              />
             </dl>
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Translations</h3>
+              <h3 className="text-sm font-semibold">{t("admin.products.detail.translations")}</h3>
               {LANGUAGES.filter((lang) => product.name[lang] || product.description?.[lang]).map(
                 (lang) => (
                   <div key={lang} className="space-y-1">

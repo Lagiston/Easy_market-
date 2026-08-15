@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +20,7 @@ export default function CategoryImageUpload({
   imageUrl: string | null;
   onChanged: () => void;
 }) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState(imageUrl);
 
@@ -47,9 +49,9 @@ export default function CategoryImageUpload({
   const error = uploadMutation.isError
     ? axios.isAxiosError(uploadMutation.error) && uploadMutation.error.response?.data?.error
       ? String(uploadMutation.error.response.data.error)
-      : "Could not upload the image. Please try again."
+      : t("admin.categories.imageUpload.uploadError")
     : removeMutation.isError
-      ? "Could not remove the image. Please try again."
+      ? t("admin.categories.imageUpload.removeError")
       : null;
 
   return (
@@ -74,7 +76,11 @@ export default function CategoryImageUpload({
             ref={inputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            aria-label={currentImageUrl ? "Change category image" : "Upload category image"}
+            aria-label={
+              currentImageUrl
+                ? t("admin.categories.imageUpload.changeAria")
+                : t("admin.categories.imageUpload.uploadAria")
+            }
             className="sr-only"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -89,7 +95,9 @@ export default function CategoryImageUpload({
             disabled={uploadMutation.isPending}
             onClick={() => inputRef.current?.click()}
           >
-            {currentImageUrl ? "Change image" : "Upload image"}
+            {currentImageUrl
+              ? t("admin.categories.imageUpload.change")
+              : t("admin.categories.imageUpload.upload")}
           </Button>
           {currentImageUrl && (
             <Button
@@ -99,7 +107,7 @@ export default function CategoryImageUpload({
               disabled={removeMutation.isPending}
               onClick={() => removeMutation.mutate()}
             >
-              Remove
+              {t("admin.categories.imageUpload.remove")}
             </Button>
           )}
         </div>

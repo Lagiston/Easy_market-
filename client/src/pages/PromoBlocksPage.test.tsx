@@ -1,3 +1,4 @@
+import "@/i18n";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -146,7 +147,7 @@ describe("PromoBlocksPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Create promo block" }));
     const dialog = await screen.findByRole("dialog");
-    await user.type(screen.getByLabelText("Headline"), "Flash Deal");
+    await user.type(screen.getByLabelText("Headline (English)"), "Flash Deal");
     await user.type(screen.getByLabelText("CTA label"), "Buy now");
     await user.type(screen.getByLabelText("CTA link"), "https://example.com/deal");
 
@@ -178,7 +179,7 @@ describe("PromoBlocksPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Create promo block" }));
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Headline"), "Scheduled Promo");
+    await user.type(within(dialog).getByLabelText("Headline (English)"), "Scheduled Promo");
     // jsdom doesn't support simulating keyboard segment entry into a native
     // date input, so set the value directly (same fireEvent.change escape
     // hatch this repo already uses for inputs userEvent can't drive reliably).
@@ -211,7 +212,7 @@ describe("PromoBlocksPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Create promo block" }));
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Headline"), "Backwards Promo");
+    await user.type(within(dialog).getByLabelText("Headline (English)"), "Backwards Promo");
     fireEvent.change(within(dialog).getByLabelText("Start date"), {
       target: { value: "2026-08-05" },
     });
@@ -245,7 +246,7 @@ describe("PromoBlocksPage", () => {
     await screen.findByText("Storefront homepage promotions");
 
     await user.click(screen.getByRole("button", { name: "Create promo block" }));
-    await user.type(screen.getByLabelText("Headline"), "Flash Deal");
+    await user.type(screen.getByLabelText("Headline (English)"), "Flash Deal");
     await user.type(screen.getByLabelText("CTA label"), "Buy now");
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Create promo block" }));
@@ -267,10 +268,10 @@ describe("PromoBlocksPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Edit Summer Sale" }));
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByLabelText("Headline")).toHaveValue("Summer Sale");
+    expect(within(dialog).getByLabelText("Headline (English)")).toHaveValue("Summer Sale");
     expect(within(dialog).getByLabelText("CTA label")).toHaveValue("Shop now");
 
-    const headlineInput = within(dialog).getByLabelText("Headline");
+    const headlineInput = within(dialog).getByLabelText("Headline (English)");
     await user.clear(headlineInput);
     await user.type(headlineInput, "Summer Mega Sale");
     await user.click(within(dialog).getByRole("button", { name: "Save changes" }));

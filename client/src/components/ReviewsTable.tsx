@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { MessageSquareReply, Star, Trash2 } from "lucide-react";
 import type { LocalizedName } from "@es-market/core";
 import { Badge } from "@/components/ui/badge";
@@ -35,19 +36,20 @@ export default function ReviewsTable({
   onDelete: (review: ReviewRow) => void;
   onReply: (review: ReviewRow) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Product</TableHead>
-          <TableHead>Rating</TableHead>
-          <TableHead>Author</TableHead>
-          <TableHead>Headline</TableHead>
-          <TableHead>Comment</TableHead>
-          <TableHead>Reply</TableHead>
-          <TableHead>Date</TableHead>
+          <TableHead>{t("admin.reviews.table.product")}</TableHead>
+          <TableHead>{t("admin.reviews.table.rating")}</TableHead>
+          <TableHead>{t("admin.reviews.table.author")}</TableHead>
+          <TableHead>{t("admin.reviews.table.headline")}</TableHead>
+          <TableHead>{t("admin.reviews.table.comment")}</TableHead>
+          <TableHead>{t("admin.reviews.table.reply")}</TableHead>
+          <TableHead>{t("admin.reviews.table.date")}</TableHead>
           <TableHead>
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{t("admin.reviews.table.actionsSr")}</span>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -68,7 +70,7 @@ export default function ReviewsTable({
         ) : reviews.length === 0 ? (
           <TableRow>
             <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-              No reviews yet.
+              {t("admin.reviews.table.empty")}
             </TableCell>
           </TableRow>
         ) : (
@@ -84,17 +86,19 @@ export default function ReviewsTable({
               <TableCell>
                 <div className="flex items-center gap-1.5">
                   {review.authorName}
-                  {review.verifiedPurchase && <Badge variant="secondary">Verified</Badge>}
+                  {review.verifiedPurchase && (
+                    <Badge variant="secondary">{t("admin.reviews.table.verified")}</Badge>
+                  )}
                 </div>
               </TableCell>
               <TableCell className="max-w-40 truncate text-foreground">
-                {review.headline ?? "—"}
+                {review.headline ?? t("admin.reviews.table.noValue")}
               </TableCell>
               <TableCell className="max-w-64 truncate text-muted-foreground">
-                {review.comment ?? "—"}
+                {review.comment ?? t("admin.reviews.table.noValue")}
               </TableCell>
               <TableCell className="max-w-64 truncate text-muted-foreground">
-                {review.staffReply ?? "—"}
+                {review.staffReply ?? t("admin.reviews.table.noValue")}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {new Date(review.createdAt).toLocaleDateString()}
@@ -104,7 +108,7 @@ export default function ReviewsTable({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Reply to review by ${review.authorName}`}
+                    aria-label={t("admin.reviews.table.replyAria", { name: review.authorName })}
                     onClick={() => onReply(review)}
                   >
                     <MessageSquareReply />
@@ -112,7 +116,7 @@ export default function ReviewsTable({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Delete review by ${review.authorName}`}
+                    aria-label={t("admin.reviews.table.deleteAria", { name: review.authorName })}
                     onClick={() => onDelete(review)}
                   >
                     <Trash2 />

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
 import axios, { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { FulfillmentType, OrderStatus } from "@es-market/core";
 import {
@@ -11,7 +12,7 @@ import {
   type OrderRow,
 } from "@/components/OrdersTable";
 import { useStoreSettings } from "@/lib/settings-context";
-import OrderStatusBadge, { CANCEL_REASON_LABELS } from "@/components/OrderStatusBadge";
+import OrderStatusBadge, { getCancelReasonLabel } from "@/components/OrderStatusBadge";
 import SmsLogList from "@/components/SmsLogList";
 import { Money } from "@/components/Money";
 import CancelOrderDialog from "./CancelOrderDialog";
@@ -50,6 +51,7 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 }
 
 export default function OrderDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { callAttemptsBeforeCancel } = useStoreSettings();
@@ -91,23 +93,17 @@ export default function OrderDetailPage() {
   });
 
   const serverError = logCallMutation.isError
-    ? extractServerError(logCallMutation.error, "Could not log the call. Please try again.")
+    ? extractServerError(logCallMutation.error, t("admin.orders.logCallError"))
     : confirmMutation.isError
-      ? extractServerError(confirmMutation.error, "Could not confirm the order. Please try again.")
+      ? extractServerError(confirmMutation.error, t("admin.orders.confirmError"))
       : outForDeliveryMutation.isError
-        ? extractServerError(
-            outForDeliveryMutation.error,
-            "Could not mark the order out for delivery. Please try again.",
-          )
+        ? extractServerError(outForDeliveryMutation.error, t("admin.orders.outForDeliveryError"))
         : completeMutation.isError
-          ? extractServerError(
-              completeMutation.error,
-              "Could not complete the order. Please try again.",
-            )
+          ? extractServerError(completeMutation.error, t("admin.orders.completeError"))
           : notifyDelayedMutation.isError
             ? extractServerError(
                 notifyDelayedMutation.error,
-                "Could not send the delayed notice. Please try again.",
+                t("admin.orders.detail.notifyDelayedError"),
               )
             : null;
 
@@ -127,7 +123,7 @@ export default function OrderDetailPage() {
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        Back to orders
+        {t("admin.orders.detail.backToOrders")}
       </Link>
       {isPending ? (
         <Card>
@@ -141,11 +137,11 @@ export default function OrderDetailPage() {
           </CardContent>
         </Card>
       ) : notFound ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Order not found.</p>
-      ) : error || !order ? (
-        <p className="py-8 text-center text-sm text-destructive">
-          Could not load order. Please try again.
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          {t("admin.orders.detail.notFound")}
         </p>
+      ) : error || !order ? (
+        <p className="py-8 text-center text-sm text-destructive">{t("admin.orders.loadError")}</p>
       ) : (
         <Card>
           <CardHeader>
@@ -154,35 +150,48 @@ export default function OrderDetailPage() {
               <OrderStatusBadge status={order.status} />
             </CardTitle>
             <CardDescription>
-              Placed {new Date(order.createdAt).toLocaleString()}
+              {t("admin.orders.detail.placedOn", { date: new Date(order.createdAt).toLocaleString() })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <dl className="divide-y">
-              <DetailRow label="Customer" value={order.customerName} />
-              <DetailRow label="Phone" value={order.customerPhone} />
+              <DetailRow label={t("admin.orders.detail.name")} value={order.customerName} />
+              <DetailRow label={t("admin.orders.detail.phone")} value={order.customerPhone} />
               <DetailRow
-                label="Fulfillment"
-                value={order.fulfillmentType === FulfillmentType.DELIVERY ? "Delivery" : "Pickup"}
+                label={t("admin.orders.detail.fulfillment")}
+                value={
+                  order.fulfillmentType === FulfillmentType.DELIVERY
+                    ? t("admin.orders.table.delivery")
+                    : t("admin.orders.table.pickup")
+                }
               />
               {order.fulfillmentType === FulfillmentType.DELIVERY && (
-                <DetailRow label="Address" value={order.address ?? "—"} />
+                <DetailRow
+                  label={t("admin.orders.detail.address")}
+                  value={order.address ?? t("admin.orders.detail.notFoundValue")}
+                />
               )}
-              <DetailRow label="Call attempts" value={String(order.callAttempts)} />
+              <DetailRow label={t("admin.orders.detail.callAttempts")} value={String(order.callAttempts)} />
               {order.cancelReason && (
-                <DetailRow label="Cancel reason" value={CANCEL_REASON_LABELS[order.cancelReason]} />
+                <DetailRow
+                  label={t("admin.orders.detail.cancelReason")}
+                  value={getCancelReasonLabel(t, order.cancelReason)}
+                />
               )}
-              <DetailRow label="Updated" value={new Date(order.updatedAt).toLocaleString()} />
+              <DetailRow
+                label={t("admin.orders.detail.updated")}
+                value={new Date(order.updatedAt).toLocaleString()}
+              />
             </dl>
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Items</h3>
+              <h3 className="text-sm font-semibold">{t("admin.orders.detail.items")}</h3>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Unit price</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead className="text-end">Line total</TableHead>
+                    <TableHead>{t("admin.orders.detail.product")}</TableHead>
+                    <TableHead>{t("admin.orders.detail.unitPrice")}</TableHead>
+                    <TableHead>{t("admin.orders.detail.quantity")}</TableHead>
+                    <TableHead className="text-end">{t("admin.orders.detail.lineTotal")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -201,20 +210,28 @@ export default function OrderDetailPage() {
                 </TableBody>
               </Table>
               <dl className="divide-y">
-                <DetailRow label="Subtotal" value={<Money amount={order.subtotal} />} />
-                <DetailRow label="Delivery fee" value={<Money amount={order.deliveryFee} />} />
-                <DetailRow label="Total" value={<Money amount={order.total} />} />
+                <DetailRow
+                  label={t("admin.orders.detail.subtotal")}
+                  value={<Money amount={order.subtotal} />}
+                />
+                <DetailRow
+                  label={t("admin.orders.detail.deliveryFee")}
+                  value={<Money amount={order.deliveryFee} />}
+                />
+                <DetailRow label={t("admin.orders.detail.total")} value={<Money amount={order.total} />} />
               </dl>
             </div>
             {order.smsLogs && (
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold">SMS notifications</h3>
+                <h3 className="text-sm font-semibold">{t("admin.orders.detail.smsLog")}</h3>
                 <SmsLogList logs={order.smsLogs} />
               </div>
             )}
             {serverError && <p className="text-sm text-destructive">{serverError}</p>}
             {notifyDelayedMutation.isSuccess && (
-              <p className="text-sm text-muted-foreground">Delayed notice sent.</p>
+              <p className="text-sm text-muted-foreground">
+                {t("admin.orders.detail.notifyDelayedSuccess")}
+              </p>
             )}
             <div className="flex flex-wrap gap-2">
               {order.status === OrderStatus.RECEIVED && (
@@ -224,10 +241,10 @@ export default function OrderDetailPage() {
                     disabled={actionsPending}
                     onClick={() => logCallMutation.mutate()}
                   >
-                    Log failed call
+                    {t("admin.orders.detail.logCall")}
                   </Button>
                   <Button disabled={actionsPending} onClick={() => confirmMutation.mutate()}>
-                    Confirm order
+                    {t("admin.orders.detail.confirm")}
                   </Button>
                   {order.callAttempts >= callAttemptsBeforeCancel && (
                     <Button
@@ -236,19 +253,19 @@ export default function OrderDetailPage() {
                       disabled={actionsPending}
                       onClick={() => setCancellingUnreachableOrder(order)}
                     >
-                      Cancel unreachable order
+                      {t("admin.orders.detail.cancelUnreachable")}
                     </Button>
                   )}
                 </>
               )}
               {canGoOutForDelivery(order) && (
                 <Button disabled={actionsPending} onClick={() => outForDeliveryMutation.mutate()}>
-                  Mark out for delivery
+                  {t("admin.orders.detail.outForDelivery")}
                 </Button>
               )}
               {canComplete(order) && (
                 <Button disabled={actionsPending} onClick={() => completeMutation.mutate()}>
-                  Complete order
+                  {t("admin.orders.detail.complete")}
                 </Button>
               )}
               {(order.status === OrderStatus.CONFIRMED ||
@@ -258,7 +275,9 @@ export default function OrderDetailPage() {
                   disabled={actionsPending}
                   onClick={() => notifyDelayedMutation.mutate()}
                 >
-                  Notify customer of delay
+                  {notifyDelayedMutation.isPending
+                    ? t("admin.orders.detail.notifyingDelayed")
+                    : t("admin.orders.detail.notifyDelayed")}
                 </Button>
               )}
               {canCancel(order) && (
@@ -267,7 +286,7 @@ export default function OrderDetailPage() {
                   disabled={actionsPending}
                   onClick={() => setCancellingOrder(order)}
                 >
-                  Cancel order
+                  {t("admin.orders.detail.cancel")}
                 </Button>
               )}
             </div>

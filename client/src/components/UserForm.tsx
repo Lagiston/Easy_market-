@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createUserSchema,
@@ -22,6 +23,7 @@ export default function UserForm({
   user?: UserRow;
   onSuccess?: () => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const {
     register,
@@ -49,7 +51,9 @@ export default function UserForm({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : `Could not ${user ? "update" : "create"} the user. Please try again.`
+      : user
+        ? t("admin.users.form.updateError")
+        : t("admin.users.form.createError")
     : null;
 
   return (
@@ -60,16 +64,16 @@ export default function UserForm({
     >
       {user && (
         <div className="grid gap-1.5">
-          <Label>Role</Label>
+          <Label>{t("admin.users.form.role")}</Label>
           <div>
             <Badge variant={user.role === Role.ADMIN ? "default" : "secondary"}>
-              {user.role === Role.ADMIN ? "Admin" : "Agent"}
+              {t(`admin.users.roleLabels.${user.role}`)}
             </Badge>
           </div>
         </div>
       )}
       <div className="grid gap-1.5">
-        <Label htmlFor="user-form-name">Name</Label>
+        <Label htmlFor="user-form-name">{t("admin.users.form.name")}</Label>
         <Input
           id="user-form-name"
           autoComplete="off"
@@ -81,7 +85,7 @@ export default function UserForm({
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="user-form-email">Email</Label>
+        <Label htmlFor="user-form-email">{t("admin.users.form.email")}</Label>
         <Input
           id="user-form-email"
           type="email"
@@ -94,7 +98,7 @@ export default function UserForm({
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="user-form-password">Password</Label>
+        <Label htmlFor="user-form-password">{t("admin.users.form.password")}</Label>
         <Input
           id="user-form-password"
           type="password"
@@ -103,9 +107,7 @@ export default function UserForm({
           {...register("password")}
         />
         {user && !errors.password && (
-          <p className="text-sm text-muted-foreground">
-            Leave blank to keep the current password.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("admin.users.form.passwordHint")}</p>
         )}
         {errors.password && (
           <p className="text-sm text-destructive">{errors.password.message}</p>
@@ -116,11 +118,11 @@ export default function UserForm({
         <Button type="submit" disabled={mutation.isPending}>
           {user
             ? mutation.isPending
-              ? "Saving…"
-              : "Save changes"
+              ? t("admin.users.form.saving")
+              : t("admin.users.form.save")
             : mutation.isPending
-              ? "Creating…"
-              : "Create user"}
+              ? t("admin.users.form.creating")
+              : t("admin.users.form.create")}
         </Button>
       </DialogFooter>
     </form>

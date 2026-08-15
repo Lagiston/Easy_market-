@@ -4,6 +4,7 @@ import axios, { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Send } from "lucide-react";
 import {
   addMessageSchema,
@@ -54,37 +55,9 @@ type ThreadMessage = {
   sources: { id: string; title: string }[];
 };
 
-const DRAFT_STATUS_LABELS: Record<Exclude<DraftStatus, "PENDING">, string> = {
-  SENT_UNEDITED: "Sent as-is",
-  SENT_EDITED: "Sent with edits",
-  DISCARDED: "Discarded",
-  AUTO_RESOLVED: "Auto-resolved by AI",
-};
-
 type InquiryThread = InquiryRow & { messages: ThreadMessage[]; language: Language };
 
 type Agent = { id: string; name: string; role: Role };
-
-// English glosses for staff, distinct from LanguageSwitcher.tsx's customer-facing
-// endonyms (which show each language in itself) — staff need to recognize the
-// language name, not read it.
-const LANGUAGE_LABELS: Record<Language, string> = {
-  en: "English",
-  ar: "Arabic",
-  sw: "Swahili",
-  fr: "French",
-};
-
-// English labels for the storefront contact form's "What's this about?"
-// select (InquiryTopic from @es-market/core) — staff UI isn't translated,
-// same precedent as LANGUAGE_LABELS above. Older inquiries have no topic.
-const INQUIRY_TOPIC_LABELS: Record<InquiryTopic, string> = {
-  [InquiryTopic.ORDER_ISSUE]: "Order issue or delivery",
-  [InquiryTopic.PRODUCT_QUESTION]: "Product question",
-  [InquiryTopic.RETURNS_REFUND]: "Returns or refund",
-  [InquiryTopic.WHOLESALE_BULK]: "Wholesale or bulk enquiry",
-  [InquiryTopic.OTHER]: "Something else",
-};
 
 function extractServerError(error: unknown, fallback: string) {
   return axios.isAxiosError(error) && error.response?.data?.error
@@ -102,6 +75,26 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function InquiryDetailPage() {
+  const { t } = useTranslation();
+  const LANGUAGE_LABELS: Record<Language, string> = {
+    en: t("admin.inquiries.detail.languageLabels.en"),
+    ar: t("admin.inquiries.detail.languageLabels.ar"),
+    sw: t("admin.inquiries.detail.languageLabels.sw"),
+    fr: t("admin.inquiries.detail.languageLabels.fr"),
+  };
+  const INQUIRY_TOPIC_LABELS: Record<InquiryTopic, string> = {
+    [InquiryTopic.ORDER_ISSUE]: t("admin.inquiries.detail.topicLabels.ORDER_ISSUE"),
+    [InquiryTopic.PRODUCT_QUESTION]: t("admin.inquiries.detail.topicLabels.PRODUCT_QUESTION"),
+    [InquiryTopic.RETURNS_REFUND]: t("admin.inquiries.detail.topicLabels.RETURNS_REFUND"),
+    [InquiryTopic.WHOLESALE_BULK]: t("admin.inquiries.detail.topicLabels.WHOLESALE_BULK"),
+    [InquiryTopic.OTHER]: t("admin.inquiries.detail.topicLabels.OTHER"),
+  };
+  const DRAFT_STATUS_LABELS: Record<Exclude<DraftStatus, "PENDING">, string> = {
+    SENT_UNEDITED: t("admin.inquiries.detail.sentAsIs"),
+    SENT_EDITED: t("admin.inquiries.detail.sentWithEdits"),
+    DISCARDED: t("admin.inquiries.detail.discardedStatus"),
+    AUTO_RESOLVED: t("admin.inquiries.detail.autoResolvedStatus"),
+  };
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [draftEdits, setDraftEdits] = useState<Record<string, string>>({});
@@ -183,21 +176,21 @@ export default function InquiryDetailPage() {
     escalateMutation.isPending;
 
   const serverError = claimMutation.isError
-    ? extractServerError(claimMutation.error, "Could not claim the inquiry. Please try again.")
+    ? extractServerError(claimMutation.error, t("admin.inquiries.claimError"))
     : resolveMutation.isError
-      ? extractServerError(resolveMutation.error, "Could not resolve the inquiry. Please try again.")
+      ? extractServerError(resolveMutation.error, t("admin.inquiries.resolveError"))
       : closeMutation.isError
-        ? extractServerError(closeMutation.error, "Could not close the inquiry. Please try again.")
+        ? extractServerError(closeMutation.error, t("admin.inquiries.closeError"))
         : reopenMutation.isError
-          ? extractServerError(reopenMutation.error, "Could not reopen the inquiry. Please try again.")
+          ? extractServerError(reopenMutation.error, t("admin.inquiries.reopenError"))
           : assignMutation.isError
-            ? extractServerError(assignMutation.error, "Could not assign the inquiry. Please try again.")
+            ? extractServerError(assignMutation.error, t("admin.inquiries.detail.assignError"))
             : escalateMutation.isError
-              ? extractServerError(escalateMutation.error, "Could not escalate the inquiry. Please try again.")
+              ? extractServerError(escalateMutation.error, t("admin.inquiries.detail.escalateError"))
               : approveDraftMutation.isError
-                ? extractServerError(approveDraftMutation.error, "Could not send the draft. Please try again.")
+                ? extractServerError(approveDraftMutation.error, t("admin.inquiries.detail.approveError"))
                 : discardDraftMutation.isError
-                  ? extractServerError(discardDraftMutation.error, "Could not discard the draft. Please try again.")
+                  ? extractServerError(discardDraftMutation.error, t("admin.inquiries.detail.discardError"))
                   : null;
 
   const notFound = isAxiosError(error) && error.response?.status === 404;
@@ -210,7 +203,7 @@ export default function InquiryDetailPage() {
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        Back to inquiries
+        {t("admin.inquiries.detail.backToInquiries")}
       </Link>
       {isPending ? (
         <Card>
@@ -224,10 +217,12 @@ export default function InquiryDetailPage() {
           </CardContent>
         </Card>
       ) : notFound ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Inquiry not found.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          {t("admin.inquiries.detail.notFound")}
+        </p>
       ) : error || !inquiry ? (
         <p className="py-8 text-center text-sm text-destructive">
-          Could not load the inquiry. Please try again.
+          {t("admin.inquiries.detail.loadError")}
         </p>
       ) : (
         <Card>
@@ -238,26 +233,45 @@ export default function InquiryDetailPage() {
               <Badge variant="outline">{LANGUAGE_LABELS[inquiry.language]}</Badge>
               {inquiry.autoResolvedAt !== null && (
                 <Badge variant="outline">
-                  Auto-resolved {new Date(inquiry.autoResolvedAt).toLocaleString()}
+                  {t("admin.inquiries.detail.autoResolved", {
+                    date: new Date(inquiry.autoResolvedAt).toLocaleString(),
+                  })}
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>Received {new Date(inquiry.createdAt).toLocaleString()}</CardDescription>
+            <CardDescription>
+              {t("admin.inquiries.detail.receivedOn", {
+                date: new Date(inquiry.createdAt).toLocaleString(),
+              })}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <dl className="divide-y">
-              <DetailRow label="Email" value={inquiry.customerEmail ?? "—"} />
-              <DetailRow label="Phone" value={inquiry.customerPhone ?? "—"} />
               <DetailRow
-                label="Topic"
-                value={inquiry.topic ? INQUIRY_TOPIC_LABELS[inquiry.topic as InquiryTopic] : "—"}
+                label={t("admin.inquiries.detail.email")}
+                value={inquiry.customerEmail ?? t("admin.orders.detail.notFoundValue")}
               />
-              <DetailRow label="Updated" value={new Date(inquiry.updatedAt).toLocaleString()} />
+              <DetailRow
+                label={t("admin.inquiries.detail.phone")}
+                value={inquiry.customerPhone ?? t("admin.orders.detail.notFoundValue")}
+              />
+              <DetailRow
+                label={t("admin.inquiries.detail.topic")}
+                value={
+                  inquiry.topic
+                    ? INQUIRY_TOPIC_LABELS[inquiry.topic as InquiryTopic]
+                    : t("admin.orders.detail.notFoundValue")
+                }
+              />
+              <DetailRow
+                label={t("admin.orders.detail.updated")}
+                value={new Date(inquiry.updatedAt).toLocaleString()}
+              />
             </dl>
 
             <div className="grid gap-1.5">
               <label htmlFor="inquiry-assign" className="text-sm font-medium">
-                Assigned to
+                {t("admin.inquiries.table.assignedTo")}
               </label>
               <Select
                 value={inquiry.assignedAgent?.id ?? "unassigned"}
@@ -266,14 +280,15 @@ export default function InquiryDetailPage() {
                 }
               >
                 <SelectTrigger id="inquiry-assign" className="w-full">
-                  <SelectValue placeholder="Unassigned">
+                  <SelectValue placeholder={t("admin.inquiries.table.unassigned")}>
                     {(value: string) =>
-                      agents?.find((agent) => agent.id === value)?.name ?? "Unassigned"
+                      agents?.find((agent) => agent.id === value)?.name ??
+                      t("admin.inquiries.table.unassigned")
                     }
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">{t("admin.inquiries.table.unassigned")}</SelectItem>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.name}
@@ -286,11 +301,12 @@ export default function InquiryDetailPage() {
             {(inquiry.escalatedAt !== null || canEscalate(inquiry)) && (
               <div className="grid gap-1.5">
                 <label htmlFor="inquiry-escalate" className="text-sm font-medium">
-                  Escalation
+                  {t("admin.inquiries.detail.escalateTo")}
                 </label>
                 {inquiry.escalatedAt !== null ? (
                   <Badge variant="destructive" className="w-fit">
-                    Escalated {new Date(inquiry.escalatedAt).toLocaleString()}
+                    {t("admin.inquiries.detail.escalatedBadge")}{" "}
+                    {new Date(inquiry.escalatedAt).toLocaleString()}
                   </Badge>
                 ) : (
                   <Select
@@ -303,7 +319,7 @@ export default function InquiryDetailPage() {
                     }}
                   >
                     <SelectTrigger id="inquiry-escalate" className="w-full">
-                      <SelectValue placeholder="Escalate to admin…" />
+                      <SelectValue placeholder={t("admin.inquiries.detail.escalatePlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {agents
@@ -321,7 +337,7 @@ export default function InquiryDetailPage() {
 
             {inquiry.smsLogs && (
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold">SMS notifications</h3>
+                <h3 className="text-sm font-semibold">{t("admin.inquiries.detail.smsLog")}</h3>
                 <SmsLogList logs={inquiry.smsLogs} />
               </div>
             )}
@@ -331,14 +347,16 @@ export default function InquiryDetailPage() {
                 message.sender === MessageSender.AI_DRAFT ? (
                   <div key={message.id} className="max-w-full rounded-lg border border-dashed p-3 text-sm">
                     <div className="mb-2 flex items-center justify-between gap-2">
-                      <Badge variant="outline">AI draft</Badge>
+                      <Badge variant="outline">{t("admin.inquiries.detail.aiDraft")}</Badge>
                       <span className="text-[10px] text-muted-foreground">
                         {new Date(message.createdAt).toLocaleString()}
                       </span>
                     </div>
                     {message.sources.length > 0 && (
                       <p className="mb-2 text-xs text-muted-foreground">
-                        Sources: {message.sources.map((source) => source.title).join(", ")}
+                        {t("admin.inquiries.detail.sourcesPrefix", {
+                          titles: message.sources.map((source) => source.title).join(", "),
+                        })}
                       </p>
                     )}
                     {message.draftStatus === DraftStatus.PENDING && !isClosed ? (
@@ -347,7 +365,7 @@ export default function InquiryDetailPage() {
                           rows={3}
                           dir={inquiry.language === "ar" ? "rtl" : "ltr"}
                           lang={inquiry.language}
-                          aria-label="Draft reply"
+                          aria-label={t("admin.inquiries.detail.draftReplyAria")}
                           value={draftEdits[message.id] ?? message.body}
                           onChange={(event) =>
                             setDraftEdits((prev) => ({
@@ -367,7 +385,7 @@ export default function InquiryDetailPage() {
                               })
                             }
                           >
-                            Approve &amp; send
+                            {t("admin.inquiries.detail.approveAndSend")}
                           </Button>
                           <Button
                             size="sm"
@@ -375,7 +393,7 @@ export default function InquiryDetailPage() {
                             disabled={approveDraftMutation.isPending || discardDraftMutation.isPending}
                             onClick={() => discardDraftMutation.mutate(message.id)}
                           >
-                            Discard
+                            {t("admin.inquiries.detail.discard")}
                           </Button>
                         </div>
                       </div>
@@ -384,7 +402,9 @@ export default function InquiryDetailPage() {
                       // both now 409 server-side, so just show it as unreviewed history.
                       <div className="text-muted-foreground">
                         <p className="whitespace-pre-wrap">{message.body}</p>
-                        <p className="mt-1 text-[10px]">Not reviewed — conversation closed</p>
+                        <p className="mt-1 text-[10px]">
+                          {t("admin.inquiries.detail.notReviewedClosed")}
+                        </p>
                       </div>
                     ) : (
                       <div className="text-muted-foreground">
@@ -406,8 +426,12 @@ export default function InquiryDetailPage() {
                   >
                     <p className="whitespace-pre-wrap">{message.body}</p>
                     <p className="mt-1 text-[10px] opacity-70">
-                      {message.author ? `${message.author.name} — ` : ""}
-                      {new Date(message.createdAt).toLocaleString()}
+                      {message.author
+                        ? t("admin.inquiries.detail.authorLine", {
+                            name: message.author.name,
+                            date: new Date(message.createdAt).toLocaleString(),
+                          })
+                        : new Date(message.createdAt).toLocaleString()}
                     </p>
                   </div>
                 ),
@@ -415,7 +439,9 @@ export default function InquiryDetailPage() {
             </div>
 
             {isClosed ? (
-              <p className="text-sm text-muted-foreground">This conversation is closed.</p>
+              <p className="text-sm text-muted-foreground">
+                {t("admin.inquiries.detail.closedNote")}
+              </p>
             ) : (
               <form
                 noValidate
@@ -423,11 +449,12 @@ export default function InquiryDetailPage() {
                 className="grid gap-1.5"
               >
                 <label htmlFor="inquiry-reply" className="text-sm font-medium">
-                  Reply
+                  {t("admin.inquiries.detail.replyLabel")}
                 </label>
                 <p className="text-sm text-muted-foreground">
-                  Customer wrote in {LANGUAGE_LABELS[inquiry.language]} — reply in the same
-                  language.
+                  {t("admin.inquiries.detail.customerWroteIn", {
+                    language: LANGUAGE_LABELS[inquiry.language],
+                  })}
                 </p>
                 <div className="flex items-end gap-2">
                   <Textarea
@@ -441,7 +468,7 @@ export default function InquiryDetailPage() {
                   <Button
                     type="submit"
                     size="icon"
-                    aria-label="Send reply"
+                    aria-label={t("admin.inquiries.detail.sendReplyAria")}
                     disabled={replyMutation.isPending}
                   >
                     <Send className="size-4" />
@@ -459,7 +486,7 @@ export default function InquiryDetailPage() {
             <div className="flex flex-wrap gap-2">
               {canClaim(inquiry) && (
                 <Button disabled={actionsPending} onClick={() => claimMutation.mutate()}>
-                  Claim
+                  {t("admin.inquiries.table.claim")}
                 </Button>
               )}
               {canResolve(inquiry) && (
@@ -468,7 +495,7 @@ export default function InquiryDetailPage() {
                   disabled={actionsPending}
                   onClick={() => resolveMutation.mutate()}
                 >
-                  Resolve
+                  {t("admin.inquiries.table.resolve")}
                 </Button>
               )}
               {canClose(inquiry) && (
@@ -477,7 +504,7 @@ export default function InquiryDetailPage() {
                   disabled={actionsPending}
                   onClick={() => closeMutation.mutate()}
                 >
-                  Close
+                  {t("admin.inquiries.table.close")}
                 </Button>
               )}
               {canReopen(inquiry) && (
@@ -486,7 +513,7 @@ export default function InquiryDetailPage() {
                   disabled={actionsPending}
                   onClick={() => reopenMutation.mutate()}
                 >
-                  Reopen
+                  {t("admin.inquiries.table.reopen")}
                 </Button>
               )}
             </div>

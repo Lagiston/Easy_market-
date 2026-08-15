@@ -1,3 +1,4 @@
+import "@/i18n";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -59,8 +60,8 @@ describe("ProductForm (create mode)", () => {
   it("renders the name, description, price, stock, category, and image fields", () => {
     renderForm();
 
-    expect(screen.getByLabelText("Name")).toBeInTheDocument();
-    expect(screen.getByLabelText("Description")).toBeInTheDocument();
+    expect(screen.getByLabelText("Name (English)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Description (English)")).toBeInTheDocument();
     expect(screen.getByLabelText("Price")).toBeInTheDocument();
     expect(screen.getByLabelText("Stock")).toBeInTheDocument();
     expect(screen.getByLabelText("Category")).toBeInTheDocument();
@@ -100,7 +101,7 @@ describe("ProductForm (create mode)", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
@@ -128,7 +129,7 @@ describe("ProductForm (create mode)", () => {
     const user = userEvent.setup();
     const { onSuccess } = renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
@@ -145,7 +146,7 @@ describe("ProductForm (create mode)", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "A");
+    await user.type(screen.getByLabelText("Name (English)"), "A");
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     expect(
@@ -159,7 +160,7 @@ describe("ProductForm (create mode)", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
@@ -173,10 +174,10 @@ describe("ProductForm (create mode)", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     // fireEvent.change sets the whole value in one go — typing 1000+ chars
     // key-by-key via user.type is slow enough to flake against the test timeout.
-    fireEvent.change(screen.getByLabelText("Description"), {
+    fireEvent.change(screen.getByLabelText("Description (English)"), {
       target: { value: "lorem ipsum ".repeat(90) },
     });
     await user.clear(screen.getByLabelText("Stock"));
@@ -212,8 +213,8 @@ describe("ProductForm (create mode)", () => {
     const user = userEvent.setup();
     const { onSuccess } = renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
-    await user.type(screen.getByLabelText("Description"), "Long grain rice");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Description (English)"), "Long grain rice");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
@@ -261,7 +262,7 @@ describe("ProductForm (create mode)", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Shirt");
+    await user.type(screen.getByLabelText("Name (English)"), "Shirt");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "5");
     await selectCategory(user, "Groceries");
@@ -290,7 +291,7 @@ describe("ProductForm (create mode)", () => {
     const user = userEvent.setup();
     const { onSuccess } = renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
@@ -332,7 +333,7 @@ describe("ProductForm AI suggestions", () => {
 
     expect(screen.getByRole("button", { name: "Suggest with AI" })).toBeDisabled();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
 
     expect(screen.getByRole("button", { name: "Suggest with AI" })).toBeEnabled();
   });
@@ -342,8 +343,8 @@ describe("ProductForm AI suggestions", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
-    await user.type(screen.getByLabelText("Description"), "Long grain rice");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Description (English)"), "Long grain rice");
     await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
 
     await waitFor(() =>
@@ -360,7 +361,7 @@ describe("ProductForm AI suggestions", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
 
     expect(await screen.findByRole("button", { name: "Suggesting…" })).toBeDisabled();
@@ -373,7 +374,7 @@ describe("ProductForm AI suggestions", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
 
     expect(await screen.findByText("Groceries")).toBeInTheDocument();
@@ -392,7 +393,7 @@ describe("ProductForm AI suggestions", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
 
     expect(await screen.findByText("No confident match")).toBeInTheDocument();
@@ -404,7 +405,7 @@ describe("ProductForm AI suggestions", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
 
     const organicButton = await screen.findByRole("button", { name: "+ organic" });
@@ -436,7 +437,7 @@ describe("ProductForm AI suggestions", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
 
     expect(await screen.findByText("AI service unavailable")).toBeInTheDocument();
@@ -452,7 +453,7 @@ describe("ProductForm AI suggestions", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
 
     expect(
@@ -465,7 +466,7 @@ describe("ProductForm AI suggestions", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.click(screen.getByRole("button", { name: "Suggest with AI" }));
 
     expect(await screen.findByText("Groceries")).toBeInTheDocument();
@@ -508,8 +509,8 @@ describe("ProductForm (edit mode)", () => {
     const user = userEvent.setup();
     renderForm(vi.fn(), existingProduct);
 
-    expect(screen.getByLabelText("Name")).toHaveValue("Rice 5kg");
-    expect(screen.getByLabelText("Description")).toHaveValue("Long grain rice");
+    expect(screen.getByLabelText("Name (English)")).toHaveValue("Rice 5kg");
+    expect(screen.getByLabelText("Description (English)")).toHaveValue("Long grain rice");
     expect(screen.getByLabelText("Price")).toHaveValue(1500);
     expect(screen.getByLabelText("Stock")).toHaveValue(20);
     expect(screen.getByLabelText("Low stock threshold")).toHaveValue(10);
@@ -556,7 +557,7 @@ describe("ProductForm (edit mode)", () => {
     const user = userEvent.setup();
     const { onSuccess } = renderForm(vi.fn(), existingProduct);
 
-    const nameInput = screen.getByLabelText("Name");
+    const nameInput = screen.getByLabelText("Name (English)");
     await user.clear(nameInput);
     await user.type(nameInput, "Rice 10kg");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
@@ -594,7 +595,7 @@ describe("ProductForm (edit mode)", () => {
     const user = userEvent.setup();
     const { onSuccess } = renderForm(vi.fn(), existingProduct);
 
-    await user.clear(screen.getByLabelText("Name"));
+    await user.clear(screen.getByLabelText("Name (English)"));
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(

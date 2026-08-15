@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import { Loader2, X } from "lucide-react";
 import { useSearchParams } from "react-router";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [status, setStatus] = useState<"active" | "deactivated">("active");
   const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
@@ -76,10 +78,10 @@ export default function UsersPage() {
   const error = isError;
   const isRefetching = isFetching && users !== null;
   const emptyMessage = debouncedSearch
-    ? `No users match "${debouncedSearch}".`
+    ? t("admin.users.emptyNoMatch", { search: debouncedSearch })
     : status === "active"
-      ? "No active users."
-      : "No deactivated users.";
+      ? t("admin.users.emptyActive")
+      : t("admin.users.emptyDeactivated");
 
   const reactivateMutation = useMutation({
     mutationFn: (user: UserRow) => axios.post(`/api/users/${user.id}/reactivate`),
@@ -88,16 +90,16 @@ export default function UsersPage() {
   const reactivateError = reactivateMutation.isError
     ? axios.isAxiosError(reactivateMutation.error) && reactivateMutation.error.response?.data?.error
       ? String(reactivateMutation.error.response.data.error)
-      : "Could not reactivate the user. Please try again."
+      : t("admin.users.reactivateError")
     : null;
 
   return (
     <Card className="mx-auto max-w-4xl">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <CardTitle>Users</CardTitle>
+          <CardTitle>{t("admin.users.title")}</CardTitle>
           <CardDescription>
-            {users ? `${users.length} member${users.length === 1 ? "" : "s"}` : "Staff accounts"}
+            {users ? t("admin.users.subtitleCount", { count: users.length }) : t("admin.users.subtitleFallback")}
           </CardDescription>
         </div>
         {status === "active" && <CreateUserDialog />}
@@ -110,14 +112,14 @@ export default function UsersPage() {
             className="gap-4"
           >
             <TabsList>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="deactivated">Deactivated</TabsTrigger>
+              <TabsTrigger value="active">{t("admin.users.active")}</TabsTrigger>
+              <TabsTrigger value="deactivated">{t("admin.users.deactivated")}</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="relative sm:max-w-xs sm:flex-1">
             <Input
-              placeholder="Search by name or email…"
-              aria-label="Search users"
+              placeholder={t("admin.users.searchPlaceholder")}
+              aria-label={t("admin.users.searchAria")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="pr-8"
@@ -125,7 +127,7 @@ export default function UsersPage() {
             {isRefetching ? (
               <Loader2
                 role="status"
-                aria-label="Searching"
+                aria-label={t("admin.users.searching")}
                 className="absolute top-1/2 right-2 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
               />
             ) : (
@@ -134,7 +136,7 @@ export default function UsersPage() {
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  aria-label="Clear search"
+                  aria-label={t("admin.users.clearSearchAria")}
                   onClick={clearSearch}
                   className="absolute top-1/2 right-1 size-6 -translate-y-1/2"
                 >
@@ -149,7 +151,7 @@ export default function UsersPage() {
         )}
         {error ? (
           <p className="py-8 text-center text-sm text-destructive">
-            Could not load users. Please try again.
+            {t("admin.users.loadError")}
           </p>
         ) : (
           <div className="mt-4">

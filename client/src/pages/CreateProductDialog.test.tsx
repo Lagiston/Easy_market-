@@ -1,3 +1,4 @@
+import "@/i18n";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -50,8 +51,8 @@ describe("CreateProductDialog", () => {
     await openDialog();
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByLabelText("Name")).toBeInTheDocument();
-    expect(screen.getByLabelText("Description")).toBeInTheDocument();
+    expect(screen.getByLabelText("Name (English)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Description (English)")).toBeInTheDocument();
     expect(screen.getByLabelText("Stock")).toBeInTheDocument();
     expect(screen.getByLabelText("Category")).toBeInTheDocument();
     expect(screen.getByLabelText("Images")).toBeInTheDocument();
@@ -59,7 +60,7 @@ describe("CreateProductDialog", () => {
 
   it("shows validation errors and does not submit invalid input", async () => {
     const user = await openDialog();
-    await user.type(screen.getByLabelText("Name"), "A");
+    await user.type(screen.getByLabelText("Name (English)"), "A");
     await user.click(screen.getByRole("button", { name: "Create product" }));
 
     expect(
@@ -71,7 +72,7 @@ describe("CreateProductDialog", () => {
 
   it("requires an image before submitting", async () => {
     const user = await openDialog();
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
@@ -91,7 +92,7 @@ describe("CreateProductDialog", () => {
     );
 
     const user = await openDialog();
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");
@@ -131,7 +132,7 @@ describe("CreateProductDialog", () => {
     });
 
     const user = await openDialog();
-    await user.type(screen.getByLabelText("Name"), "Rice 5kg");
+    await user.type(screen.getByLabelText("Name (English)"), "Rice 5kg");
     await user.clear(screen.getByLabelText("Stock"));
     await user.type(screen.getByLabelText("Stock"), "10");
     await selectCategory(user, "Groceries");

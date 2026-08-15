@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { Ban, PackageCheck, PhoneCall, PhoneMissed, PhoneOff, Truck } from "lucide-react";
 import {
   FulfillmentType,
@@ -77,21 +78,22 @@ export default function OrdersTable({
   onCancel: (order: OrderRow) => void;
   actionsPending: boolean;
 }) {
+  const { t } = useTranslation();
   const { callAttemptsBeforeCancel } = useStoreSettings();
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Code</TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Calls</TableHead>
-          <TableHead>Total</TableHead>
-          <TableHead>Placed</TableHead>
+          <TableHead>{t("admin.orders.table.code")}</TableHead>
+          <TableHead>{t("admin.orders.table.customer")}</TableHead>
+          <TableHead>{t("admin.orders.table.fulfillment")}</TableHead>
+          <TableHead>{t("admin.orders.table.status")}</TableHead>
+          <TableHead>{t("admin.orders.table.calls")}</TableHead>
+          <TableHead>{t("admin.orders.table.total")}</TableHead>
+          <TableHead>{t("admin.orders.table.placed")}</TableHead>
           <TableHead>
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{t("admin.orders.table.actionsSr")}</span>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -109,7 +111,7 @@ export default function OrdersTable({
         ) : orders.length === 0 ? (
           <TableRow>
             <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-              No orders yet.
+              {t("admin.orders.table.empty")}
             </TableCell>
           </TableRow>
         ) : (
@@ -128,7 +130,9 @@ export default function OrdersTable({
                 <div className="text-muted-foreground">{order.customerPhone}</div>
               </TableCell>
               <TableCell>
-                {order.fulfillmentType === FulfillmentType.DELIVERY ? "Delivery" : "Pickup"}
+                {order.fulfillmentType === FulfillmentType.DELIVERY
+                  ? t("admin.orders.table.delivery")
+                  : t("admin.orders.table.pickup")}
               </TableCell>
               <TableCell>
                 <OrderStatusBadge status={order.status} />
@@ -143,7 +147,7 @@ export default function OrdersTable({
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label={`Log failed call for ${order.code}`}
+                        aria-label={t("admin.orders.table.logCallAria", { code: order.code })}
                         disabled={actionsPending}
                         onClick={() => onLogCall(order)}
                       >
@@ -152,7 +156,7 @@ export default function OrdersTable({
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label={`Confirm order ${order.code}`}
+                        aria-label={t("admin.orders.table.confirmAria", { code: order.code })}
                         disabled={actionsPending}
                         onClick={() => onConfirm(order)}
                       >
@@ -163,7 +167,7 @@ export default function OrdersTable({
                           variant="ghost"
                           size="icon-sm"
                           className="text-destructive"
-                          aria-label={`Cancel unreachable order ${order.code}`}
+                          aria-label={t("admin.orders.table.cancelUnreachableAria", { code: order.code })}
                           disabled={actionsPending}
                           onClick={() => onCancelUnreachable(order)}
                         >
@@ -176,7 +180,7 @@ export default function OrdersTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Mark order ${order.code} out for delivery`}
+                      aria-label={t("admin.orders.table.outForDeliveryAria", { code: order.code })}
                       disabled={actionsPending}
                       onClick={() => onOutForDelivery(order)}
                     >
@@ -187,7 +191,7 @@ export default function OrdersTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Complete order ${order.code}`}
+                      aria-label={t("admin.orders.table.completeAria", { code: order.code })}
                       disabled={actionsPending}
                       onClick={() => onComplete(order)}
                     >
@@ -199,7 +203,7 @@ export default function OrdersTable({
                       variant="ghost"
                       size="icon-sm"
                       className="text-destructive"
-                      aria-label={`Cancel order ${order.code}`}
+                      aria-label={t("admin.orders.table.cancelAria", { code: order.code })}
                       disabled={actionsPending}
                       onClick={() => onCancel(order)}
                     >

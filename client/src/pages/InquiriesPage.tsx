@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useSearchParams } from "react-router";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { INQUIRY_STATUSES, type InquiryQueue, type InquiryStatus } from "@es-market/core";
 import InquiriesTable, { type InquiryRow } from "@/components/InquiriesTable";
-import { INQUIRY_STATUS_LABELS } from "@/components/InquiryStatusBadge";
+import { getInquiryStatusLabel } from "@/components/InquiryStatusBadge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -21,11 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const QUEUE_LABELS: Record<InquiryQueue, string> = {
-  mine: "My queue",
-  unassigned: "Unassigned",
-  all: "All",
-};
+const QUEUE_VALUES: InquiryQueue[] = ["mine", "unassigned", "all"];
 
 function extractServerError(error: unknown, fallback: string) {
   return axios.isAxiosError(error) && error.response?.data?.error
@@ -34,6 +31,12 @@ function extractServerError(error: unknown, fallback: string) {
 }
 
 export default function InquiriesPage() {
+  const { t } = useTranslation();
+  const QUEUE_LABELS: Record<InquiryQueue, string> = {
+    mine: t("admin.inquiries.queueMine"),
+    unassigned: t("admin.inquiries.queueUnassigned"),
+    all: t("admin.inquiries.queueAll"),
+  };
   const queryClient = useQueryClient();
   // Read-once (like the storefront's own ?tag= deep-link pattern), not
   // two-way synced — lets a dashboard KPI card land here pre-filtered
@@ -41,7 +44,9 @@ export default function InquiriesPage() {
   const [searchParams] = useSearchParams();
   const [queue, setQueue] = useState<InquiryQueue>(() => {
     const fromUrl = searchParams.get("queue");
-    return fromUrl && fromUrl in QUEUE_LABELS ? (fromUrl as InquiryQueue) : "all";
+    return fromUrl && (QUEUE_VALUES as readonly string[]).includes(fromUrl)
+      ? (fromUrl as InquiryQueue)
+      : "all";
   });
   const [statusFilter, setStatusFilter] = useState<InquiryStatus | "all">(() => {
     const fromUrl = searchParams.get("status");
@@ -82,13 +87,13 @@ export default function InquiriesPage() {
   });
 
   const serverError = claimMutation.isError
-    ? extractServerError(claimMutation.error, "Could not claim the inquiry. Please try again.")
+    ? extractServerError(claimMutation.error, t("admin.inquiries.claimError"))
     : resolveMutation.isError
-      ? extractServerError(resolveMutation.error, "Could not resolve the inquiry. Please try again.")
+      ? extractServerError(resolveMutation.error, t("admin.inquiries.resolveError"))
       : closeMutation.isError
-        ? extractServerError(closeMutation.error, "Could not close the inquiry. Please try again.")
+        ? extractServerError(closeMutation.error, t("admin.inquiries.closeError"))
         : reopenMutation.isError
-          ? extractServerError(reopenMutation.error, "Could not reopen the inquiry. Please try again.")
+          ? extractServerError(reopenMutation.error, t("admin.inquiries.reopenError"))
           : null;
 
   const actionsPending =
@@ -100,18 +105,18 @@ export default function InquiriesPage() {
   return (
     <Card className="mx-auto max-w-5xl">
       <CardHeader>
-        <CardTitle>Inquiries</CardTitle>
+        <CardTitle>{t("admin.inquiries.title")}</CardTitle>
         <CardDescription>
           {inquiries
-            ? `${inquiries.length} inquir${inquiries.length === 1 ? "y" : "ies"}`
-            : "Customer support inquiries"}
+            ? t("admin.inquiries.subtitleCount", { count: inquiries.length })
+            : t("admin.inquiries.subtitleFallback")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <Tabs value={queue} onValueChange={(value) => setQueue(value as InquiryQueue)}>
             <TabsList>
-              {(["mine", "unassigned", "all"] as const).map((value) => (
+              {QUEUE_VALUES.map((value) => (
                 <TabsTrigger key={value} value={value}>
                   {QUEUE_LABELS[value]}
                 </TabsTrigger>
@@ -122,14 +127,14 @@ export default function InquiriesPage() {
             value={statusFilter}
             onValueChange={(value) => setStatusFilter(value as InquiryStatus | "all")}
           >
-            <SelectTrigger className="w-40" aria-label="Status">
+            <SelectTrigger className="w-40" aria-label={t("admin.inquiries.statusLabel")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="all">{t("admin.inquiries.allStatuses")}</SelectItem>
               {INQUIRY_STATUSES.map((status) => (
                 <SelectItem key={status} value={status}>
-                  {INQUIRY_STATUS_LABELS[status]}
+                  {getInquiryStatusLabel(t, status)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -137,7 +142,7 @@ export default function InquiriesPage() {
         </div>
         {isError ? (
           <p className="py-8 text-center text-sm text-destructive">
-            Could not load inquiries. Please try again.
+            {t("admin.inquiries.loadError")}
           </p>
         ) : (
           <>

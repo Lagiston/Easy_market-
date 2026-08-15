@@ -1,3 +1,4 @@
+import "@/i18n";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -33,8 +34,8 @@ describe("CreateKbArticleDialog", () => {
     await openDialog();
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByLabelText("Title")).toBeInTheDocument();
-    expect(screen.getByLabelText("Body")).toBeInTheDocument();
+    expect(screen.getByLabelText("Title (English)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Body (English)")).toBeInTheDocument();
     expect(screen.getByLabelText("Topic")).toBeInTheDocument();
   });
 
@@ -50,8 +51,8 @@ describe("CreateKbArticleDialog", () => {
     mockedAxios.post.mockResolvedValue({ data: { kbArticle: createdKbArticle } });
 
     const user = await openDialog();
-    await user.type(screen.getByLabelText("Title"), "How to track my order");
-    await user.type(screen.getByLabelText("Body"), "Use the order status page.");
+    await user.type(screen.getByLabelText("Title (English)"), "How to track my order");
+    await user.type(screen.getByLabelText("Body (English)"), "Use the order status page.");
     await user.type(screen.getByLabelText("Topic"), "orders");
     await user.click(screen.getByRole("button", { name: "Create article" }));
 
@@ -75,8 +76,8 @@ describe("CreateKbArticleDialog", () => {
     });
 
     const user = await openDialog();
-    await user.type(screen.getByLabelText("Title"), "How to track my order");
-    await user.type(screen.getByLabelText("Body"), "Use the order status page.");
+    await user.type(screen.getByLabelText("Title (English)"), "How to track my order");
+    await user.type(screen.getByLabelText("Body (English)"), "Use the order status page.");
     await user.click(screen.getByRole("button", { name: "Create article" }));
 
     expect(await screen.findByText("Body is required")).toBeInTheDocument();

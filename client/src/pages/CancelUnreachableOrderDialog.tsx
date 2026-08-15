@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { CancelReason } from "@es-market/core";
 import type { OrderRow } from "@/components/OrdersTable";
 import {
@@ -20,6 +21,7 @@ export default function CancelUnreachableOrderDialog({
   order: OrderRow | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -36,7 +38,7 @@ export default function CancelUnreachableOrderDialog({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : "Could not cancel the order. Please try again."
+      : t("admin.orders.cancelUnreachableDialog.error")
     : null;
 
   return (
@@ -49,21 +51,26 @@ export default function CancelUnreachableOrderDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Cancel order {order?.code}?</AlertDialogTitle>
+          <AlertDialogTitle>
+            {t("admin.orders.cancelUnreachableDialog.title", { code: order?.code })}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            The customer could not be reached after {order?.callAttempts} call attempts.
-            Cancelling records the reason and restores the items&apos; stock.
+            {t("admin.orders.cancelUnreachableDialog.description", {
+              count: order?.callAttempts,
+            })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel>Keep order</AlertDialogCancel>
+          <AlertDialogCancel>{t("admin.orders.cancelUnreachableDialog.keepOrder")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Cancelling…" : "Cancel order"}
+            {mutation.isPending
+              ? t("admin.orders.cancelUnreachableDialog.cancelling")
+              : t("admin.orders.cancelUnreachableDialog.submit")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

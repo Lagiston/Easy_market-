@@ -2,6 +2,7 @@ import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import {
   createCategorySchema,
   updateCategorySchema,
@@ -23,10 +24,6 @@ import {
 import CategoryImageUpload from "@/components/CategoryImageUpload";
 import type { CategoryRow } from "@/components/CategoriesTable";
 
-const HOME_ROW_LABELS: Record<string, string> = {
-  look_good: "Look Good row",
-};
-
 export default function CategoryForm({
   category,
   onSuccess,
@@ -34,6 +31,10 @@ export default function CategoryForm({
   category?: CategoryRow;
   onSuccess?: (category: CategoryRow) => void;
 }) {
+  const { t } = useTranslation();
+  const HOME_ROW_LABELS: Record<string, string> = {
+    look_good: t("admin.categories.form.lookGoodRow"),
+  };
   const queryClient = useQueryClient();
 
   const {
@@ -69,7 +70,9 @@ export default function CategoryForm({
   const serverError = mutation.isError
     ? axios.isAxiosError(mutation.error) && mutation.error.response?.data?.error
       ? String(mutation.error.response.data.error)
-      : `Could not ${category ? "update" : "create"} the category. Please try again.`
+      : category
+        ? t("admin.categories.form.updateError")
+        : t("admin.categories.form.createError")
     : null;
 
   const enHasError = !!errors.name?.en;
@@ -84,13 +87,13 @@ export default function CategoryForm({
       <Tabs defaultValue="en">
         <TabsList>
           <TabsTrigger value="en">
-            English
+            {t("admin.products.form.english")}
             {enHasError && (
               <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
             )}
           </TabsTrigger>
           <TabsTrigger value="ar">
-            Arabic
+            {t("admin.products.form.arabic")}
             {arHasError && (
               <span className="size-1.5 rounded-full bg-destructive" aria-hidden="true" />
             )}
@@ -98,7 +101,7 @@ export default function CategoryForm({
         </TabsList>
         <TabsContent value="en" className="grid gap-4 pt-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="category-form-name-en">Name</Label>
+            <Label htmlFor="category-form-name-en">{t("admin.categories.form.nameEn")}</Label>
             <Input
               id="category-form-name-en"
               autoComplete="off"
@@ -112,7 +115,7 @@ export default function CategoryForm({
         </TabsContent>
         <TabsContent value="ar" className="grid gap-4 pt-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="category-form-name-ar">Name</Label>
+            <Label htmlFor="category-form-name-ar">{t("admin.categories.form.nameAr")}</Label>
             <Input
               id="category-form-name-ar"
               dir="rtl"
@@ -127,7 +130,7 @@ export default function CategoryForm({
         </TabsContent>
       </Tabs>
       <div className="grid gap-1.5">
-        <Label htmlFor="category-form-home-row">Homepage row</Label>
+        <Label htmlFor="category-form-home-row">{t("admin.categories.form.homeRow")}</Label>
         <Controller
           name="homeRow"
           control={control}
@@ -137,13 +140,13 @@ export default function CategoryForm({
               onValueChange={(value) => field.onChange(value === "none" ? "" : value)}
             >
               <SelectTrigger id="category-form-home-row" className="w-full">
-                <SelectValue placeholder="Not on homepage">
-                  {(value: string) => HOME_ROW_LABELS[value] ?? "Not on homepage"}
+                <SelectValue placeholder={t("admin.categories.form.notOnHomepage")}>
+                  {(value: string) => HOME_ROW_LABELS[value] ?? t("admin.categories.form.notOnHomepage")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Not on homepage</SelectItem>
-                <SelectItem value="look_good">Look Good row</SelectItem>
+                <SelectItem value="none">{t("admin.categories.form.notOnHomepage")}</SelectItem>
+                <SelectItem value="look_good">{t("admin.categories.form.lookGoodRow")}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -151,7 +154,7 @@ export default function CategoryForm({
       </div>
       {category && (
         <div className="grid gap-1.5">
-          <Label>Cover image</Label>
+          <Label>{t("admin.categories.form.coverImage")}</Label>
           <CategoryImageUpload
             categoryId={category.id}
             imageUrl={category.imageUrl}
@@ -164,11 +167,11 @@ export default function CategoryForm({
         <Button type="submit" disabled={mutation.isPending}>
           {category
             ? mutation.isPending
-              ? "Saving…"
-              : "Save changes"
+              ? t("admin.categories.form.saving")
+              : t("admin.categories.form.save")
             : mutation.isPending
-              ? "Creating…"
-              : "Create category"}
+              ? t("admin.categories.form.creating")
+              : t("admin.categories.form.create")}
         </Button>
       </DialogFooter>
     </form>
