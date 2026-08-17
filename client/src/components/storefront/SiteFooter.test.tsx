@@ -113,12 +113,7 @@ describe("SiteFooter", () => {
   it("renders the mission statement", () => {
     renderFooter();
     expect(
-      screen.getByText(
-        (_, element) =>
-          element?.tagName === "P" &&
-          element.textContent ===
-            "Practical hardware and building supplies for Dar es Salaam — sourced right, priced fairly, delivered when we say.",
-      ),
+      screen.getByText("Sourced right, priced fairly, delivered when we say."),
     ).toBeInTheDocument();
   });
 

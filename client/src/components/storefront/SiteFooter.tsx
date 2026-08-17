@@ -56,18 +56,15 @@ export default function SiteFooter() {
                     blurs into a squiggle at on-page display sizes. */}
                 <img src="/Logo/logo-mark-small.png" alt="" aria-hidden className="h-10 w-auto shrink-0 object-contain sm:h-9" />
                 <span className="text-[28px] font-bold tracking-[-0.03em] whitespace-nowrap text-foreground dark:text-white">
-                  {t("brand")}
+                  {settings?.siteName ?? t("brand")}
                 </span>
               </Link>
 
-              <p className="text-[20px] leading-[1.5] tracking-[-0.015em]">
-                <span className="text-foreground dark:text-[#dceaf4]">{t("footer.missionLead")}</span>{" "}
-                <span className="text-muted-foreground dark:text-[rgba(220,234,244,0.45)]">
-                  {t("footer.missionRest")}
-                </span>
+              <p className="mt-3 text-[20px] leading-[1.5] tracking-[-0.015em] text-muted-foreground dark:text-[rgba(220,234,244,0.45)]">
+                {t("footer.missionRest")}
               </p>
 
-              <nav aria-label={t("footer.nav")} className="flex flex-wrap items-center gap-x-[30px] gap-y-3">
+              <nav aria-label={t("footer.nav")} className="mt-6 flex flex-wrap items-center gap-x-[30px] gap-y-3">
                 {NAV_ITEMS.map((item) => (
                   <Link
                     key={item.to}

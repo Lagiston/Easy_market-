@@ -356,8 +356,7 @@
   "footer": {
     "copyright": "© {{year}} Halatu. All rights reserved.",
     "nav": "Footer navigation",
-    "missionLead": "Practical hardware and building supplies for Dar es Salaam",
-    "missionRest": "— sourced right, priced fairly, delivered when we say.",
+    "missionRest": "Sourced right, priced fairly, delivered when we say.",
     "getInTouch": "Get in touch",
     "callCaption": "Call the shop",
     "emailCaption": "Email us at"
@@ -1351,6 +1350,8 @@
       "loadError": "Could not load settings. Please try again.",
       "saveError": "Could not save the settings. Please try again.",
       "saved": "Settings saved.",
+      "siteName": "Site name",
+      "siteNameHint": "Shown in the storefront header/footer, the admin login page, and the browser tab.",
       "deliveryFee": "Delivery fee",
       "deliveryFeeHint": "Flat fee added to delivery orders. Pickup is always free.",
       "freeDeliveryThreshold": "Free delivery threshold",

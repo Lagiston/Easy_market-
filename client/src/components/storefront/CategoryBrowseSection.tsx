@@ -101,7 +101,7 @@ export default function CategoryBrowseSection({
   // (createdAt desc); reverse to oldest-first so the row reads in seeded
   // order (Wigs leading, Earrings trailing), not backwards.
   const lookGood = (categories ?? [])
-    .filter((c) => c.homeRow === "look_good")
+    .filter((c) => c.homeRow === "look_good" && c.itemCount > 0)
     .slice()
     .reverse()
     .slice(0, MAX_TILES_PER_ROW);
