@@ -7,7 +7,6 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { customerAuth } from "./lib/customer-auth";
 import { prisma } from "./lib/prisma";
-import { uploadsDir } from "./lib/uploads";
 import {
   aiLimiter,
   apiLimiter,
@@ -75,8 +74,6 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.all("/api/customer-auth/*splat", toNodeHandler(customerAuth));
 
 app.use(express.json());
-
-app.use("/api/uploads", express.static(uploadsDir));
 
 app.get("/api/health", async (_req, res) => {
   try {

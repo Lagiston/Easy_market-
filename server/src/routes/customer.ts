@@ -1,12 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer, { MulterError } from "multer";
 import { fileTypeFromBuffer } from "file-type";
 import { linkGuestOrdersSchema, updateReviewSchema } from "@es-market/core";
 import { prisma } from "../lib/prisma";
-import { customerImagesDir } from "../lib/uploads";
+import { uploadImageBuffer, publicIdFromImageUrl, deleteCloudinaryImage } from "../lib/cloudinary";
 import { requireCustomerAuth } from "../middleware/require-customer-auth";
 import { linkOrdersLimiter } from "../middleware/rate-limit";
 import { orderWithItems, serializePublicOrder, normalizePhone } from "./orders";
@@ -247,12 +245,6 @@ function uploadAvatar(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-// filename portion of a "/api/uploads/customers/<file>" URL, used to unlink
-// a customer's previous avatar file on replace/remove.
-function avatarFilenameFromUrl(url: string): string {
-  return url.slice(url.lastIndexOf("/") + 1);
-}
-
 customerRouter.post(
   "/customer/profile/avatar",
   requireCustomerAuth,
@@ -265,8 +257,7 @@ customerRouter.post(
     }
 
     const detected = await fileTypeFromBuffer(file.buffer);
-    const extension = detected ? AVATAR_IMAGE_EXTENSIONS[detected.mime] : undefined;
-    if (!extension) {
+    if (!detected || !AVATAR_IMAGE_EXTENSIONS[detected.mime]) {
       res.status(400).json({ error: INVALID_AVATAR_MESSAGE });
       return;
     }
@@ -276,15 +267,11 @@ customerRouter.post(
       select: { image: true },
     });
 
-    const filename = `${randomUUID()}${extension}`;
-    await writeFile(path.join(customerImagesDir, filename), file.buffer);
-    const image = `/api/uploads/customers/${filename}`;
+    const image = await uploadImageBuffer(file.buffer, "customers", randomUUID());
 
     await prisma.customer.update({ where: { id: req.customer.id }, data: { image } });
     if (current.image) {
-      await unlink(path.join(customerImagesDir, avatarFilenameFromUrl(current.image))).catch(
-        () => {},
-      );
+      await deleteCloudinaryImage(publicIdFromImageUrl(current.image, "customers"));
     }
 
     res.json({ image });
@@ -302,7 +289,7 @@ customerRouter.delete("/customer/profile/avatar", requireCustomerAuth, async (re
   }
 
   await prisma.customer.update({ where: { id: req.customer.id }, data: { image: null } });
-  await unlink(path.join(customerImagesDir, avatarFilenameFromUrl(current.image))).catch(() => {});
+  await deleteCloudinaryImage(publicIdFromImageUrl(current.image, "customers"));
 
   res.status(204).end();
 });

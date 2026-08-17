@@ -51,13 +51,13 @@ const FEATURES = [
 // width (w_800,c_scale) so phones on metered connections don't pull the
 // same full-resolution file as desktop.
 const VIDEO_SECTION_SRC_MOBILE =
-  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto,w_800,c_scale/v1786219391/Cosmetics_dropping_into_bag_202608082258_d2xsig.mp4";
+  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto,w_800,c_scale/v1786986431/gfvfdjwbfxwvgnxebbdh.mp4";
 const VIDEO_SECTION_SRC =
-  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto/v1786219391/Cosmetics_dropping_into_bag_202608082258_d2xsig.mp4";
+  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto/v1786986431/gfvfdjwbfxwvgnxebbdh.mp4";
 // Cloudinary auto-generates a first-frame thumbnail for any video asset at
 // the same delivery URL with the extension swapped to an image format.
 const VIDEO_SECTION_POSTER =
-  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto/v1786219391/Cosmetics_dropping_into_bag_202608082258_d2xsig.jpg";
+  "https://res.cloudinary.com/first1/video/upload/f_auto,q_auto/v1786986431/gfvfdjwbfxwvgnxebbdh.jpg";
 
 function FeatureCard({
   feature,

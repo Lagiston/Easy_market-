@@ -241,9 +241,9 @@ test.describe("Delete product (ADMIN)", () => {
 
 test.describe("Product image upload (ADMIN)", () => {
   // Note: hardDeleteProduct only removes the DB row; it doesn't clean up the
-  // uploaded file from server/uploads/products/. Left out of scope here since
-  // this runs against a local/test-only DB and disk, and stray fixture-sized
-  // files don't affect other tests.
+  // uploaded asset from Cloudinary (the "products" folder in the configured
+  // test-only Cloudinary account). Left out of scope here since stray
+  // fixture-sized images don't affect other tests.
 
   test("uploading a non-image file on the create form shows an error, leaves the dialog open, and doesn't attach an image", async ({
     page,

@@ -1,12 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer, { MulterError } from "multer";
 import { fileTypeFromBuffer } from "file-type";
 import { Role } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
-import { categoryImagesDir } from "../lib/uploads";
+import { uploadImageBuffer, publicIdFromImageUrl, deleteCloudinaryImage } from "../lib/cloudinary";
 import { requireAuth, requireRole } from "../middleware/require-auth";
 import { createCategorySchema, updateCategorySchema, type LocalizedName } from "@es-market/core";
 
@@ -141,12 +139,6 @@ function uploadCategoryImage(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-// filename portion of a "/api/uploads/categories/<file>" URL, used to unlink
-// a category's previous image file on replace/remove.
-function categoryImageFilenameFromUrl(url: string): string {
-  return url.slice(url.lastIndexOf("/") + 1);
-}
-
 categoriesRouter.post<{ id: string }>(
   "/categories/:id/image",
   requireAuth,
@@ -167,21 +159,16 @@ categoriesRouter.post<{ id: string }>(
     }
 
     const detected = await fileTypeFromBuffer(file.buffer);
-    const extension = detected ? CATEGORY_IMAGE_EXTENSIONS[detected.mime] : undefined;
-    if (!extension) {
+    if (!detected || !CATEGORY_IMAGE_EXTENSIONS[detected.mime]) {
       res.status(400).json({ error: INVALID_CATEGORY_IMAGE_MESSAGE });
       return;
     }
 
-    const filename = `${randomUUID()}${extension}`;
-    await writeFile(path.join(categoryImagesDir, filename), file.buffer);
-    const imageUrl = `/api/uploads/categories/${filename}`;
+    const imageUrl = await uploadImageBuffer(file.buffer, "categories", randomUUID());
 
     await prisma.category.update({ where: { id: categoryId }, data: { imageUrl } });
     if (target.imageUrl) {
-      await unlink(
-        path.join(categoryImagesDir, categoryImageFilenameFromUrl(target.imageUrl)),
-      ).catch(() => {});
+      await deleteCloudinaryImage(publicIdFromImageUrl(target.imageUrl, "categories"));
     }
 
     res.json({ imageUrl });
@@ -205,9 +192,7 @@ categoriesRouter.delete<{ id: string }>(
     }
 
     await prisma.category.update({ where: { id: categoryId }, data: { imageUrl: null } });
-    await unlink(
-      path.join(categoryImagesDir, categoryImageFilenameFromUrl(target.imageUrl)),
-    ).catch(() => {});
+    await deleteCloudinaryImage(publicIdFromImageUrl(target.imageUrl, "categories"));
 
     res.status(204).end();
   },

@@ -15,7 +15,7 @@ TypeScript end-to-end: one language across client and server, with shared types 
 | Auth | Session cookies, **sessions stored in PostgreSQL** (via Prisma `Session` model) | Seeded admin + staff accounts only, no public signup — simpler and safer than JWT. DB-backed sessions survive server restarts, need no extra infra (no Redis), and allow instant revocation |
 | AI | Vercel AI SDK (`ai` + `@ai-sdk/openai`) — OpenAI's "GPT-5.6 Luna" (model id `gpt-5.6-luna`, placeholder — confirm) for both reply drafting and classification/routing | Vercel AI SDK gives a typed, provider-agnostic `generateObject` API for structured outputs (zod schema in, typed object out) plus built-in retry/error handling, instead of hand-rolling JSON-schema parsing against the raw OpenAI SDK |
 | Chat / inbox updates | Server-Sent Events (or polling in v1) | Live-ish inquiry inbox and customer chat without WebSocket complexity |
-| File uploads | Local disk (product images) | Swap to S3-compatible storage in phase 2 if needed |
+| File uploads | Cloudinary (product images, category images, customer avatars) | Swapped from local disk; see server/src/lib/cloudinary.ts |
 | Deployment | Single VPS, Docker Compose (app + Postgres) | One box is plenty for v1; low cost |
 
 ## Decisions & rationale

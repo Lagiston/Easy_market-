@@ -9,5 +9,3 @@ server/src/generated/
 playwright-report/
 test-results/
 blob-report/
-server/uploads/*
-!server/uploads/.gitkeep

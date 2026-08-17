@@ -1,12 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer, { MulterError } from "multer";
 import { fileTypeFromBuffer } from "file-type";
 import { Role, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
-import { productImagesDir } from "../lib/uploads";
+import { uploadImageBuffer, publicIdFromImageUrl, deleteCloudinaryImage } from "../lib/cloudinary";
 import { requireAuth, requireRole } from "../middleware/require-auth";
 import { boss, CLASSIFY_PRODUCT_QUEUE } from "../lib/queue";
 import { acquireReclassifyLock } from "../lib/product-reclassify-lock";
@@ -104,32 +102,25 @@ function uploadImages(req: Request, res: Response, next: NextFunction) {
 
 // Detects each file's real type from its magic bytes (never trusting the
 // client-declared mimetype/extension) and, only if every file in the batch
-// is genuinely an allowed image type, writes them all to disk under
-// server-generated filenames + extensions derived from the detected types.
-// All-or-nothing: rejects (and writes nothing) if any single file in the
-// batch isn't actually an image, rather than silently dropping bad ones.
-// Returns null (having already sent the 400 response) on rejection.
-async function writeValidatedProductImages(
+// is genuinely an allowed image type, uploads them all to Cloudinary under
+// server-generated public_ids. All-or-nothing: rejects (and uploads
+// nothing) if any single file in the batch isn't actually an image, rather
+// than silently dropping bad ones. Returns null (having already sent the
+// 400 response) on rejection.
+async function uploadValidatedProductImages(
   files: Express.Multer.File[],
   res: Response,
 ): Promise<string[] | null> {
-  const extensions: string[] = [];
   for (const file of files) {
     const detected = await fileTypeFromBuffer(file.buffer);
-    const extension = detected ? IMAGE_EXTENSIONS[detected.mime] : undefined;
-    if (!extension) {
+    if (!detected || !IMAGE_EXTENSIONS[detected.mime]) {
       res.status(400).json({ error: INVALID_IMAGE_MESSAGE });
       return null;
     }
-    extensions.push(extension);
   }
 
   return Promise.all(
-    files.map(async (file, index) => {
-      const filename = `${randomUUID()}${extensions[index]}`;
-      await writeFile(path.join(productImagesDir, filename), file.buffer);
-      return filename;
-    }),
+    files.map((file) => uploadImageBuffer(file.buffer, "products", randomUUID())),
   );
 }
 
@@ -450,13 +441,13 @@ productsRouter.post<{ id: string }>(
       return;
     }
 
-    const filenames = await writeValidatedProductImages(files, res);
-    if (!filenames) return;
+    const urls = await uploadValidatedProductImages(files, res);
+    if (!urls) return;
 
     const product = await prisma.product.update({
       where: { id: productId },
       data: {
-        images: [...target.images, ...filenames.map((f) => `/api/uploads/products/${f}`)],
+        images: [...target.images, ...urls],
       },
       include: productInclude,
     });
@@ -464,6 +455,9 @@ productsRouter.post<{ id: string }>(
   },
 );
 
+// :filename is the basename of a stored image URL (e.g. "<uuid>.jpg", the
+// same token the client already extracts via `imageUrl.split("/").pop()`)
+// — resolved back to a Cloudinary public_id for deletion.
 productsRouter.delete<{ id: string; filename: string }>(
   "/products/:id/images/:filename",
   requireAuth,
@@ -477,8 +471,10 @@ productsRouter.delete<{ id: string; filename: string }>(
       return;
     }
 
-    const url = `/api/uploads/products/${req.params.filename}`;
-    if (!target.images.includes(url)) {
+    const url = target.images.find(
+      (image) => image.slice(image.lastIndexOf("/") + 1) === req.params.filename,
+    );
+    if (!url) {
       res.status(404).json({ error: "Image not found on this product" });
       return;
     }
@@ -488,7 +484,7 @@ productsRouter.delete<{ id: string; filename: string }>(
       data: { images: target.images.filter((image) => image !== url) },
       include: productInclude,
     });
-    await unlink(path.join(productImagesDir, req.params.filename)).catch(() => {});
+    await deleteCloudinaryImage(publicIdFromImageUrl(url, "products"));
     res.json({ product });
   },
 );
