@@ -37,6 +37,7 @@ export default function SettingsPage() {
     resolver: zodResolver(updateSettingsSchema),
     values: settings
       ? {
+          siteName: settings.siteName,
           deliveryFee: settings.deliveryFee,
           freeDeliveryThreshold: settings.freeDeliveryThreshold ?? undefined,
           callAttemptsBeforeCancel: settings.callAttemptsBeforeCancel,
@@ -84,6 +85,18 @@ export default function SettingsPage() {
             onSubmit={handleSubmit((input) => mutation.mutate(input))}
             className="grid gap-4"
           >
+            <div className="grid gap-1.5">
+              <Label htmlFor="settings-site-name">{t("admin.settings.siteName")}</Label>
+              <Input
+                id="settings-site-name"
+                aria-invalid={!!errors.siteName}
+                {...register("siteName")}
+              />
+              <p className="text-sm text-muted-foreground">{t("admin.settings.siteNameHint")}</p>
+              {errors.siteName && (
+                <p className="text-sm text-destructive">{errors.siteName.message}</p>
+              )}
+            </div>
             <div className="grid gap-1.5">
               <Label htmlFor="settings-delivery-fee">{t("admin.settings.deliveryFee")}</Label>
               <Input

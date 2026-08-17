@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Navigate, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { authClient } from "@/lib/auth-client";
+import { usePublicStoreSettings } from "@/lib/storefront-settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,8 @@ export default function LoginPage() {
   });
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
+  const { data: publicSettings } = usePublicStoreSettings();
+  const siteName = publicSettings?.siteName ?? "Halatu";
   const {
     register,
     handleSubmit,
@@ -48,7 +51,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-center text-2xl">Halatu</CardTitle>
+          <CardTitle className="text-center text-2xl">{siteName}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>

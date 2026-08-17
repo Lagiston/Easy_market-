@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { customerAuthClient } from "@/lib/customer-auth-client";
 import { useHideOnScroll } from "@/lib/use-hide-on-scroll";
+import { usePublicStoreSettings } from "@/lib/storefront-settings";
 import { useWishlist } from "@/lib/wishlist";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +44,8 @@ function IconBadge({ count }: { count: number }) {
 
 export default function SiteHeader() {
   const { t } = useTranslation();
+  const { data: publicSettings } = usePublicStoreSettings();
+  const siteName = publicSettings?.siteName ?? t("brand");
   const { totalQuantity } = useCart();
   const { data: session } = customerAuthClient.useSession();
   // Safe pre-session — useWishlist's query is enabled: !!session, so this
@@ -99,7 +102,7 @@ export default function SiteHeader() {
               square box, since the arrow glyph is naturally wide and flat. */}
           <img src="/Logo/logo-mark-small.png" alt="" aria-hidden className="h-6 w-auto shrink-0 object-contain" />
           <span className="text-lg font-bold tracking-tight whitespace-nowrap text-foreground">
-            {t("brand")}
+            {siteName}
           </span>
         </Link>
 
@@ -158,7 +161,7 @@ export default function SiteHeader() {
             </SheetTrigger>
             <SheetContent side="right" className="flex flex-col">
               <SheetHeader>
-                <SheetTitle>{t("brand")}</SheetTitle>
+                <SheetTitle>{siteName}</SheetTitle>
               </SheetHeader>
               <nav aria-label={t("nav.mainNavigation")} className="flex flex-col gap-1 px-4">
                 {NAV_ITEMS.map((item) => (

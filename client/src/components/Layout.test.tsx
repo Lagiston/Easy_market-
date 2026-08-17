@@ -17,6 +17,21 @@ vi.mock("axios", async (importOriginal) => {
 });
 const mockedGet = vi.mocked(axios.get);
 
+// Layout now also fetches /api/settings (for the site name in the brand
+// link) alongside /api/inquiries/attention-count — mock by URL rather than
+// call order so the two queries' request order can't make a test flaky.
+function mockAttentionCount(count: number) {
+  mockedGet.mockImplementation((url: string) => {
+    if (url === "/api/settings") {
+      return Promise.resolve({ data: { settings: { siteName: "Halatu" } } });
+    }
+    if (url === "/api/inquiries/attention-count") {
+      return Promise.resolve({ data: { count } });
+    }
+    return Promise.reject(new Error(`Unexpected GET ${url}`));
+  });
+}
+
 function user(overrides: Partial<SessionUser> = {}): SessionUser {
   return {
     id: "u1",
@@ -45,7 +60,7 @@ describe("Layout", () => {
   });
 
   it("renders the Inquiries nav link without a badge when nothing needs attention", async () => {
-    mockedGet.mockResolvedValueOnce({ data: { count: 0 } });
+    mockAttentionCount(0);
     renderLayout();
 
     const link = await screen.findByRole("link", { name: "Inquiries" });
@@ -55,7 +70,7 @@ describe("Layout", () => {
   });
 
   it("shows a badge with the attention count when inquiries need attention", async () => {
-    mockedGet.mockResolvedValueOnce({ data: { count: 3 } });
+    mockAttentionCount(3);
     renderLayout();
 
     expect(await screen.findByText("3")).toBeInTheDocument();
@@ -65,7 +80,7 @@ describe("Layout", () => {
   });
 
   it("hides ADMIN-only nav links for an AGENT", async () => {
-    mockedGet.mockResolvedValueOnce({ data: { count: 0 } });
+    mockAttentionCount(0);
     renderLayout({ role: Role.AGENT });
 
     await screen.findByRole("link", { name: "Inquiries" });

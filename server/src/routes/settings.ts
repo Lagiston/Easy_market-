@@ -14,6 +14,7 @@ export const settingsRouter = Router();
 // not exposed here.
 settingsRouter.get("/storefront/settings", async (_req, res) => {
   const {
+    siteName,
     deliveryFee,
     freeDeliveryThreshold,
     contactPhone,
@@ -26,6 +27,7 @@ settingsRouter.get("/storefront/settings", async (_req, res) => {
   } = await getSettings();
   res.json({
     settings: {
+      siteName,
       deliveryFee,
       freeDeliveryThreshold,
       contactPhone,
@@ -52,6 +54,7 @@ settingsRouter.put("/settings", requireAuth, requireRole(Role.ADMIN), async (req
     return;
   }
   const {
+    siteName,
     deliveryFee,
     freeDeliveryThreshold,
     callAttemptsBeforeCancel,
@@ -66,6 +69,7 @@ settingsRouter.put("/settings", requireAuth, requireRole(Role.ADMIN), async (req
   } = parsed.data;
 
   const entries = [
+    { key: "siteName", value: siteName as Prisma.InputJsonValue },
     { key: "deliveryFee", value: deliveryFee as Prisma.InputJsonValue },
     {
       key: "freeDeliveryThreshold",

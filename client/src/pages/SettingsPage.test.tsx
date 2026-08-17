@@ -17,6 +17,7 @@ const mockedGet = vi.mocked(axios.get);
 const mockedPut = vi.mocked(axios.put);
 
 const baseSettings = {
+  siteName: "Halatu",
   deliveryFee: 200,
   freeDeliveryThreshold: 5000,
   callAttemptsBeforeCancel: 3,
@@ -68,6 +69,7 @@ describe("SettingsPage", () => {
 
     await waitFor(() =>
       expect(mockedPut).toHaveBeenCalledWith("/api/settings", {
+        siteName: "Halatu",
         deliveryFee: 300,
         freeDeliveryThreshold: 4000,
         callAttemptsBeforeCancel: 3,

@@ -4,7 +4,7 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Menu } from "lucide-react";
-import { Role } from "@es-market/core";
+import { Role, type StoreSettings } from "@es-market/core";
 import { authClient, type SessionUser } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,16 @@ export default function Layout({ user }: { user: SessionUser }) {
   // button lives inside the nav, matching SiteHeader.tsx's storefront
   // equivalent.
   const hidden = useHideOnScroll(mobileOpen);
+
+  // Same cache key/endpoint as SettingsPage.tsx, so the two share one cache
+  // entry — a staff member editing the site name sees the nav update once
+  // the mutation invalidates ["settings"].
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () =>
+      axios.get<{ settings: StoreSettings }>("/api/settings").then((res) => res.data.settings),
+  });
+  const siteName = settings?.siteName ?? "Halatu";
 
   // Inquiries still open/resolved that are unclaimed or escalated — the nav
   // badge's "needs a human to look at this" count.
@@ -79,7 +89,7 @@ export default function Layout({ user }: { user: SessionUser }) {
         <div className="hidden items-center gap-6 lg:flex">
           <Link to="/admin" className="flex items-center gap-2 text-lg font-semibold">
             <img src="/Logo/logo-mark-small.png" alt="" aria-hidden className="h-5 w-auto shrink-0 object-contain" />
-            Halatu
+            {siteName}
           </Link>
           {navLinks.map((item) => (
             <Link
@@ -120,7 +130,7 @@ export default function Layout({ user }: { user: SessionUser }) {
             </SheetTrigger>
             <SheetContent side="right" className="flex flex-col">
               <SheetHeader>
-                <SheetTitle>Halatu</SheetTitle>
+                <SheetTitle>{siteName}</SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-1 px-4">
                 {navLinks.map((item) => (

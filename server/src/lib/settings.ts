@@ -10,6 +10,9 @@ export async function getSettings(): Promise<StoreSettings> {
   const rows = await prisma.setting.findMany();
   const settings: StoreSettings = { ...DEFAULT_SETTINGS };
   for (const row of rows) {
+    if (row.key === "siteName" && typeof row.value === "string" && row.value.trim() !== "") {
+      settings.siteName = row.value;
+    }
     if (row.key === "deliveryFee" && typeof row.value === "number") {
       settings.deliveryFee = row.value;
     }

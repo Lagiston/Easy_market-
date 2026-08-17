@@ -10,12 +10,18 @@ const LOW_STOCK_DEFAULT_ERROR =
 const CONTACT_EMAIL_ERROR = "Enter a valid email address";
 const CONTACT_PHONE_ERROR = "Phone number is too long";
 const SOCIAL_URL_ERROR = "Enter a valid link (starting with http:// or https://)";
+const SITE_NAME_ERROR = "Site name is required";
 
 // Store-wide settings kept in the `Setting` key-value table. `freeDeliveryThreshold`
 // null means the free-delivery-above-total rule is disabled; `contactPhone`/
 // `contactEmail`/`contactAddress`/`social*Url` null means "not configured yet"
 // (hidden on the storefront contact page/footer, rather than shown blank).
+// `siteName` has no null state — unlike the optional contact/social fields,
+// the storefront header/footer/login page always need something to render,
+// so it defaults to "Halatu" (DEFAULT_SETTINGS below) rather than falling
+// back to a static i18n string once this setting exists.
 export type StoreSettings = {
+  siteName: string;
   deliveryFee: number;
   freeDeliveryThreshold: number | null;
   callAttemptsBeforeCancel: number;
@@ -38,6 +44,7 @@ export type StoreSettings = {
 // (unauthenticated) storefront.
 export type PublicStoreSettings = Pick<
   StoreSettings,
+  | "siteName"
   | "deliveryFee"
   | "freeDeliveryThreshold"
   | "contactPhone"
@@ -50,6 +57,7 @@ export type PublicStoreSettings = Pick<
 >;
 
 export const DEFAULT_SETTINGS: StoreSettings = {
+  siteName: "Halatu",
   deliveryFee: 0,
   freeDeliveryThreshold: null,
   callAttemptsBeforeCancel: 3,
@@ -82,6 +90,12 @@ const optionalSocialUrlSetting = () =>
   );
 
 export const updateSettingsSchema = z.object({
+  siteName: z
+    .string(SITE_NAME_ERROR)
+    .trim()
+    .min(1, SITE_NAME_ERROR)
+    .max(100, SITE_NAME_ERROR)
+    .transform(sanitizeText),
   deliveryFee: z
     .number(DELIVERY_FEE_ERROR)
     .int(DELIVERY_FEE_ERROR)
