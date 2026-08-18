@@ -6,7 +6,10 @@
     "dev": "bun --hot src/index.ts",
     "start": "bun src/index.ts",
     "typecheck": "tsc --noEmit",
-    "seed": "bun prisma/seed.ts"
+    "seed": "bun prisma/seed.ts",
+    "generate": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy",
+    "build": "bun run generate"
   },
   "dependencies": {
     "@ai-sdk/gateway": "4.0.26",

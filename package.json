@@ -7,6 +7,7 @@
     "dev": "bun run --filter '*' dev",
     "dev:client": "bun run --cwd client dev",
     "dev:server": "bun run --cwd server dev",
+    "build": "bun install && bun run --cwd server build && bun run --cwd client build",
     "test:e2e": "bun e2e/setup-db.ts && playwright test",
     "test:e2e:setup": "bun e2e/setup-db.ts",
     "test:e2e:ui": "bun e2e/setup-db.ts && playwright test --ui"

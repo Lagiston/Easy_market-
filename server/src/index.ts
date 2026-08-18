@@ -1,5 +1,6 @@
 import "./instrument";
 
+import path from "node:path";
 import * as Sentry from "@sentry/node";
 import express from "express";
 import helmet from "helmet";
@@ -50,9 +51,24 @@ if (process.env.TRUST_PROXY_HOPS) {
   app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS));
 }
 
-// API-only server (no HTML views), so helmet's default CSP/HSTS/frame/nosniff
-// defaults are safe as-is — nothing here renders untrusted markup.
-app.use(helmet());
+// This process also serves the built client in production (see the static
+// block below), so helmet's default CSP (script-src/img-src/media-src
+// 'self' only) needs explicit exceptions: img-src/media-src for
+// Cloudinary-hosted product/category/avatar images and the homepage video
+// (res.cloudinary.com). No script-src exception is needed — the dark-mode
+// pre-paint script lives in client/public/theme-init.js and is served
+// same-origin, so it's already covered by the 'self' default.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "img-src": ["'self'", "data:", "https://res.cloudinary.com"],
+        "media-src": ["'self'", "https://res.cloudinary.com"],
+      },
+    },
+  }),
+);
 
 // POST /customer/orders/link-by-phone is rate-limited too, but per signed-in
 // customer rather than per IP — see linkOrdersLimiter's own comment. That
@@ -101,6 +117,24 @@ app.use("/api", reviewsRouter);
 app.use("/api", aiRouter);
 
 Sentry.setupExpressErrorHandler(app);
+
+// Serve the built client SPA from this same process/domain in production —
+// dev serves the client via Vite's own dev server (bun run dev:client), so
+// this block is a no-op there and client/dist need not exist locally.
+// Resolved via import.meta.dir (not process.cwd()) so it works regardless of
+// the directory Railway's start command runs from — same convention as
+// knowledge-base.ts.
+if (process.env.NODE_ENV === "production") {
+  const clientDist = path.join(import.meta.dir, "..", "..", "client", "dist");
+  app.use(express.static(clientDist));
+  // Any non-API GET that didn't match a static file falls through to
+  // index.html so client-side (react-router) routes resolve on hard
+  // refresh/deep link. A RegExp (not a "*" string) is used since Express 5's
+  // stricter path-to-regexp rejects a bare wildcard string route.
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
 
 // Note (dev-only): Bun's --hot reload re-runs this module on every save, so
 // repeated hot reloads can register duplicate pg-boss workers in the same
