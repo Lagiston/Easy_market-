@@ -37,9 +37,10 @@ COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/core ./core
 COPY --from=build /app/server ./server
 COPY --from=build /app/client/dist ./client/dist
+RUN chmod +x ./server/docker-entrypoint.sh
 
 EXPOSE 3000
 # Railway's railway.json deploy.startCommand takes precedence over this CMD;
 # it's kept as a correct default for running the image directly
 # (`docker run`) outside Railway.
-CMD ["sh", "-c", "bun run --cwd server migrate:deploy && bun run --cwd server start"]
+CMD ["./server/docker-entrypoint.sh"]
