@@ -14,6 +14,15 @@ export const auth = betterAuth({
   trustedOrigins: [requiredEnv("BETTER_AUTH_URL"), requiredEnv("CLIENT_URL")],
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
+    // Railway's edge sits 2 hops in front of the container (edge, then an
+    // internal LB) — x-forwarded-for arrives as a 2-value chain, but the
+    // edge also sets x-real-ip to a single, unambiguous client IP, which
+    // is simpler and safer to trust here than parsing/stripping the XFF
+    // chain (see TRUST_PROXY_HOPS in index.ts for the equivalent Express
+    // fix). Confirmed live via a diagnostic route comparing both headers.
+    ipAddress: {
+      ipAddressHeaders: ["x-real-ip"],
+    },
   },
   emailAndPassword: {
     enabled: true,

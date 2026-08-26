@@ -49,7 +49,12 @@ const port = Number(process.env.PORT ?? 3000);
 // express-rate-limit keys its buckets on, bypassing every per-IP limiter
 // below. Only set TRUST_PROXY_HOPS once a real reverse proxy/load balancer
 // (nginx, Caddy, a platform LB, ...) is actually in front of this process —
-// the value is the number of proxy hops to trust (usually 1).
+// the value is the number of proxy hops to trust. On Railway this is 2, not
+// the more common 1: the platform's edge sits in front of an internal load
+// balancer before reaching the container, so x-forwarded-for arrives as a
+// 2-value chain — confirmed live via a diagnostic route comparing
+// x-forwarded-for against x-real-ip (a single, unambiguous value the edge
+// also sets).
 if (process.env.TRUST_PROXY_HOPS) {
   app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS));
 }

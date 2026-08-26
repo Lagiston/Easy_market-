@@ -23,6 +23,12 @@ export const customerAuth = betterAuth({
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
     cookiePrefix: "es-market-customer",
+    // See the matching comment in ./auth.ts — Railway's edge is 2 hops in
+    // front of the container, so x-real-ip (a single, unambiguous value)
+    // is trusted here rather than parsing the 2-value x-forwarded-for chain.
+    ipAddress: {
+      ipAddressHeaders: ["x-real-ip"],
+    },
   },
   emailAndPassword: {
     enabled: true,
