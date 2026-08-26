@@ -9,7 +9,15 @@ export const CLASSIFY_PRODUCT_QUEUE = "classify-product";
 export const PRODUCT_STOCK_SNAPSHOT_QUEUE = "product-stock-snapshot";
 export const SMS_LOG_RETENTION_QUEUE = "sms-log-retention";
 
-export const boss = new PgBoss({ connectionString: requiredEnv("DATABASE_URL") });
+// connectionTimeoutMillis: pg-boss connects via node-postgres directly (not
+// Prisma's own schema-engine binary, which has separate connection logic) —
+// without an explicit timeout, a connection that never completes its TCP/TLS
+// handshake hangs boss.start() forever with no error, which is
+// indistinguishable from a slow start from the process's own logs.
+export const boss = new PgBoss({
+  connectionString: requiredEnv("DATABASE_URL"),
+  connectionTimeoutMillis: 10_000,
+});
 
 export async function startQueue() {
   boss.on("error", (err: Error) => {

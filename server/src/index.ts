@@ -144,10 +144,13 @@ if (process.env.NODE_ENV === "production") {
 // queue name, so repeated calls don't create duplicate schedules). Not
 // solved here — flagged, same as other accepted v1 gaps in this codebase;
 // restarting the dev server clears it.
+console.log("Starting job queue...");
 await startQueue();
+console.log("Job queue started, registering workers...");
 await registerProductClassificationWorker();
 await registerProductStockSnapshotWorker();
 await registerSmsLogRetentionWorker();
+console.log("Workers registered, starting HTTP listener...");
 
 app.listen(port, () => {
   console.log(`Halatu server listening on http://localhost:${port}`);
