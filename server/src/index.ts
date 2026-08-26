@@ -32,6 +32,7 @@ import { kbArticlesRouter } from "./routes/kb-articles";
 import { promoBlocksRouter } from "./routes/promo-blocks";
 import { reviewsRouter } from "./routes/reviews";
 import { aiRouter } from "./routes/ai";
+import { sentryRouter } from "./routes/sentry";
 import { startQueue } from "./lib/queue";
 import { registerProductClassificationWorker } from "./lib/product-classification-job";
 import { registerProductStockSnapshotWorker } from "./lib/product-stock-snapshot-job";
@@ -115,6 +116,7 @@ app.use("/api", kbArticlesRouter);
 app.use("/api", promoBlocksRouter);
 app.use("/api", reviewsRouter);
 app.use("/api", aiRouter);
+app.use("/api", sentryRouter);
 
 Sentry.setupExpressErrorHandler(app);
 
