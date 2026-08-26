@@ -34,7 +34,6 @@ import { reviewsRouter } from "./routes/reviews";
 import { aiRouter } from "./routes/ai";
 import { sentryRouter } from "./routes/sentry";
 import { cloudinaryVerifyRouter } from "./routes/cloudinary-verify";
-import { networkVerifyRouter } from "./routes/network-verify";
 import { startQueue } from "./lib/queue";
 import { registerProductClassificationWorker } from "./lib/product-classification-job";
 import { registerProductStockSnapshotWorker } from "./lib/product-stock-snapshot-job";
@@ -125,7 +124,6 @@ app.use("/api", reviewsRouter);
 app.use("/api", aiRouter);
 app.use("/api", sentryRouter);
 app.use("/api", cloudinaryVerifyRouter);
-app.use("/api", networkVerifyRouter);
 
 Sentry.setupExpressErrorHandler(app);
 
