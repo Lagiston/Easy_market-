@@ -24,6 +24,17 @@ bun run --cwd client test        # Vitest component tests, single run
 bun run --cwd client test:watch  # Vitest component tests, watch mode
 ```
 
+## Deployment
+
+Production runs on Railway (Docker builder, `railway.json` → `Dockerfile`), service **Halatu**, at **https://halatu-production.up.railway.app** (renamed from an earlier auto-generated `easymarket-production-*` domain — that old URL is dead). `BETTER_AUTH_URL`/`CLIENT_URL` must match the live domain exactly, since both feed `trustedOrigins` in `server/src/lib/auth.ts`/`customer-auth.ts` — changing the domain requires updating both and redeploying.
+
+- **Startup**: `server/docker-entrypoint.sh` runs `prisma migrate deploy` under a bounded `timeout` before `exec`-ing the server — `migrate deploy` was observed hanging on Railway's private network after completing its real work (logs show success but the process never exits), so a post-completion timeout is treated as success while a genuine failure/incomplete run still aborts the deploy.
+- **`TRUST_PROXY_HOPS=2`** (not the more common `1`): Railway's edge sits in front of an internal load balancer before reaching the container, so `x-forwarded-for` arrives as a 2-value chain. Confirmed live via a temporary diagnostic route comparing `x-forwarded-for` against `x-real-ip`.
+- Both Better Auth instances trust `x-real-ip` (`advanced.ipAddress.ipAddressHeaders: ["x-real-ip"]`) rather than parsing/stripping the 2-hop `x-forwarded-for` chain via `trustedProxies` — simpler and avoids hardcoding Railway's internal-hop IP, which isn't guaranteed stable.
+- Railway env vars must **not** be set with literal quote characters wrapped around the value (e.g. `railway variables --set 'KEY=value'`, not `'KEY="value"'`) — a prior incident had most vars (`ADMIN_*`, `CLOUDINARY_*`, `OPENAI_API_KEY`, `SENTRY_DSN`, `BETTER_AUTH_SECRET`) stored with the quotes baked into the value itself, silently breaking admin login, Cloudinary, OpenAI, and Sentry in production until caught and fixed.
+- Admin-only wiring-verification routes exist for smoke-testing external integrations without guessing: `POST /api/ai/verify` (OpenAI), `POST /api/sentry/verify` (throws a deliberate error to confirm Sentry is capturing), `POST /api/cloudinary/verify` (upload+delete round-trip). None are exercised by automated tests.
+- `VITE_SENTRY_DSN` is a Vite build-time var — Railway auto-injects service variables as Docker build ARGs when the `ARG` name matches (see the `ARG VITE_SENTRY_DSN` block in `Dockerfile`), so changing it triggers a full rebuild, not just a restart.
+
 ## Component testing
 
 Component tests use Vitest + React Testing Library, colocated with the component as `*.test.tsx` (e.g. `client/src/pages/UsersPage.tsx` → `client/src/pages/UsersPage.test.tsx`). Config lives in `client/vitest.config.ts` (jsdom environment, `@` alias matching Vite's, setup file at `client/src/test/setup.ts` which loads `@testing-library/jest-dom`).
