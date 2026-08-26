@@ -15,6 +15,11 @@ RUN bun install --frozen-lockfile
 FROM deps AS build
 WORKDIR /app
 COPY . .
+# `prisma generate` only reads the schema — it never connects to a real
+# database — but prisma.config.ts's env("DATABASE_URL") throws if the var
+# is unresolved at all, so a build-time placeholder unblocks codegen without
+# needing the real (secret) DATABASE_URL as a build arg.
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 RUN bun run --cwd server generate
 # Vite bakes VITE_* vars into the built bundle at build time, so it must be
 # passed as a build ARG (Railway's build-time env vars are exposed this way
