@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import i18n from "@/i18n";
 import { CartProvider } from "@/lib/cart";
 import SiteHeader from "./SiteHeader";
@@ -88,6 +88,19 @@ describe("SiteHeader", () => {
     await userEvent.click(screen.getByRole("button", { name: "Toggle theme" }));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("opens the chat widget and closes the sheet from the mobile menu", async () => {
+    const open = vi.fn();
+    window.HalatuChat = { open };
+    renderHeader();
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+    await screen.findByRole("dialog");
+
+    await userEvent.click(screen.getByRole("button", { name: "Chat with us" }));
+
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("shows the total item quantity on the cart badge", () => {

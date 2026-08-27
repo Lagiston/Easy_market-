@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
@@ -138,6 +138,20 @@ describe("storefront ChatWidget", () => {
 
     expect(await screen.findByText("This conversation is closed.")).toBeInTheDocument();
     expect(screen.queryByLabelText("Message")).not.toBeInTheDocument();
+  });
+
+  it("opens via the window.HalatuChat global even though the widget is hidden on mobile by default", async () => {
+    renderWithQuery(<ChatWidget />);
+
+    expect(screen.queryByText("Tell us a bit about yourself and how we can help.")).not.toBeInTheDocument();
+
+    act(() => {
+      window.HalatuChat!.open();
+    });
+
+    expect(
+      await screen.findByText("Tell us a bit about yourself and how we can help."),
+    ).toBeInTheDocument();
   });
 
   it("clears the stored id and falls back to the start form on a 404", async () => {

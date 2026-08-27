@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Heart, Menu, ShoppingCart, User } from "lucide-react";
+import { Heart, Menu, MessageCircle, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { customerAuthClient } from "@/lib/customer-auth-client";
@@ -213,6 +213,18 @@ export default function SiteHeader() {
                 >
                   <User className="size-4" />
                   {session ? session.user.name : t("nav.signIn")}
+                </SheetClose>
+                <SheetClose
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => window.HalatuChat?.open()}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-start text-sm text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
+                    />
+                  }
+                >
+                  <MessageCircle className="size-4" />
+                  {t("chat.title")}
                 </SheetClose>
                 {/* Deliberately not wrapped in SheetClose, unlike every other
                     row above — toggling theme/language isn't a navigation,

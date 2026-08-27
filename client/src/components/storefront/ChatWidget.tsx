@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { MessageCircle, Send, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   addMessageSchema,
   createInquirySchema,
@@ -130,9 +131,14 @@ export default function ChatWidget() {
   const isClosed = thread?.status === InquiryStatus.CLOSED;
 
   return (
-    <div className="fixed bottom-4 end-4 z-50 flex flex-col items-end gap-3">
+    <div
+      className={cn(
+        "fixed bottom-4 end-4 z-50 flex-col items-end gap-3",
+        open ? "flex" : "hidden min-[860px]:flex",
+      )}
+    >
       {open && (
-        <div className="flex h-[28rem] w-80 flex-col overflow-hidden rounded-lg border border-border/60 bg-background/85 shadow-xl backdrop-blur-xl reduced-transparency:bg-background reduced-transparency:backdrop-blur-none">
+        <div className="flex h-[28rem] w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border border-border/60 bg-background/85 shadow-xl backdrop-blur-xl reduced-transparency:bg-background reduced-transparency:backdrop-blur-none">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <p className="font-semibold">{t("chat.title")}</p>
             <button
