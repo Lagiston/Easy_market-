@@ -91,11 +91,10 @@ test.describe("Product reviews", () => {
       await page.getByRole("button", { name: "Add to cart" }).click();
 
       await page.goto("/checkout");
-      await page.getByLabel("Name").fill(customerName);
-      await page.getByLabel("Phone", { exact: true }).fill("700555666");
-      await page.getByLabel("Delivery or pickup").click();
-      await page.getByRole("option", { name: "Pickup" }).click();
-      await page.getByRole("button", { name: "Place order" }).click();
+      await page.getByLabel(/Full name/).fill(customerName);
+      await page.getByLabel(/^Phone \*$/).fill("700555666");
+      await page.getByRole("button", { name: "Store pickup" }).click();
+      await page.getByRole("button", { name: /Place order/ }).click();
       await expect(page).toHaveURL("/checkout/confirmation");
       await expect(
         page.getByRole("heading", { name: "Thank you for your order!" }),

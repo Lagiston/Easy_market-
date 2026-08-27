@@ -38,6 +38,15 @@ export const customerSignInSchema = z.object({
 
 export type CustomerSignInInput = z.infer<typeof customerSignInSchema>;
 
+// Real server-validated schema (unlike the Better-Auth-owned schemas above) —
+// backs the hand-written DELETE /customer/account route (no Better Auth
+// deleteUser plugin is configured), same pattern as createReviewSchema.
+export const deleteCustomerAccountSchema = z.object({
+  password: z.string().min(1, PASSWORD_REQUIRED_ERROR),
+});
+
+export type DeleteCustomerAccountInput = z.infer<typeof deleteCustomerAccountSchema>;
+
 // Mirrors the `Gender` Prisma enum (server/prisma/schema.prisma) — the client
 // has no access to the Prisma-generated enum, same precedent as Role/
 // FulfillmentType in user.ts/order.ts.

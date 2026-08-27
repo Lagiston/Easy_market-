@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer, { MulterError } from "multer";
 import { fileTypeFromBuffer } from "file-type";
-import { linkGuestOrdersSchema, updateReviewSchema } from "@es-market/core";
+import { verifyPassword } from "better-auth/crypto";
+import { linkGuestOrdersSchema, updateReviewSchema, deleteCustomerAccountSchema } from "@es-market/core";
 import { prisma } from "../lib/prisma";
 import { uploadImageBuffer, publicIdFromImageUrl, deleteCloudinaryImage } from "../lib/cloudinary";
 import { requireCustomerAuth } from "../middleware/require-customer-auth";
@@ -290,6 +291,45 @@ customerRouter.delete("/customer/profile/avatar", requireCustomerAuth, async (re
 
   await prisma.customer.update({ where: { id: req.customer.id }, data: { image: null } });
   await deleteCloudinaryImage(publicIdFromImageUrl(current.image, "customers"));
+
+  res.status(204).end();
+});
+
+// Self-service account deletion — no Better Auth deleteUser plugin is
+// configured, so this is hand-written. Requires re-entering the current
+// password (verified via Better Auth's own verifyPassword primitive, not a
+// hand-rolled hash check) as a guard against a hijacked/left-open session.
+// Customer has no deletedAt (soft-delete was deliberately never built for
+// it) — this is a genuine hard delete. Orders/reviews are point-in-time
+// snapshots (customerName/authorName/etc. already carry what they need
+// independent of the Customer row), so they're anonymized (customerId
+// nulled, same shape as a guest order/review) rather than deleted or
+// blocking deletion. CustomerSession/CustomerAccount/WishlistItem all
+// cascade automatically via onDelete: Cascade on their customerId FK.
+customerRouter.delete("/customer/account", requireCustomerAuth, async (req, res) => {
+  const parsed = deleteCustomerAccountSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]!.message });
+    return;
+  }
+
+  const credentialAccount = await prisma.customerAccount.findFirst({
+    where: { customerId: req.customer.id, providerId: "credential" },
+    select: { password: true },
+  });
+  if (
+    !credentialAccount?.password ||
+    !(await verifyPassword({ hash: credentialAccount.password, password: parsed.data.password }))
+  ) {
+    res.status(401).json({ error: "Incorrect password" });
+    return;
+  }
+
+  await prisma.$transaction([
+    prisma.order.updateMany({ where: { customerId: req.customer.id }, data: { customerId: null } }),
+    prisma.review.updateMany({ where: { customerId: req.customer.id }, data: { customerId: null } }),
+    prisma.customer.delete({ where: { id: req.customer.id } }),
+  ]);
 
   res.status(204).end();
 });

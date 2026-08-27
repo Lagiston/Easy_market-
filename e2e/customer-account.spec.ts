@@ -91,11 +91,16 @@ test.describe("Customer accounts", () => {
       await page.getByRole("button", { name: "Add to cart" }).click();
 
       await page.goto("/checkout");
-      await expect(page.getByLabel("Delivery or pickup")).toContainText("Delivery");
-      await page.getByLabel("Name").fill("E2E Customer");
-      await page.getByLabel("Phone", { exact: true }).fill("+255700111222");
-      await page.getByLabel("Address").fill("1 Account Lane");
-      await page.getByRole("button", { name: "Place order" }).click();
+      // Delivery is the default fulfillment card.
+      await expect(page.getByRole("button", { name: "Delivery" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await page.getByLabel(/Full name/).fill("E2E Customer");
+      await page.getByLabel(/^Phone \*$/).fill("700111222");
+      await page.getByLabel(/Area \/ ward/).fill("Kinondoni");
+      await page.getByLabel(/Nearest landmark/).fill("Near the account lane market");
+      await page.getByRole("button", { name: /Place order/ }).click();
 
       await expect(page).toHaveURL("/checkout/confirmation");
       await expect(
@@ -145,10 +150,11 @@ test.describe("Customer accounts", () => {
       await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
 
       await page.goto("/checkout");
-      await page.getByLabel("Name").fill("E2E Guest");
-      await page.getByLabel("Phone", { exact: true }).fill("+255700333444");
-      await page.getByLabel("Address").fill("2 Guest Road");
-      await page.getByRole("button", { name: "Place order" }).click();
+      await page.getByLabel(/Full name/).fill("E2E Guest");
+      await page.getByLabel(/^Phone \*$/).fill("700333444");
+      await page.getByLabel(/Area \/ ward/).fill("Kinondoni");
+      await page.getByLabel(/Nearest landmark/).fill("Near the guest road market");
+      await page.getByRole("button", { name: /Place order/ }).click();
 
       await expect(page).toHaveURL("/checkout/confirmation");
       await expect(

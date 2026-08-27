@@ -476,6 +476,19 @@
       "avatarUploadError": "Could not upload image. Please try again.",
       "avatarRemoveError": "Could not remove image. Please try again.",
       "address": "Address"
+    },
+    "deleteAccount": {
+      "dangerZoneTitle": "Danger zone",
+      "dangerZoneDescription": "Deleting your account is permanent and cannot be undone.",
+      "dangerZoneButton": "Delete my account",
+      "title": "Delete your account?",
+      "description": "This will permanently delete your account. Your past orders and reviews will remain, but will no longer be linked to your account. Enter your password to confirm.",
+      "passwordLabel": "Password",
+      "confirm": "Delete account",
+      "deleting": "Deleting…",
+      "success": "Your account has been deleted.",
+      "error": "Could not delete your account. Please try again.",
+      "wrongPassword": "Incorrect password"
     }
   },
   "wishlist": {

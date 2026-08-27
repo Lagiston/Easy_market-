@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import {
 import { customerAuthClient } from "@/lib/customer-auth-client";
 import { translateFieldError } from "@/lib/zod-error-i18n";
 import CustomerAvatarUpload from "@/components/storefront/CustomerAvatarUpload";
+import DeleteAccountDialog from "./DeleteAccountDialog";
 import { PhoneInput } from "@/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +43,7 @@ export const GENDER_LABEL_KEYS: Record<Gender, string> = {
 export default function AccountProfilePage() {
   const { t } = useTranslation();
   const { data: session, refetch } = customerAuthClient.useSession();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const {
     register,
@@ -206,6 +208,22 @@ export default function AccountProfilePage() {
           </form>
         </CardContent>
       </Card>
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle className="text-destructive">
+            {t("account.deleteAccount.dangerZoneTitle")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t("account.deleteAccount.dangerZoneDescription")}
+          </p>
+          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+            {t("account.deleteAccount.dangerZoneButton")}
+          </Button>
+        </CardContent>
+      </Card>
+      <DeleteAccountDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
+import { MemoryRouter } from "react-router";
 import i18n from "@/i18n";
 import { renderWithQuery } from "@/test/render-with-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -30,10 +31,10 @@ const baseUser = {
 
 function renderPage() {
   renderWithQuery(
-    <>
+    <MemoryRouter>
       <AccountProfilePage />
       <Toaster />
-    </>,
+    </MemoryRouter>,
   );
 }
 

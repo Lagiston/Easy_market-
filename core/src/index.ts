@@ -12,6 +12,7 @@ export {
   customerSignUpSchema,
   customerSignInSchema,
   updateCustomerProfileSchema,
+  deleteCustomerAccountSchema,
   Gender,
   GENDER_VALUES,
   NAME_ERROR as CUSTOMER_NAME_MIN_ERROR,
@@ -24,6 +25,7 @@ export {
   type CustomerSignUpInput,
   type CustomerSignInInput,
   type UpdateCustomerProfileInput,
+  type DeleteCustomerAccountInput,
 } from "./schemas/customer";
 export {
   LANGUAGES,
