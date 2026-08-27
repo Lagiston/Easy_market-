@@ -1,10 +1,40 @@
 import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
+import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router";
 import i18n from "@/i18n";
 import { renderWithQuery } from "@/test/render-with-query";
 import HomePage from "./HomePage";
+
+// ScrollFrameAnimation preloads 270 `new Image()` frames on every mount (its
+// real scroll-scrubbed hero) — none of these tests exercise that animation
+// itself (see the component's own file for why it's manual-only, not even
+// E2E-tested), and constructing that many Images on every one of this file's
+// many HomePage renders is expensive enough under full-suite parallel load
+// to blow through findByText/test timeouts elsewhere in this file (seen
+// live: the category-tile tests below intermittently time out only when the
+// whole suite runs together, never in isolation). Stub it down to just
+// rendering its slotted content — every assertion in this file reads from
+// `children`/`endChildren`/`pillarsChildren`, never the canvas/preload
+// internals, so nothing here loses coverage.
+vi.mock("@/components/storefront/ScrollFrameAnimation", () => ({
+  ScrollFrameAnimation: ({
+    children,
+    endChildren,
+    pillarsChildren,
+  }: {
+    children?: ReactNode;
+    endChildren?: ReactNode;
+    pillarsChildren?: ReactNode[];
+  }) => (
+    <>
+      {children}
+      {endChildren}
+      {pillarsChildren}
+    </>
+  ),
+}));
 
 vi.mock("axios", async (importOriginal) => {
   const actual = await importOriginal<typeof import("axios")>();
@@ -232,7 +262,7 @@ describe("storefront HomePage", () => {
     name: { en: "Wigs" },
     imageUrl: null,
     homeRow: "look_good",
-    itemCount: 0,
+    itemCount: 3,
   };
   const LOOK_GOOD_CATEGORY_WITH_IMAGE = {
     id: "cat-makeup",
@@ -263,15 +293,29 @@ describe("storefront HomePage", () => {
 
     expect(await screen.findByText("Look Good")).toBeInTheDocument();
     expect(screen.getByText("Wigs")).toBeInTheDocument();
-    expect(screen.getByText("0 items")).toBeInTheDocument();
+    expect(screen.getByText("3 items")).toBeInTheDocument();
 
-    expect(screen.getByRole("link", { name: "Browse Wigs, 0 items" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Browse Wigs, 3 items" })).toHaveAttribute(
       "href",
       "/products?category=cat-wigs",
     );
 
     expect(screen.queryByText("Home & Everyday")).not.toBeInTheDocument();
     expect(screen.queryByText("Groceries")).not.toBeInTheDocument();
+  });
+
+  it("excludes a Look Good category with zero items from the row", async () => {
+    // CategoryBrowseSection.tsx filters on `itemCount > 0` (not just
+    // `homeRow === "look_good"`) — an empty category shouldn't be offered as
+    // something to browse. With only a zero-item category available, the
+    // whole row (and its "Look Good" kicker) should be absent entirely.
+    const emptyLookGoodCategory = { ...LOOK_GOOD_CATEGORY, itemCount: 0 };
+    mockStorefrontData({ categories: [emptyLookGoodCategory] });
+    renderPage();
+
+    await screen.findByRole("heading", { name: /serve looks.*head to toe/i });
+    expect(screen.queryByText("Look Good")).not.toBeInTheDocument();
+    expect(screen.queryByText("Wigs")).not.toBeInTheDocument();
   });
 
   it("reverses the API's newest-first order back to seeded (oldest-first) order", async () => {
