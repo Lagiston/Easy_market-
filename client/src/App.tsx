@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import { Role } from "@es-market/core";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
 import StorefrontLayout from "./components/storefront/StorefrontLayout";
 import StorefrontHomePage from "./pages/storefront/HomePage";
+import StorefrontMobileHomePage from "./pages/storefront/MobileHomePage";
 import StorefrontProductsPage from "./pages/storefront/ProductsPage";
 import StorefrontProductDetailPage from "./pages/storefront/ProductDetailPage";
 import StorefrontContactPage from "./pages/storefront/ContactPage";
@@ -36,11 +38,22 @@ import KbArticlesPage from "./pages/KbArticlesPage";
 import PromoBlocksPage from "./pages/PromoBlocksPage";
 import ReviewsPage from "./pages/ReviewsPage";
 
+// Same 860px desktop/mobile split SiteHeader.tsx already uses for its own nav
+// collapse — checked once via matchMedia at mount (same "read once, not
+// reactive" precedent as HomePage.tsx's prefers-reduced-motion check) rather
+// than a live-updating listener, so resizing mid-visit doesn't yank a
+// visitor already reading the desktop homepage over to the mobile one.
+function StorefrontHomeRoute() {
+  const [isMobile] = useState(() => window.matchMedia("(max-width: 859px)").matches);
+  return isMobile ? <Navigate to="/mobile-home" replace /> : <StorefrontHomePage />;
+}
+
 function App() {
   return (
     <Routes>
+      <Route path="mobile-home" element={<StorefrontMobileHomePage />} />
       <Route element={<StorefrontLayout />}>
-        <Route index element={<StorefrontHomePage />} />
+        <Route index element={<StorefrontHomeRoute />} />
         <Route path="products" element={<StorefrontProductsPage />} />
         <Route path="products/:id" element={<StorefrontProductDetailPage />} />
         <Route path="about" element={<StorefrontAboutPage />} />
