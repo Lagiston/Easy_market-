@@ -204,7 +204,7 @@ export default function MobileHomePage() {
   return (
     <div className="min-h-screen bg-[#f7f7f7] font-sans text-[#111]">
       <header className="flex h-14 items-center justify-between px-4">
-        <img src="/Logo/logo-mark-small.png" alt="Halatu" className="h-7 w-auto object-contain" />
+        <img src="/Logo/icons/halatu-mark-ink-512.png" alt="Halatu" className="h-7 w-auto object-contain" />
         <Link to="/cart" aria-label="Cart" className={cn("relative", TAP_CLASS)}>
           <ShoppingBag className="size-6" />
           {totalQuantity > 0 && (

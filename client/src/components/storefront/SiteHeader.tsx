@@ -95,12 +95,9 @@ export default function SiteHeader() {
       >
         {/* Left — logo lockup */}
         <Link to="/" className="flex items-center gap-2 justify-self-start">
-          {/* logo-mark-small.png: a simplified, bold-orange-arrow-only crop
-              of the full logo (logo-mark.png) — the full leaf+arrow
-              linework is too fine to read at header size and blurs into an
-              indistinct squiggle, confirmed live. Sized by height, not a
-              square box, since the arrow glyph is naturally wide and flat. */}
-          <img src="/Logo/logo-mark-small.png" alt="" aria-hidden className="h-6 w-auto shrink-0 object-contain" />
+          {/* Sized by height, not a square box, since the mark glyph is
+              naturally wide and flat. */}
+          <img src="/Logo/icons/halatu-mark-ink-512.png" alt="" aria-hidden className="h-6 w-auto shrink-0 object-contain" />
           <span className="text-lg font-bold tracking-tight whitespace-nowrap text-foreground">
             {siteName}
           </span>

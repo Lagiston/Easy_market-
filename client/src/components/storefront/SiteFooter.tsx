@@ -51,10 +51,7 @@ export default function SiteFooter() {
             {/* Left column */}
             <div className="flex max-w-[540px] flex-col items-start gap-6">
               <Link to="/" className="flex items-center gap-3">
-                {/* See SiteHeader.tsx's own comment: the simplified
-                    arrow-only crop, not the full leaf+arrow mark, which
-                    blurs into a squiggle at on-page display sizes. */}
-                <img src="/Logo/logo-mark-small.png" alt="" aria-hidden className="h-10 w-auto shrink-0 object-contain sm:h-9" />
+                <img src="/Logo/icons/halatu-mark-ink-512.png" alt="" aria-hidden className="h-10 w-auto shrink-0 object-contain sm:h-9" />
                 <span className="text-[28px] font-bold tracking-[-0.03em] whitespace-nowrap text-foreground dark:text-white">
                   {settings?.siteName ?? t("brand")}
                 </span>
