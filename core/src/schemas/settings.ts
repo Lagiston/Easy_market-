@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sanitizeText } from "../sanitize";
+import { emptyToUndefined, sanitizeText } from "../sanitize";
 
 const DELIVERY_FEE_ERROR = "Delivery fee must be zero or a positive whole number";
 const FREE_DELIVERY_ERROR =
@@ -71,21 +71,18 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   socialWhatsappUrl: null,
 };
 
-// Same "" → undefined clear pattern as freeDeliveryThreshold above and
+// Same "" / null → undefined clear pattern as freeDeliveryThreshold below and
 // Customer.address (core/src/schemas/customer.ts) — a blank field clears the
 // setting back to null rather than being rejected as invalid.
 const optionalTextSetting = () =>
-  z.preprocess(
-    (value) => (value === "" || value === null ? undefined : value),
-    z.string().trim().transform(sanitizeText).optional(),
-  );
+  z.preprocess(emptyToUndefined, z.string().trim().transform(sanitizeText).optional());
 
 // Same clear-on-blank pattern as optionalTextSetting, plus a plain .url()
 // check — these are always meant to be full external links (a profile page,
 // a wa.me link), never a same-site path like PromoBlock's ctaUrl.
 const optionalSocialUrlSetting = () =>
   z.preprocess(
-    (value) => (value === "" || value === null ? undefined : value),
+    emptyToUndefined,
     z.string().trim().max(300, SOCIAL_URL_ERROR).url(SOCIAL_URL_ERROR).optional(),
   );
 
@@ -101,7 +98,7 @@ export const updateSettingsSchema = z.object({
     .int(DELIVERY_FEE_ERROR)
     .min(0, DELIVERY_FEE_ERROR),
   freeDeliveryThreshold: z.preprocess(
-    (value) => (value === "" || value === null || Number.isNaN(value) ? undefined : value),
+    emptyToUndefined,
     z.number(FREE_DELIVERY_ERROR).int(FREE_DELIVERY_ERROR).min(0, FREE_DELIVERY_ERROR).optional(),
   ),
   callAttemptsBeforeCancel: z
@@ -113,11 +110,11 @@ export const updateSettingsSchema = z.object({
     .int(LOW_STOCK_DEFAULT_ERROR)
     .min(0, LOW_STOCK_DEFAULT_ERROR),
   contactPhone: z.preprocess(
-    (value) => (value === "" || value === null ? undefined : value),
+    emptyToUndefined,
     z.string().trim().max(30, CONTACT_PHONE_ERROR).transform(sanitizeText).optional(),
   ),
   contactEmail: z.preprocess(
-    (value) => (value === "" || value === null ? undefined : value),
+    emptyToUndefined,
     z
       .string()
       .trim()

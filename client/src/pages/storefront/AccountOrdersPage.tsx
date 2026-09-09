@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StorefrontStatusMessage } from "@/components/storefront/StorefrontStatusMessage";
 import type { PlacedOrder } from "./CheckoutPage";
 
 type AccountOrder = PlacedOrder & { createdAt: string };
@@ -110,9 +111,9 @@ export default function AccountOrdersPage() {
       )}
 
       {isError ? (
-        <p className="py-12 text-center text-sm text-destructive">
+        <StorefrontStatusMessage variant="destructive">
           {t("account.orders.error")}
-        </p>
+        </StorefrontStatusMessage>
       ) : isPending ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }, (_, i) => (
@@ -120,9 +121,7 @@ export default function AccountOrdersPage() {
           ))}
         </div>
       ) : data.length === 0 ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">
-          {t("account.orders.empty")}
-        </p>
+        <StorefrontStatusMessage>{t("account.orders.empty")}</StorefrontStatusMessage>
       ) : (
         <div className="space-y-3">
           {data.map((order) => (

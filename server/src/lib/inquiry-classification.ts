@@ -5,6 +5,7 @@ import { draftInquiryReply } from "./inquiry-draft";
 import { applyAutoResolve } from "./inquiry-auto-resolve";
 import { isAutoResolveReplySafe } from "./auto-resolve-safety";
 import { KNOWLEDGE_BASE } from "./knowledge-base";
+import { getEnglishText } from "./localized-json";
 import { inquiryClassificationSchema, type Language } from "@es-market/core";
 
 // Deterministic backstop: escalate regardless of what the model decided if its
@@ -28,7 +29,7 @@ export async function classifyInquiry(
       select: { id: true, name: true, assignedAgentId: true },
     });
     const catalog = products
-      .map((p) => `${p.id}: ${(p.name as { en: string }).en}`)
+      .map((p) => `${p.id}: ${getEnglishText(p.name)}`)
       .join("\n");
 
     const result = await generateStructuredOutput(

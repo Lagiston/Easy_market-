@@ -1,5 +1,6 @@
 import { DraftStatus, MessageSender } from "../generated/prisma/client";
 import { prisma } from "./prisma";
+import { getEnglishText } from "./localized-json";
 
 const METRICS_WINDOW_DAYS = 30;
 // A sent reply within this fraction of the original draft's word count is
@@ -131,7 +132,7 @@ export async function getMostWishlistedProducts(): Promise<
     where: { id: { in: grouped.map((g) => g.productId) }, deletedAt: null },
     select: { id: true, name: true },
   });
-  const nameById = new Map(products.map((p) => [p.id, (p.name as { en: string }).en]));
+  const nameById = new Map(products.map((p) => [p.id, getEnglishText(p.name)]));
 
   // Preserves the count-ranked order from groupBy; a product that's since
   // been soft-deleted is dropped rather than shown with a placeholder name —

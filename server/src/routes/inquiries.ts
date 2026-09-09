@@ -15,6 +15,7 @@ import { requireAuth } from "../middleware/require-auth";
 import { classifyInquiry } from "../lib/inquiry-classification";
 import { normalizePhone } from "./orders";
 import { sendSms, buildMessageReplySms } from "../lib/sms";
+import { getEnglishText } from "../lib/localized-json";
 import {
   addMessageSchema,
   assignInquirySchema,
@@ -298,7 +299,7 @@ async function withResolvedSources<T extends { messages: { sourceKbArticleIds: s
         select: { id: true, title: true },
       })
     : [];
-  const titleById = new Map(articles.map((a) => [a.id, (a.title as { en: string }).en]));
+  const titleById = new Map(articles.map((a) => [a.id, getEnglishText(a.title)]));
 
   return {
     ...inquiry,

@@ -8,6 +8,7 @@ import { generateOrderCode } from "../lib/order-code";
 import { computeDeliveryFee, getSettings } from "../lib/settings";
 import { requireAuth } from "../middleware/require-auth";
 import { customerAuth } from "../lib/customer-auth";
+import { getEnglishText } from "../lib/localized-json";
 import {
   sendSms,
   buildOrderConfirmedSms,
@@ -28,9 +29,7 @@ export const ordersRouter = Router();
 class InsufficientStockError extends Error {}
 
 function englishName(value: Prisma.JsonValue): string {
-  return typeof value === "object" && value !== null && "en" in value
-    ? String((value as { en: unknown }).en)
-    : "product";
+  return getEnglishText(value, "product");
 }
 
 // A code collision aborts the whole Postgres transaction, so the retry loop

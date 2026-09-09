@@ -9,7 +9,9 @@ const SCROLL_HIDE_DELTA_THRESHOLD = 32;
 // doesn't disappear the instant the page starts moving.
 const SCROLL_HIDE_MIN_Y = 120;
 
-// Shared by SiteHeader.tsx and Layout.tsx — hides on scroll-down, reappears
+// Shared by SiteHeader.tsx and Layout.tsx (distinct from
+// use-scroll-header-visibility.ts's useHideOnMainScroll, used by
+// AutoHideHeader) — hides on scroll-down, reappears
 // on any scroll-up, skipped entirely under prefers-reduced-motion (checked
 // once at mount). `disabled` additionally forces the nav visible and skips
 // the hide logic without touching the reduced-motion check — used by

@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { generateStructuredOutput } from "./ai";
+import { getEnglishText } from "./localized-json";
 import { productClassificationSchema, type ProductClassification } from "@es-market/core";
 
 // v1 simplification: the whole non-deleted category list (id + English name)
@@ -15,7 +16,7 @@ export async function classifyProduct(
     select: { id: true, name: true },
   });
   const catalog = categories
-    .map((c) => `${c.id}: ${(c.name as { en: string }).en}`)
+    .map((c) => `${c.id}: ${getEnglishText(c.name)}`)
     .join("\n");
 
   const result = await generateStructuredOutput(

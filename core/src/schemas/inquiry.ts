@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sanitizeText } from "../sanitize";
+import { emptyToUndefined, sanitizeText } from "../sanitize";
 import { LANGUAGES } from "./localized";
 
 // Mirrors the `InquiryChannel` enum in server/prisma/schema.prisma. Shared here so
@@ -119,7 +119,7 @@ export const createInquirySchema = z.object({
     // Sanitizing markup-only input can empty the value after the min check.
     .refine((value) => value.length >= 2, CUSTOMER_NAME_ERROR),
   customerEmail: z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    emptyToUndefined,
     z.string().trim().toLowerCase().pipe(z.email(EMAIL_ERROR)).optional(),
   ),
   customerPhone: z
@@ -208,10 +208,7 @@ export type InquiryListQuery = z.infer<typeof inquiryListQuerySchema>;
 // Staff assignment — omitting/blanking agentId unassigns. Mirrors the
 // assignedAgentId preprocess pattern in core/src/schemas/product.ts.
 export const assignInquirySchema = z.object({
-  agentId: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.string().trim().min(1).max(100).optional(),
-  ),
+  agentId: z.preprocess(emptyToUndefined, z.string().trim().min(1).max(100).optional()),
 });
 
 export type AssignInquiryInput = z.infer<typeof assignInquirySchema>;

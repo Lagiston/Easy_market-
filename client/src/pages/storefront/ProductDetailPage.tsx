@@ -12,7 +12,6 @@ import {
   Minus,
   Plus,
   ShoppingCart,
-  Star,
   Store,
   Truck,
 } from "lucide-react";
@@ -22,11 +21,14 @@ import { cn } from "@/lib/utils";
 import ProductReviews from "@/components/storefront/ProductReviews";
 import ProductVariantPicker from "@/components/storefront/ProductVariantPicker";
 import WishlistButton from "@/components/storefront/WishlistButton";
+import { AverageRatingBadge, StarRow } from "@/components/storefront/StarRating";
+import { StorefrontStatusMessage } from "@/components/storefront/StorefrontStatusMessage";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Money, formatCurrencyValue } from "@/components/Money";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { StorefrontProduct } from "./ProductsPage";
+import { getStockStatus, type StorefrontProduct } from "./ProductsPage";
+import { NEW_BADGE_WINDOW_MS, getProductBadgeKind } from "@/lib/product-badge";
 
 const GLASS_PANEL_CLASS =
   "rounded-[18px] border border-foreground/10 bg-card/60 backdrop-blur-xl reduced-transparency:bg-card reduced-transparency:backdrop-blur-none";
@@ -36,8 +38,6 @@ const PERKS = [
   { key: "payOnDelivery", Icon: HandCoins },
   { key: "pickup", Icon: Store },
 ] as const;
-
-const NEW_BADGE_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 
 export default function ProductDetailPage() {
   const { t, i18n } = useTranslation();
@@ -119,11 +119,11 @@ export default function ProductDetailPage() {
             </div>
           </div>
         ) : notFound ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            {t("products.notFound")}
-          </p>
+          <StorefrontStatusMessage>{t("products.notFound")}</StorefrontStatusMessage>
         ) : error ? (
-          <p className="py-12 text-center text-sm text-destructive">{t("products.error")}</p>
+          <StorefrontStatusMessage variant="destructive">
+            {t("products.error")}
+          </StorefrontStatusMessage>
         ) : (
           <ProductDetailContent
             product={product}
@@ -184,17 +184,15 @@ export default function ProductDetailPage() {
                           <Money amount={related.price} />
                         </p>
                         {related.averageRating !== null && (
-                          <p
-                            aria-label={`${t("reviews.averageLabel", {
+                          <AverageRatingBadge
+                            average={related.averageRating}
+                            count={related.reviewCount}
+                            label={`${t("reviews.averageLabel", {
                               average: related.averageRating.toFixed(1),
                             })} · ${t("reviews.count", { count: related.reviewCount })}`}
-                            className="flex items-center gap-1 text-sm text-muted-foreground"
-                          >
-                            <Star aria-hidden className="size-3.5 fill-sky-500 text-sky-500" />
-                            <span aria-hidden>
-                              {related.averageRating.toFixed(1)} ({related.reviewCount})
-                            </span>
-                          </p>
+                            className="text-sm text-muted-foreground"
+                            starClassName="fill-sky-500 text-sky-500"
+                          />
                         )}
                       </div>
                     </div>
@@ -235,8 +233,7 @@ function ProductDetailContent({
 }) {
   const { t } = useTranslation();
   const productName = localize(product.name, language);
-  const stockStatus =
-    product.stock === 0 ? "soldOut" : product.stock < product.lowStockThreshold ? "lowStock" : "inStock";
+  const stockStatus = getStockStatus(product);
   const isOnSale = product.salePrice !== null;
   const currentPrice = product.salePrice ?? product.price;
   const discountPercent = isOnSale
@@ -246,16 +243,21 @@ function ProductDetailContent({
   // Same badge derivation/priority as the product-card grid (ProductsPage) —
   // reused here rather than a fabricated "best seller" flag, since there's no
   // real sales-count data anywhere in this codebase to back one.
+  const galleryBadgeKind = getProductBadgeKind({
+    isSoldOut: stockStatus === "soldOut",
+    isOnSale,
+    isNew,
+  });
   const galleryBadge =
-    stockStatus === "soldOut" ? (
+    galleryBadgeKind === "soldOut" ? (
       <Badge variant="destructive" className="text-[11px] font-bold tracking-wide uppercase backdrop-blur">
         {t("products.outOfStock")}
       </Badge>
-    ) : isOnSale ? (
+    ) : galleryBadgeKind === "onSale" ? (
       <Badge className="border-brand-orange/30 bg-brand-orange/15 text-[11px] font-bold tracking-wide text-orange-800 uppercase backdrop-blur dark:text-brand-orange">
         {t("products.saleBadge", { percent: discountPercent })}
       </Badge>
-    ) : isNew ? (
+    ) : galleryBadgeKind === "new" ? (
       <Badge className="border-sky-600/30 bg-sky-500/15 text-[11px] font-bold tracking-wide text-sky-700 uppercase backdrop-blur dark:border-sky-500/30 dark:text-sky-400">
         {t("products.new")}
       </Badge>
@@ -330,20 +332,7 @@ function ProductDetailContent({
               })} · ${t("reviews.count", { count: product.reviewCount })}`}
               className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground"
             >
-              <span className="inline-flex gap-0.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    aria-hidden
-                    className={cn(
-                      "size-4",
-                      star <= Math.round(product.averageRating!)
-                        ? "fill-[#facc15] text-[#facc15]"
-                        : "text-muted-foreground/40",
-                    )}
-                  />
-                ))}
-              </span>
+              <StarRow rating={Math.round(product.averageRating)} />
               <span aria-hidden>{product.averageRating.toFixed(1)}</span>
               <a href="#reviews" className="underline underline-offset-4 hover:text-foreground">
                 {t("reviews.count", { count: product.reviewCount })}

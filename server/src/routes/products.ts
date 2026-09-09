@@ -1,13 +1,19 @@
 import { randomUUID } from "node:crypto";
-import { Router, type NextFunction, type Request, type Response } from "express";
-import multer, { MulterError } from "multer";
-import { fileTypeFromBuffer } from "file-type";
+import { Router, type Response } from "express";
+import { MulterError } from "multer";
 import { Role, Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { uploadImageBuffer, publicIdFromImageUrl, deleteCloudinaryImage } from "../lib/cloudinary";
 import { requireAuth, requireRole } from "../middleware/require-auth";
+import {
+  createImageUpload,
+  handleImageUpload,
+  isValidImageBuffer,
+  INVALID_IMAGE_MESSAGE,
+} from "../lib/image-upload";
 import { boss, CLASSIFY_PRODUCT_QUEUE } from "../lib/queue";
 import { acquireReclassifyLock } from "../lib/product-reclassify-lock";
+import { getEnglishText } from "../lib/localized-json";
 import { ensureTagRows } from "../lib/tags";
 import {
   createProductSchema,
@@ -51,54 +57,27 @@ function resolveVariants(productId: string, variantGroupId: string | null) {
   });
 }
 
-const IMAGE_EXTENSIONS: Record<string, string> = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-};
-
 // Buffered in memory (not written to disk by multer directly) because the
 // declared mimetype/extension can't be trusted until the actual file bytes
 // are inspected below — an attacker can label any payload "image/jpeg" in
 // the multipart Content-Type field. fileFilter here is just a cheap early
 // rejection on the obviously-wrong declared type; the real gate is the
 // magic-byte check in writeValidatedProductImages.
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (!IMAGE_EXTENSIONS[file.mimetype]) {
-      // Distinct field name from "images" so the error handler below can
-      // tell this apart from multer's own "too many files" rejection, which
-      // reuses the real field name ("images") on its LIMIT_UNEXPECTED_FILE.
-      cb(new MulterError("LIMIT_UNEXPECTED_FILE", "invalidImageType"));
-      return;
-    }
-    cb(null, true);
-  },
-});
+const upload = createImageUpload();
 
-const INVALID_IMAGE_MESSAGE = "Image must be a JPEG, PNG, or WebP file";
-
-function uploadImages(req: Request, res: Response, next: NextFunction) {
-  upload.array("images", MAX_PRODUCT_IMAGES)(req, res, (err: unknown) => {
-    if (err instanceof MulterError) {
-      const message =
-        err.code === "LIMIT_FILE_SIZE"
-          ? "Each image must be 5MB or smaller"
-          : err.code === "LIMIT_UNEXPECTED_FILE" && err.field === "images"
-            ? `A product can have at most ${MAX_PRODUCT_IMAGES} images`
-            : INVALID_IMAGE_MESSAGE;
-      res.status(400).json({ error: message });
-      return;
-    }
-    if (err) {
-      next(err);
-      return;
-    }
-    next();
-  });
-}
+// Distinct field name from "images" so the LIMIT_FILE_SIZE/other branch
+// below can tell a too-many-files rejection apart from an actually-invalid
+// file — multer's own "too many files" error reuses the real field name
+// ("images") on its LIMIT_UNEXPECTED_FILE.
+const uploadImages = handleImageUpload(
+  (req, res, cb) => upload.array("images", MAX_PRODUCT_IMAGES)(req, res, cb),
+  (err: MulterError) =>
+    err.code === "LIMIT_FILE_SIZE"
+      ? "Each image must be 5MB or smaller"
+      : err.code === "LIMIT_UNEXPECTED_FILE" && err.field === "images"
+        ? `A product can have at most ${MAX_PRODUCT_IMAGES} images`
+        : INVALID_IMAGE_MESSAGE,
+);
 
 // Detects each file's real type from its magic bytes (never trusting the
 // client-declared mimetype/extension) and, only if every file in the batch
@@ -112,8 +91,7 @@ async function uploadValidatedProductImages(
   res: Response,
 ): Promise<string[] | null> {
   for (const file of files) {
-    const detected = await fileTypeFromBuffer(file.buffer);
-    if (!detected || !IMAGE_EXTENSIONS[detected.mime]) {
+    if (!(await isValidImageBuffer(file.buffer))) {
       res.status(400).json({ error: INVALID_IMAGE_MESSAGE });
       return null;
     }
@@ -127,9 +105,7 @@ async function uploadValidatedProductImages(
 // `name` (and `category.name`) are stored as localized JSON, which Postgres/Prisma
 // can't order by directly — sorting on those fields is done in JS below instead.
 function localizedEn(value: Prisma.JsonValue): string {
-  return typeof value === "object" && value !== null && "en" in value
-    ? String((value as { en: unknown }).en)
-    : "";
+  return getEnglishText(value);
 }
 
 const PRODUCT_SORT_COMPARATORS: Record<

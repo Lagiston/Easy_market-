@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sanitizeText } from "../sanitize";
+import { emptyToUndefined, sanitizeText } from "../sanitize";
 
 // Client-side form validation only — Better Auth's own /sign-up/email and
 // /sign-in/email endpoints (server/src/lib/customer-auth.ts) are the actual
@@ -79,7 +79,7 @@ export const updateCustomerProfileSchema = z.object({
   // the same way as assignedAgentId in product.ts so a blank field clears
   // rather than storing "".
   mobile: z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    emptyToUndefined,
     z
       .string(MOBILE_ERROR)
       .trim()
@@ -89,12 +89,9 @@ export const updateCustomerProfileSchema = z.object({
   // shadcn's Select can't use a literal "" value, so the "unset" choice maps
   // to "" in the form and is preprocessed to undefined here — same
   // "Unassigned" convention as assignedAgentId.
-  gender: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.enum(GENDER_VALUES).optional(),
-  ),
+  gender: z.preprocess(emptyToUndefined, z.enum(GENDER_VALUES).optional()),
   region: z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    emptyToUndefined,
     z
       .string(REGION_ERROR)
       .trim()
@@ -104,10 +101,7 @@ export const updateCustomerProfileSchema = z.object({
   ),
   // Uncapped, same as Order.address (checkoutFieldsSchema in order.ts) — a
   // shipping address isn't a bounded-length field the way region/name are.
-  address: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.string().trim().transform(sanitizeText).optional(),
-  ),
+  address: z.preprocess(emptyToUndefined, z.string().trim().transform(sanitizeText).optional()),
 });
 
 export type UpdateCustomerProfileInput = z.input<typeof updateCustomerProfileSchema>;

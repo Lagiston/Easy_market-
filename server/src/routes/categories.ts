@@ -1,11 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { Router, type NextFunction, type Request, type Response } from "express";
-import multer, { MulterError } from "multer";
-import { fileTypeFromBuffer } from "file-type";
+import { Router } from "express";
 import { Role } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { uploadImageBuffer, publicIdFromImageUrl, deleteCloudinaryImage } from "../lib/cloudinary";
 import { requireAuth, requireRole } from "../middleware/require-auth";
+import {
+  createImageUpload,
+  handleImageUpload,
+  isValidImageBuffer,
+  INVALID_IMAGE_MESSAGE,
+} from "../lib/image-upload";
 import { createCategorySchema, updateCategorySchema, type LocalizedName } from "@es-market/core";
 
 // Category endpoints; mounted at /api in index.ts.
@@ -103,41 +107,10 @@ categoriesRouter.delete<{ id: string }>(
 // (routes/customer.ts): magic-byte validation via file-type, never trusting
 // the declared mimetype, and a replace-not-append write (one cover image,
 // not a gallery).
-const CATEGORY_IMAGE_EXTENSIONS: Record<string, string> = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-};
-
-const INVALID_CATEGORY_IMAGE_MESSAGE = "Image must be a JPEG, PNG, or WebP file";
-
-const categoryImageUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (!CATEGORY_IMAGE_EXTENSIONS[file.mimetype]) {
-      cb(new MulterError("LIMIT_UNEXPECTED_FILE", "invalidImageType"));
-      return;
-    }
-    cb(null, true);
-  },
-});
-
-function uploadCategoryImage(req: Request, res: Response, next: NextFunction) {
-  categoryImageUpload.single("image")(req, res, (err: unknown) => {
-    if (err instanceof MulterError) {
-      const message =
-        err.code === "LIMIT_FILE_SIZE" ? "Image must be 5MB or smaller" : INVALID_CATEGORY_IMAGE_MESSAGE;
-      res.status(400).json({ error: message });
-      return;
-    }
-    if (err) {
-      next(err);
-      return;
-    }
-    next();
-  });
-}
+const categoryImageUpload = createImageUpload();
+const uploadCategoryImage = handleImageUpload((req, res, cb) =>
+  categoryImageUpload.single("image")(req, res, cb),
+);
 
 categoriesRouter.post<{ id: string }>(
   "/categories/:id/image",
@@ -158,9 +131,8 @@ categoriesRouter.post<{ id: string }>(
       return;
     }
 
-    const detected = await fileTypeFromBuffer(file.buffer);
-    if (!detected || !CATEGORY_IMAGE_EXTENSIONS[detected.mime]) {
-      res.status(400).json({ error: INVALID_CATEGORY_IMAGE_MESSAGE });
+    if (!(await isValidImageBuffer(file.buffer))) {
+      res.status(400).json({ error: INVALID_IMAGE_MESSAGE });
       return;
     }
 

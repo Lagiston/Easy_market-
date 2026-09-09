@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sanitizeText } from "../sanitize";
+import { emptyToUndefined, sanitizeText } from "../sanitize";
 
 // Mirrors the `FulfillmentType` enum in server/prisma/schema.prisma. Shared here
 // so the client (which has no access to the Prisma-generated enum) and server
@@ -125,7 +125,7 @@ export const QUANTITY_ERROR = "Quantity must be a positive whole number";
 
 const optionalTextField = (max?: number) =>
   z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    emptyToUndefined,
     (max ? z.string().trim().max(max) : z.string().trim())
       .transform(sanitizeText)
       .optional(),

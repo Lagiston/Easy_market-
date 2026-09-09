@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { LANGUAGES, type Language, localizedNameSchema } from "./localized";
-import { sanitizeText } from "../sanitize";
+import { emptyToUndefined, sanitizeText } from "../sanitize";
 
 const DESCRIPTION_ERROR = "Description must be 1000 characters or fewer";
 const PRICE_ERROR = "Price must be zero or a positive whole number";
@@ -59,23 +59,20 @@ export const createProductSchema = z.object({
   // missing description too.
   description: localizedDescriptionSchema.optional(),
   price: z.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR),
-  // Nullable discounted price — same empty-string/NaN-to-undefined
+  // Nullable discounted price — same empty-string/null/NaN-to-undefined
   // preprocessing as assignedAgentId/size/color, since a number input's
   // `valueAsNumber` yields NaN (not "") when cleared. undefined means "no
   // sale" and, unlike assignedAgentId, is explicitly coerced back to a
   // Prisma `null` write on both create and update (see products.ts) so
   // clearing a previously-set sale price actually persists.
   salePrice: z.preprocess(
-    (value) => (value === "" || (typeof value === "number" && Number.isNaN(value)) ? undefined : value),
+    emptyToUndefined,
     z.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
   ),
   stock: z.number(STOCK_ERROR).int(STOCK_ERROR).min(0, STOCK_ERROR),
   lowStockThreshold: z.number(THRESHOLD_ERROR).int(THRESHOLD_ERROR).min(0, THRESHOLD_ERROR),
   categoryId: z.string(CATEGORY_ERROR).trim().min(1, CATEGORY_ERROR).max(100, CATEGORY_ERROR),
-  assignedAgentId: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.string().trim().min(1).max(100).optional(),
-  ),
+  assignedAgentId: z.preprocess(emptyToUndefined, z.string().trim().min(1).max(100).optional()),
   tags: z
     .array(tagSchema)
     .max(10)
@@ -85,14 +82,8 @@ export const createProductSchema = z.object({
   // like tags, since each product row is exactly one size/one color. Reuses
   // the same empty-string-to-undefined preprocessing as assignedAgentId so a
   // blank form field clears rather than storing "".
-  size: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.string().trim().max(50, VARIANT_LABEL_ERROR).optional(),
-  ),
-  color: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.string().trim().max(50, VARIANT_LABEL_ERROR).optional(),
-  ),
+  size: z.preprocess(emptyToUndefined, z.string().trim().max(50, VARIANT_LABEL_ERROR).optional()),
+  color: z.preprocess(emptyToUndefined, z.string().trim().max(50, VARIANT_LABEL_ERROR).optional()),
 }).superRefine((value, ctx) => {
   if (value.salePrice !== undefined && value.salePrice >= value.price) {
     ctx.addIssue({

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sanitizeText } from "../sanitize";
+import { emptyToUndefined, sanitizeText } from "../sanitize";
 
 export const AUTHOR_NAME_ERROR = "Name must be at least 2 characters";
 export const AUTHOR_NAME_MAX_ERROR = "Name must be 100 characters or fewer";
@@ -31,7 +31,7 @@ export const createReviewSchema = z.object({
     .min(1, RATING_ERROR)
     .max(5, RATING_ERROR),
   headline: z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    emptyToUndefined,
     z
       .string()
       .trim()
@@ -40,7 +40,7 @@ export const createReviewSchema = z.object({
       .optional(),
   ),
   comment: z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    emptyToUndefined,
     z
       .string()
       .trim()

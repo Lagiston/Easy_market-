@@ -3,6 +3,7 @@ import { DraftStatus, InquiryStatus, MessageSender, Role } from "../generated/pr
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/require-auth";
 import { getProductClassificationAcceptance } from "../lib/product-classification-metrics";
+import { getEnglishText } from "../lib/localized-json";
 import {
   getAvgFirstResponseMinutes,
   getDraftLittleEditRate,
@@ -166,7 +167,7 @@ dashboardRouter.get(
       where: { id: { in: snapshot.soldOutProductIds } },
       select: { id: true, name: true },
     });
-    const nameById = new Map(products.map((p) => [p.id, (p.name as { en: string }).en]));
+    const nameById = new Map(products.map((p) => [p.id, getEnglishText(p.name)]));
 
     res.json({
       date: dateParam,

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { localizedNameSchema } from "./localized";
+import { emptyToUndefined } from "../sanitize";
 
 // Only one homepage row exists today — a second ("home_everyday") was
 // tried and removed. Kept as an array (not a single literal) so a future
@@ -15,10 +16,7 @@ export const createCategorySchema = z.object({
   // — the route explicitly writes `homeRow ?? null` on both create and
   // update, so omitting the field always clears it rather than "leaving
   // unchanged".
-  homeRow: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.enum(HOME_ROWS).optional(),
-  ),
+  homeRow: z.preprocess(emptyToUndefined, z.enum(HOME_ROWS).optional()),
 });
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;

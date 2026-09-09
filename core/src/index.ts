@@ -1,12 +1,11 @@
 export { sanitizeText } from "./sanitize";
+export { classifyStock, type StockLevel } from "./stock";
 export {
   Role,
   createUserSchema,
   updateUserSchema,
   userListQuerySchema,
-  type CreateUserInput,
   type UpdateUserInput,
-  type UserListQuery,
 } from "./schemas/user";
 export {
   customerSignUpSchema,
@@ -38,28 +37,22 @@ export {
   updateProductSchema,
   productListQuerySchema,
   reclassifyStatusQuerySchema,
-  type ReclassifyStatusQuery,
   PRODUCT_SORT_FIELDS,
   SORT_ORDERS,
   PRODUCTS_PAGE_SIZE,
   MAX_PRODUCT_IMAGES,
   linkVariantSchema,
-  type LinkVariantInput,
   STOREFRONT_PRODUCT_SORTS,
   STOREFRONT_PAGE_SIZE,
   STOREFRONT_AVAILABILITY_FILTERS,
   type StorefrontAvailabilityFilter,
   storefrontProductListQuerySchema,
   type LocalizedDescription,
-  type CreateProductInput,
-  type CreateProductFormInput,
   type UpdateProductInput,
   type UpdateProductFormInput,
   type ProductSortField,
   type SortOrder,
-  type ProductListQuery,
   type StorefrontProductSort,
-  type StorefrontProductListQuery,
 } from "./schemas/product";
 export {
   FulfillmentType,
@@ -87,11 +80,7 @@ export {
   ITEMS_ERROR as ORDER_ITEMS_ERROR,
   QUANTITY_ERROR as ORDER_QUANTITY_ERROR,
   type CheckoutFormInput,
-  type PlaceOrderInput,
   type CancelOrderInput,
-  type OrderListQuery,
-  type OrderLookupInput,
-  type OrderLookupFormInput,
   type LinkGuestOrdersInput,
 } from "./schemas/order";
 export {
@@ -99,7 +88,6 @@ export {
   updateSettingsSchema,
   type StoreSettings,
   type PublicStoreSettings,
-  type UpdateSettingsInput,
   type UpdateSettingsFormInput,
 } from "./schemas/settings";
 export {
@@ -109,17 +97,13 @@ export {
   updateSiteContentSchema,
   type SiteContentKey,
   type SiteContent,
-  type UpdateSiteContentInput,
 } from "./schemas/site-content";
 export {
   createCategorySchema,
   updateCategorySchema,
   HOME_ROWS,
-  type CreateCategoryInput,
-  type CreateCategoryFormInput,
   type UpdateCategoryInput,
   type UpdateCategoryFormInput,
-  type HomeRow,
 } from "./schemas/category";
 export {
   InquiryChannel,
@@ -142,33 +126,23 @@ export {
   TOPIC_ERROR as INQUIRY_TOPIC_ERROR,
   InquiryTopic,
   INQUIRY_TOPICS,
-  type CreateInquiryInput,
   type CreateInquiryFormInput,
   addMessageSchema,
-  type AddMessageInput,
   type AddMessageFormInput,
   INQUIRY_QUEUES,
   type InquiryQueue,
   inquiryListQuerySchema,
-  type InquiryListQuery,
   assignInquirySchema,
-  type AssignInquiryInput,
-  type AssignInquiryFormInput,
   escalateInquirySchema,
-  type EscalateInquiryInput,
   LOOKUP_CODE_ERROR as INQUIRY_LOOKUP_CODE_ERROR,
   LOOKUP_PHONE_ERROR as INQUIRY_LOOKUP_PHONE_ERROR,
   LOOKUP_CODE_LENGTH_ERROR as INQUIRY_LOOKUP_CODE_LENGTH_ERROR,
   LOOKUP_PHONE_FORMAT_ERROR as INQUIRY_LOOKUP_PHONE_FORMAT_ERROR,
   inquiryLookupSchema,
-  type InquiryLookupInput,
-  type InquiryLookupFormInput,
 } from "./schemas/inquiry";
 export {
   INQUIRY_URGENCIES,
   inquiryClassificationSchema,
-  type InquiryUrgency,
-  type InquiryClassification,
 } from "./schemas/inquiry-classification";
 export { inquiryDraftSchema, type InquiryDraft } from "./schemas/inquiry-draft";
 export {
@@ -177,11 +151,8 @@ export {
   PRODUCT_CLASSIFICATION_FIELDS,
   productClassificationAcceptSchema,
   dismissProductSuggestionSchema,
-  type ProductClassificationRequest,
   type ProductClassification,
   type ProductClassificationField,
-  type ProductClassificationAcceptInput,
-  type DismissProductSuggestionInput,
 } from "./schemas/product-classification";
 export {
   createReviewSchema,
@@ -190,9 +161,6 @@ export {
   REVIEWS_PAGE_SIZE,
   REVIEW_SORTS,
   type ReviewSort,
-  type ReviewListQuery,
-  type UpdateReviewInput,
-  type UpdateReviewFormInput,
   AUTHOR_NAME_ERROR as REVIEW_AUTHOR_NAME_ERROR,
   AUTHOR_NAME_MAX_ERROR as REVIEW_AUTHOR_NAME_MAX_ERROR,
   RATING_ERROR as REVIEW_RATING_ERROR,
@@ -200,12 +168,11 @@ export {
   COMMENT_MAX_LENGTH as REVIEW_COMMENT_MAX_LENGTH,
   HEADLINE_MAX_ERROR as REVIEW_HEADLINE_MAX_ERROR,
   HEADLINE_MAX_LENGTH as REVIEW_HEADLINE_MAX_LENGTH,
-  type CreateReviewInput,
   type CreateReviewFormInput,
+  type UpdateReviewFormInput,
   staffReplySchema,
   STAFF_REPLY_ERROR,
   STAFF_REPLY_MAX_ERROR,
-  type StaffReplyInput,
   type StaffReplyFormInput,
 } from "./schemas/review";
 export {
@@ -214,17 +181,12 @@ export {
   updateKbArticleSchema,
   kbSearchQuerySchema,
   type KbArticleBody,
-  type CreateKbArticleInput,
-  type CreateKbArticleFormInput,
   type UpdateKbArticleInput,
   type UpdateKbArticleFormInput,
-  type KbSearchQuery,
 } from "./schemas/kb-article";
 export {
   createPromoBlockSchema,
   updatePromoBlockSchema,
-  type CreatePromoBlockInput,
-  type CreatePromoBlockFormInput,
   type UpdatePromoBlockInput,
   type UpdatePromoBlockFormInput,
 } from "./schemas/promo-block";

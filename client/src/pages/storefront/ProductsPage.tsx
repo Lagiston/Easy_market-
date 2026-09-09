@@ -132,9 +132,9 @@ const SELECT_CONTROL_CLASS =
 const FILTER_PILL_CLASS =
   "inline-flex max-w-full items-center gap-1.5 rounded-full border border-foreground/10 bg-card/60 py-1.5 ps-3 pe-2 text-[12.5px] text-foreground reduced-transparency:bg-card";
 
-type StockStatus = "inStock" | "lowStock" | "soldOut";
+export type StockStatus = "inStock" | "lowStock" | "soldOut";
 
-function getStockStatus(product: StorefrontProduct): StockStatus {
+export function getStockStatus(product: StorefrontProduct): StockStatus {
   if (product.stock === 0) return "soldOut";
   if (product.stock < product.lowStockThreshold) return "lowStock";
   return "inStock";

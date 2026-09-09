@@ -1,11 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { Router, type NextFunction, type Request, type Response } from "express";
-import multer, { MulterError } from "multer";
-import { fileTypeFromBuffer } from "file-type";
+import { Router } from "express";
 import { verifyPassword } from "better-auth/crypto";
 import { linkGuestOrdersSchema, updateReviewSchema, deleteCustomerAccountSchema } from "@es-market/core";
 import { prisma } from "../lib/prisma";
 import { uploadImageBuffer, publicIdFromImageUrl, deleteCloudinaryImage } from "../lib/cloudinary";
+import {
+  createImageUpload,
+  handleImageUpload,
+  isValidImageBuffer,
+  INVALID_IMAGE_MESSAGE,
+} from "../lib/image-upload";
 import { requireCustomerAuth } from "../middleware/require-customer-auth";
 import { linkOrdersLimiter } from "../middleware/rate-limit";
 import { orderWithItems, serializePublicOrder, normalizePhone } from "./orders";
@@ -208,43 +212,10 @@ customerRouter.delete<{ productId: string }>(
 // (an appended gallery), an avatar *replaces* whatever was there before, so
 // on success the customer's previous avatar file (if any) is best-effort
 // unlinked and Customer.image is overwritten rather than appended to.
-const AVATAR_IMAGE_EXTENSIONS: Record<string, string> = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-};
-
-const INVALID_AVATAR_MESSAGE = "Image must be a JPEG, PNG, or WebP file";
-
-const avatarUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (!AVATAR_IMAGE_EXTENSIONS[file.mimetype]) {
-      cb(new MulterError("LIMIT_UNEXPECTED_FILE", "invalidImageType"));
-      return;
-    }
-    cb(null, true);
-  },
-});
-
-function uploadAvatar(req: Request, res: Response, next: NextFunction) {
-  avatarUpload.single("image")(req, res, (err: unknown) => {
-    if (err instanceof MulterError) {
-      const message =
-        err.code === "LIMIT_FILE_SIZE"
-          ? "Image must be 5MB or smaller"
-          : INVALID_AVATAR_MESSAGE;
-      res.status(400).json({ error: message });
-      return;
-    }
-    if (err) {
-      next(err);
-      return;
-    }
-    next();
-  });
-}
+const avatarUpload = createImageUpload();
+const uploadAvatar = handleImageUpload((req, res, cb) =>
+  avatarUpload.single("image")(req, res, cb),
+);
 
 customerRouter.post(
   "/customer/profile/avatar",
@@ -257,9 +228,8 @@ customerRouter.post(
       return;
     }
 
-    const detected = await fileTypeFromBuffer(file.buffer);
-    if (!detected || !AVATAR_IMAGE_EXTENSIONS[detected.mime]) {
-      res.status(400).json({ error: INVALID_AVATAR_MESSAGE });
+    if (!(await isValidImageBuffer(file.buffer))) {
+      res.status(400).json({ error: INVALID_IMAGE_MESSAGE });
       return;
     }
 

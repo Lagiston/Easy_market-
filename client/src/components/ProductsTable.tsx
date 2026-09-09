@@ -20,7 +20,12 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import type { LocalizedDescription, LocalizedName, UpdateProductInput } from "@es-market/core";
+import {
+  classifyStock,
+  type LocalizedDescription,
+  type LocalizedName,
+  type UpdateProductInput,
+} from "@es-market/core";
 import { pingClassificationAccepted } from "@/lib/product-classification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -170,13 +175,17 @@ export function SuggestionBadge({ product }: { product: ProductRow }) {
 export const STOCK_STATUSES = ["in-stock", "low-stock", "out-of-stock"] as const;
 export type StockStatus = (typeof STOCK_STATUSES)[number];
 
+const STOCK_LEVEL_TO_STATUS: Record<ReturnType<typeof classifyStock>, StockStatus> = {
+  out: "out-of-stock",
+  low: "low-stock",
+  in: "in-stock",
+};
+
 export function getStockStatus(product: {
   stock: number;
   lowStockThreshold: number;
 }): StockStatus {
-  if (product.stock === 0) return "out-of-stock";
-  if (product.stock < product.lowStockThreshold) return "low-stock";
-  return "in-stock";
+  return STOCK_LEVEL_TO_STATUS[classifyStock(product)];
 }
 
 const columnHelper = createColumnHelper<ProductRow>();

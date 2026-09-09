@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { localizedNameSchema } from "./localized";
 import { localizedDescriptionSchema } from "./product";
-import { sanitizeText } from "../sanitize";
+import { emptyToUndefined, sanitizeText } from "../sanitize";
 
 const CTA_LABEL_ERROR = "CTA label must be 50 characters or fewer";
 const CTA_URL_ERROR =
@@ -23,7 +23,7 @@ const CTA_LABEL_MAX = 50;
 // field's type from coerced Date back to a plain validated string made both
 // disappear, so avoid reintroducing z.coerce.date()/z.date() in this schema.
 const optionalDateSchema = z.preprocess(
-  (value) => (value === "" || value == null ? undefined : value),
+  emptyToUndefined,
   z
     .string()
     .refine((value) => !Number.isNaN(new Date(value).getTime()), DATE_ERROR)
@@ -63,11 +63,11 @@ export const promoBlockSchema = z
     headline: localizedNameSchema,
     copy: localizedDescriptionSchema.optional(),
     ctaLabel: z.preprocess(
-      (value) => (value === "" ? undefined : value),
+      emptyToUndefined,
       z.string().trim().max(CTA_LABEL_MAX, CTA_LABEL_ERROR).optional(),
     ),
     ctaUrl: z.preprocess(
-      (value) => (value === "" ? undefined : value),
+      emptyToUndefined,
       z.string().trim().refine(isValidCtaUrl, CTA_URL_ERROR).optional(),
     ),
     isActive: z.boolean(),

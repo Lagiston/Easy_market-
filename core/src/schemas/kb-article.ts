@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { LANGUAGES, localizedNameSchema } from "./localized";
-import { sanitizeText } from "../sanitize";
+import { emptyToUndefined, sanitizeText } from "../sanitize";
 
 const BODY_ERROR = "Body must be 10000 characters or fewer";
 const BODY_REQUIRED_ERROR = "Body is required";
@@ -37,10 +37,7 @@ export type KbArticleBody = z.infer<typeof kbArticleBodySchema>;
 export const createKbArticleSchema = z.object({
   title: localizedNameSchema,
   body: kbArticleBodySchema,
-  topic: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.string().trim().max(TOPIC_MAX, TOPIC_ERROR).optional(),
-  ),
+  topic: z.preprocess(emptyToUndefined, z.string().trim().max(TOPIC_MAX, TOPIC_ERROR).optional()),
 });
 
 export type CreateKbArticleInput = z.infer<typeof createKbArticleSchema>;

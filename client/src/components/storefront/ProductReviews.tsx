@@ -17,6 +17,7 @@ import {
 import { customerAuthClient } from "@/lib/customer-auth-client";
 import { translateFieldError } from "@/lib/zod-error-i18n";
 import { cn } from "@/lib/utils";
+import { StarRow } from "./StarRating";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,23 +87,6 @@ const GLASS_PANEL_CLASS =
 
 const FORM_CONTROL_CLASS =
   "rounded-xl border-foreground/10 bg-card/40 focus-visible:border-sky-500 focus-visible:ring-4 focus-visible:ring-sky-500/[0.16] reduced-transparency:bg-card";
-
-function StarRow({ rating, label }: { rating: number; label: string }) {
-  return (
-    <span role="img" aria-label={label} className="inline-flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          aria-hidden
-          className={cn(
-            "size-4",
-            star <= rating ? "fill-[#facc15] text-[#facc15]" : "text-muted-foreground/30",
-          )}
-        />
-      ))}
-    </span>
-  );
-}
 
 // Shared interactive star picker for both the create form and the inline edit
 // form below — the read-only StarRow above is a different component since it
