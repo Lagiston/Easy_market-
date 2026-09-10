@@ -163,55 +163,50 @@ export default function SiteHeader() {
               </SheetHeader>
               <nav aria-label={t("nav.mainNavigation")} className="flex flex-col gap-1 px-4">
                 {NAV_ITEMS.map((item) => (
-                  <SheetClose key={item.to} render={
-                    <NavLink to={item.to} end={item.to === "/"} className={mobileNavLinkClassName} />
-                  }>
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === "/"}
+                    className={mobileNavLinkClassName}
+                    onClick={() => setMobileOpen(false)}
+                  >
                     {t(item.labelKey)}
-                  </SheetClose>
+                  </NavLink>
                 ))}
               </nav>
               <div className="flex flex-col gap-1 border-t px-4 pt-4">
-                <SheetClose
-                  render={
-                    <Link
-                      to="/cart"
-                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
-                    />
-                  }
+                <Link
+                  to="/cart"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
+                  onClick={() => setMobileOpen(false)}
                 >
                   <span className="relative">
                     <ShoppingCart className="size-4" />
                     <IconBadge count={totalQuantity} />
                   </span>
                   {t("cart.nav")}
-                </SheetClose>
+                </Link>
                 {session && (
-                  <SheetClose
-                    render={
-                      <Link
-                        to="/account/wishlist"
-                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
-                      />
-                    }
+                  <Link
+                    to="/account/wishlist"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
+                    onClick={() => setMobileOpen(false)}
                   >
                     <span className="relative">
                       <Heart className="size-4" />
                       <IconBadge count={wishlistProducts.length} />
                     </span>
                     {t("wishlist.nav")}
-                  </SheetClose>
+                  </Link>
                 )}
-                <SheetClose
-                  render={
-                    <Link
-                      to={session ? "/account" : "/account/login"}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
-                    />
-                  }
+                <Link
+                  to={session ? "/account" : "/account/login"}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
+                  onClick={() => setMobileOpen(false)}
                 >
                   <User className="size-4" />
                   {session ? session.user.name : t("nav.signIn")}
-                </SheetClose>
+                </Link>
                 <SheetClose
                   render={
                     <button
