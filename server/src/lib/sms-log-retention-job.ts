@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { prisma } from "./prisma";
-import { boss, SMS_LOG_RETENTION_QUEUE } from "./queue";
+import { boss, registeredWorkers, SMS_LOG_RETENTION_QUEUE } from "./queue";
 
 // SmsLog stores the full message body of every send attempt with no cap —
 // fine at this store's current volume, but unbounded over time. Rather than
@@ -18,6 +18,10 @@ export async function pruneOldSmsLogs() {
 }
 
 export async function registerSmsLogRetentionWorker() {
+  // See queue.ts's `registeredWorkers` comment.
+  if (registeredWorkers.has(SMS_LOG_RETENTION_QUEUE)) return;
+  registeredWorkers.add(SMS_LOG_RETENTION_QUEUE);
+
   await boss.work(SMS_LOG_RETENTION_QUEUE, async () => {
     try {
       await pruneOldSmsLogs();

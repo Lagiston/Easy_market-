@@ -14,12 +14,48 @@ export const SMS_LOG_RETENTION_QUEUE = "sms-log-retention";
 // without an explicit timeout, a connection that never completes its TCP/TLS
 // handshake hangs boss.start() forever with no error, which is
 // indistinguishable from a slow start from the process's own logs.
-export const boss = new PgBoss({
-  connectionString: requiredEnv("DATABASE_URL"),
-  connectionTimeoutMillis: 10_000,
-});
+//
+// Cached on globalThis for the same reason lib/prisma.ts's PrismaClient is —
+// `bun --hot` re-runs this whole module graph on every dev save (a plain
+// `app.listen` Express server, not `Bun.serve()`'s in-place hot-swap), so a
+// bare module-level PgBoss would open a brand new connection pool on every
+// reload without ever closing the previous one. globalThis survives that
+// re-execution, so this only actually constructs a pool once per process.
+const globalForBoss = globalThis as unknown as {
+  boss?: PgBoss;
+  bossStarted?: boolean;
+  registeredWorkers?: Set<string>;
+};
+
+export const boss =
+  globalForBoss.boss ??
+  new PgBoss({
+    connectionString: requiredEnv("DATABASE_URL"),
+    connectionTimeoutMillis: 10_000,
+  });
+
+globalForBoss.boss = boss;
+
+// Same globalThis-survives-hot-reload trick as `boss` itself, applied to
+// worker registration: each register*Worker() (in the sibling *-job.ts
+// files) is called unconditionally from index.ts's top-level code on every
+// reload, so without this a duplicate `boss.work(...)` subscription would
+// stack up per queue per reload — re-processing jobs redundantly and
+// (each subscription holding its own poll connection) contributing to the
+// same connection-pool growth `boss` itself used to cause. Keyed by queue
+// name; register*Worker() functions check-and-add via `registeredWorkers`
+// before calling `boss.work(...)`.
+export const registeredWorkers = globalForBoss.registeredWorkers ?? new Set<string>();
+globalForBoss.registeredWorkers = registeredWorkers;
 
 export async function startQueue() {
+  // startQueue() itself still re-runs on every hot reload (it's called from
+  // index.ts's top-level code, which always re-executes) — this guard stops
+  // it from re-registering the "error" listener and re-running boss.start()
+  // against an already-started instance on every single save.
+  if (globalForBoss.bossStarted) return;
+  globalForBoss.bossStarted = true;
+
   boss.on("error", (err: Error) => {
     console.error("pg-boss error:", err);
     Sentry.captureException(err);

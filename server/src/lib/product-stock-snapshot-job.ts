@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { prisma } from "./prisma";
-import { boss, PRODUCT_STOCK_SNAPSHOT_QUEUE } from "./queue";
+import { boss, registeredWorkers, PRODUCT_STOCK_SNAPSHOT_QUEUE } from "./queue";
 
 export async function takeProductStockSnapshot() {
   const soldOutProducts = await prisma.product.findMany({
@@ -18,6 +18,10 @@ export async function takeProductStockSnapshot() {
 }
 
 export async function registerProductStockSnapshotWorker() {
+  // See queue.ts's `registeredWorkers` comment.
+  if (registeredWorkers.has(PRODUCT_STOCK_SNAPSHOT_QUEUE)) return;
+  registeredWorkers.add(PRODUCT_STOCK_SNAPSHOT_QUEUE);
+
   await boss.work(PRODUCT_STOCK_SNAPSHOT_QUEUE, async () => {
     try {
       await takeProductStockSnapshot();

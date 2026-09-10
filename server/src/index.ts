@@ -145,14 +145,15 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Note (dev-only): Bun's --hot reload re-runs this module on every save, so
-// repeated hot reloads can register duplicate pg-boss workers in the same
-// process (now covering both registerProductClassificationWorker and
-// registerProductStockSnapshotWorker) — each duplicate re-processes the same
-// jobs redundantly. boss.schedule() itself is unaffected (it upserts by
-// queue name, so repeated calls don't create duplicate schedules). Not
-// solved here — flagged, same as other accepted v1 gaps in this codebase;
-// restarting the dev server clears it.
+// Bun's --hot reload re-runs this module (and everything it imports) on
+// every dev save, including this top-level startup sequence — startQueue()
+// and each register*Worker() below are guarded (see queue.ts's `boss`/
+// `registeredWorkers` caching) so a reload reuses the existing pg-boss
+// connection pool and worker subscriptions instead of stacking up new ones
+// each time. Previously unguarded, this caused two compounding dev-only
+// bugs: leaked connection pools eventually exhausting Postgres's
+// max_connections, and duplicate job processing from repeated boss.work()
+// registrations.
 console.log("Starting job queue...");
 await startQueue();
 console.log("Job queue started, registering workers...");

@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/node";
 import { prisma } from "./prisma";
 import { classifyProduct } from "./product-classification";
 import { recordSuggestion } from "./product-classification-metrics";
-import { boss, CLASSIFY_PRODUCT_QUEUE } from "./queue";
+import { boss, registeredWorkers, CLASSIFY_PRODUCT_QUEUE } from "./queue";
 import { getEnglishText } from "./localized-json";
 
 async function classifyProductJob(productId: string) {
@@ -36,6 +36,12 @@ async function classifyProductJob(productId: string) {
 }
 
 export async function registerProductClassificationWorker() {
+  // See queue.ts's `registeredWorkers` comment — stops bun --hot's
+  // unconditional re-call of this function on every dev save from stacking
+  // up a duplicate boss.work() subscription for this queue.
+  if (registeredWorkers.has(CLASSIFY_PRODUCT_QUEUE)) return;
+  registeredWorkers.add(CLASSIFY_PRODUCT_QUEUE);
+
   await boss.work<{ productId: string }>(
     CLASSIFY_PRODUCT_QUEUE,
     { localConcurrency: 2 }, // throttle OpenAI concurrency for a bulk run
