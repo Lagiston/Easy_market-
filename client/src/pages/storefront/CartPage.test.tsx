@@ -182,7 +182,7 @@ describe("storefront CartPage", () => {
     renderPage();
 
     await screen.findByText("Sunflower Oil");
-    expect(await screen.findByText("Add TSh 4,200 more for free delivery")).toBeInTheDocument();
+    expect(await screen.findByText("Add KSh 4,200 more for free delivery")).toBeInTheDocument();
     expect(screen.queryByText("Delivery is free on this order")).not.toBeInTheDocument();
   });
 

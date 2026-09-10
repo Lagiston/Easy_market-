@@ -642,7 +642,7 @@ export default function CheckoutPage() {
                 {mutation.isPending
                   ? t("checkout.placing")
                   : t("checkout.placeOrderWithTotal", {
-                      total: `TSh ${formatCurrencyValue(total)}`,
+                      total: `KSh ${formatCurrencyValue(total)}`,
                     })}
               </Button>
               <p className="text-center text-[12.5px] text-neutral-500">

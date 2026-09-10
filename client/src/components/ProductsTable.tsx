@@ -28,6 +28,7 @@ import {
 } from "@es-market/core";
 import { pingClassificationAccepted } from "@/lib/product-classification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Money } from "@/components/Money";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -274,15 +275,23 @@ export default function ProductsTable({
         cell: ({ getValue, row }) => {
           const salePrice = row.original.salePrice;
           if (salePrice === null) {
-            return <div className="text-right">{getValue()}</div>;
+            return (
+              <div className="text-right">
+                <Money amount={getValue()} />
+              </div>
+            );
           }
           return (
             <div className="flex items-center justify-end gap-1.5">
               <Badge variant="secondary" className="shrink-0">
                 {t("admin.products.table.sale")}
               </Badge>
-              <span className="text-muted-foreground line-through">{getValue()}</span>
-              <span className="font-medium">{salePrice}</span>
+              <span className="text-muted-foreground line-through">
+                <Money amount={getValue()} />
+              </span>
+              <span className="font-medium">
+                <Money amount={salePrice} />
+              </span>
             </div>
           );
         },

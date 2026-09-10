@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, ImageOff } from "lucide-react";
 import { LANGUAGES, type Language } from "@es-market/core";
 import { type ProductRow } from "@/components/ProductsTable";
+import { formatCurrencyValue } from "@/components/Money";
 import {
   Card,
   CardContent,
@@ -100,7 +101,10 @@ export default function ProductDetailPage() {
               </div>
             )}
             <dl className="divide-y">
-              <DetailRow label={t("admin.products.detail.price")} value={String(product.price)} />
+              <DetailRow
+                label={t("admin.products.detail.price")}
+                value={`KSh ${formatCurrencyValue(product.price)}`}
+              />
               <DetailRow label={t("admin.products.detail.stock")} value={String(product.stock)} />
               <DetailRow
                 label={t("admin.products.detail.lowStockThreshold")}

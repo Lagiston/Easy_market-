@@ -60,7 +60,7 @@ describe("ProductDetailPage", () => {
     // Name appears in the card title and again in the Translations section
     expect(await screen.findAllByText("Rice 5kg")).toHaveLength(2);
     expect(mockedGet).toHaveBeenCalledWith("/api/products/p1");
-    expect(screen.getByText("1500")).toBeInTheDocument();
+    expect(screen.getByText("KSh 1,500")).toBeInTheDocument();
     expect(screen.getByText("20")).toBeInTheDocument();
     expect(screen.getByText("10")).toBeInTheDocument();
     expect(screen.getAllByText("Groceries").length).toBeGreaterThan(0);

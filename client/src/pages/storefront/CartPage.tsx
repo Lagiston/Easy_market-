@@ -137,7 +137,7 @@ export default function CartPage() {
                   <div className="space-y-2 rounded-2xl border border-amber-500/[0.26] bg-amber-500/[0.07] px-4 py-3">
                     <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
                       {t("cart.freeDeliveryProgress", {
-                        amount: `TSh ${formatCurrencyValue(freeDeliveryThreshold - subtotal)}`,
+                        amount: `KSh ${formatCurrencyValue(freeDeliveryThreshold - subtotal)}`,
                       })}
                     </p>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">

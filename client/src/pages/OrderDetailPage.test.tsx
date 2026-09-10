@@ -80,7 +80,7 @@ describe("OrderDetailPage", () => {
             {
               id: "sms1",
               to: "+255712345678",
-              message: "Halatu: order ABCD2345 confirmed. Total TSh 4000, pay on delivery.",
+              message: "Halatu: order ABCD2345 confirmed. Total KSh 4000, pay on delivery.",
               status: "SENT",
               error: null,
               createdAt: "2026-07-18T13:00:00.000Z",
@@ -94,7 +94,7 @@ describe("OrderDetailPage", () => {
     await screen.findByText("ABCD2345");
     expect(screen.getByText("SMS notifications")).toBeInTheDocument();
     expect(
-      screen.getByText("Halatu: order ABCD2345 confirmed. Total TSh 4000, pay on delivery."),
+      screen.getByText("Halatu: order ABCD2345 confirmed. Total KSh 4000, pay on delivery."),
     ).toBeInTheDocument();
     expect(screen.getByText("Sent")).toBeInTheDocument();
   });

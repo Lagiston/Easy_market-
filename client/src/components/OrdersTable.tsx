@@ -9,6 +9,7 @@ import {
 } from "@es-market/core";
 import { useStoreSettings } from "@/lib/settings-context";
 import OrderStatusBadge from "@/components/OrderStatusBadge";
+import { Money } from "@/components/Money";
 import type { SmsLogRow } from "@/components/SmsLogList";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -138,7 +139,9 @@ export default function OrdersTable({
                 <OrderStatusBadge status={order.status} />
               </TableCell>
               <TableCell className="tabular-nums">{order.callAttempts}</TableCell>
-              <TableCell className="tabular-nums">{order.total}</TableCell>
+              <TableCell className="tabular-nums">
+                <Money amount={order.total} />
+              </TableCell>
               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">

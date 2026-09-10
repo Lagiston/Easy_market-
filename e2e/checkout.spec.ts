@@ -101,7 +101,7 @@ test.describe("Guest checkout", () => {
       await page.getByLabel(/Nearest landmark/).fill("Opposite the Total petrol station");
 
       // Order summary reflects DB price × quantity — name and quantity are
-      // separate elements now, and Money renders "TSh" and the number as
+      // separate elements now, and Money renders "KSh" and the number as
       // separate text nodes, so match the summary line's container instead
       // of a single combined text string.
       const summaryItem = page.getByText(name, { exact: true }).locator("..").locator("..");

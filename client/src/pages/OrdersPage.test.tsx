@@ -62,7 +62,7 @@ describe("OrdersPage", () => {
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
     expect(screen.getByText("0712345678")).toBeInTheDocument();
     expect(within(screen.getByRole("table")).getByText("Received")).toBeInTheDocument();
-    expect(screen.getByText("4000")).toBeInTheDocument();
+    expect(screen.getByText("4,000")).toBeInTheDocument();
     expect(screen.getByText("1 order — call the customer to confirm each received order.")).toBeInTheDocument();
   });
 

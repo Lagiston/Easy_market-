@@ -498,7 +498,7 @@ describe("storefront ProductsPage", () => {
 
     expect(screen.getByText("2 filters")).toBeInTheDocument();
     expect(screen.getByText("rice")).toBeInTheDocument();
-    expect(screen.getByText("TSh 100 – 2000")).toBeInTheDocument();
+    expect(screen.getByText("KSh 100 – 2000")).toBeInTheDocument();
 
     // Removing the search pill clears only the search filter
     await user.click(screen.getByRole("button", { name: "Remove filter: rice" }));

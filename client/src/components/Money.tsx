@@ -1,7 +1,7 @@
-// Tanzanian Shilling display — no shared money-formatting utility existed
+// Kenyan Shilling display — no shared money-formatting utility existed
 // before this; every price site in this codebase was previously a bare
-// number, or (on two storefront pages) hardcoded the wrong "KSh" (Kenyan
-// Shilling) label. All prices are whole-number Ints (no cents anywhere).
+// number, or hardcoded the label ad hoc. All prices are whole-number Ints
+// (no cents anywhere).
 export function formatCurrencyValue(amount: number): string {
   return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(amount);
 }
@@ -25,7 +25,7 @@ export function Money({
   return (
     <span className={className}>
       <span className={prefixClassName ?? "text-[0.66em] font-semibold text-muted-foreground"}>
-        TSh{" "}
+        KSh{" "}
       </span>
       <span className="tabular-nums">{formatCurrencyValue(amount)}</span>
     </span>

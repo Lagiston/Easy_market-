@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ImageOff, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Money } from "@/components/Money";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SuggestionBadge, getStockStatus, type ProductRow } from "@/components/ProductsTable";
@@ -90,7 +91,9 @@ export default function ProductsCardGrid({
                 </div>
               )}
               <div className="flex items-center justify-between gap-2">
-                <p className="font-semibold">{product.price}</p>
+                <p className="font-semibold">
+                  <Money amount={product.price} />
+                </p>
                 {stockBadge.variant && <Badge variant={stockBadge.variant}>{stockBadge.label}</Badge>}
               </div>
               <p className="text-sm text-muted-foreground">
