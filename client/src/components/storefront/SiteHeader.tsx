@@ -97,7 +97,8 @@ export default function SiteHeader() {
         <Link to="/" className="flex items-center gap-2 justify-self-start">
           {/* Sized by height, not a square box, since the mark glyph is
               naturally wide and flat. */}
-          <img src="/Logo/icons/halatu-mark-ink-512.png" alt="" aria-hidden className="h-6 w-auto shrink-0 object-contain" />
+          <img src="/Logo/icons/halatu-mark-ink-512.png" alt="" aria-hidden className="h-8 w-auto shrink-0 object-contain dark:hidden" />
+          <img src="/Logo/icons/halatu-mark-frost-512.png" alt="" aria-hidden className="hidden h-8 w-auto shrink-0 object-contain dark:block" />
           <span className="text-lg font-bold tracking-tight whitespace-nowrap text-foreground">
             {siteName}
           </span>

@@ -88,7 +88,8 @@ export default function Layout({ user }: { user: SessionUser }) {
         {/* Desktop */}
         <div className="hidden items-center gap-6 lg:flex">
           <Link to="/admin" className="flex items-center gap-2 text-lg font-semibold">
-            <img src="/Logo/icons/halatu-mark-ink-512.png" alt="" aria-hidden className="h-5 w-auto shrink-0 object-contain" />
+            <img src="/Logo/icons/halatu-mark-ink-512.png" alt="" aria-hidden className="h-7 w-auto shrink-0 object-contain dark:hidden" />
+            <img src="/Logo/icons/halatu-mark-frost-512.png" alt="" aria-hidden className="hidden h-7 w-auto shrink-0 object-contain dark:block" />
             {siteName}
           </Link>
           {navLinks.map((item) => (
@@ -120,7 +121,8 @@ export default function Layout({ user }: { user: SessionUser }) {
 
         {/* Mobile */}
         <Link to="/admin" className="flex items-center gap-2 text-lg font-semibold lg:hidden">
-          <img src="/Logo/icons/halatu-mark-ink-512.png" alt="" aria-hidden className="h-5 w-auto shrink-0 object-contain" />
+          <img src="/Logo/icons/halatu-mark-ink-512.png" alt="" aria-hidden className="h-7 w-auto shrink-0 object-contain dark:hidden" />
+          <img src="/Logo/icons/halatu-mark-frost-512.png" alt="" aria-hidden className="hidden h-7 w-auto shrink-0 object-contain dark:block" />
           Halatu
         </Link>
         <div className="lg:hidden">
