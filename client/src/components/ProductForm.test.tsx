@@ -304,6 +304,188 @@ describe("ProductForm (create mode)", () => {
   });
 });
 
+describe("ProductForm variant rows (create mode)", () => {
+  beforeEach(() => {
+    mockGet();
+    mockedAxios.post.mockReset();
+    mockedAxios.isAxiosError.mockReset();
+  });
+
+  async function fillBaseFields(user: ReturnType<typeof userEvent.setup>) {
+    await user.type(screen.getByLabelText("Name (English)"), "Shirt");
+    await user.clear(screen.getByLabelText("Stock"));
+    await user.type(screen.getByLabelText("Stock"), "5");
+    await selectCategory(user, "Groceries");
+    const file = new File(["image"], "product.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Images"), file);
+  }
+
+  it("adds and removes a variant row", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    expect(screen.queryByLabelText("Variant size")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Add variant" }));
+
+    expect(screen.getByLabelText("Variant size")).toBeInTheDocument();
+    expect(screen.getByLabelText("Variant color")).toBeInTheDocument();
+    expect(screen.getByLabelText("Variant price")).toBeInTheDocument();
+    expect(screen.getByLabelText("Variant stock")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove variant 1" }));
+
+    expect(screen.queryByLabelText("Variant size")).not.toBeInTheDocument();
+  });
+
+  it("blocks submit when a variant row's sale price is not less than its price", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await fillBaseFields(user);
+    await user.click(screen.getByRole("button", { name: "Add variant" }));
+    fireEvent.change(screen.getByLabelText("Variant price"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("Variant sale price (optional)"), {
+      target: { value: "10" },
+    });
+    fireEvent.change(screen.getByLabelText("Variant stock"), { target: { value: "5" } });
+    await user.click(screen.getByRole("button", { name: "Create product" }));
+
+    expect(
+      await screen.findByText("Sale price must be less than the regular price"),
+    ).toBeInTheDocument();
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
+  it("blocks submit when a variant row's size/color duplicates the base product's", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await fillBaseFields(user);
+    await user.type(screen.getByLabelText("Size"), "M");
+    await user.type(screen.getByLabelText("Color"), "Red");
+    await user.click(screen.getByRole("button", { name: "Add variant" }));
+    fireEvent.change(screen.getByLabelText("Variant size"), { target: { value: "M" } });
+    fireEvent.change(screen.getByLabelText("Variant color"), { target: { value: "Red" } });
+    fireEvent.change(screen.getByLabelText("Variant price"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("Variant stock"), { target: { value: "5" } });
+    await user.click(screen.getByRole("button", { name: "Create product" }));
+
+    expect(
+      await screen.findByText("Two variants can't have the same size and color."),
+    ).toBeInTheDocument();
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
+  it("creates the base product plus each variant row and links them", async () => {
+    const baseProduct = {
+      id: "base-1",
+      name: { en: "Shirt" },
+      description: null,
+      stock: 5,
+      images: [],
+      category: categories[0],
+      assignedAgent: null,
+    };
+    const variantProduct = { ...baseProduct, id: "variant-1" };
+    mockedAxios.post.mockImplementation((url: string) => {
+      if (url === "/api/products") {
+        // First call creates the base product; subsequent calls create variants.
+        return mockedAxios.post.mock.calls.filter((call) => call[0] === "/api/products").length === 1
+          ? Promise.resolve({ data: { product: baseProduct } })
+          : Promise.resolve({ data: { product: variantProduct } });
+      }
+      if (url === "/api/products/base-1/images") {
+        return Promise.resolve({ data: { product: { ...baseProduct, images: ["x.jpg"] } } });
+      }
+      if (url === "/api/products/base-1/variants") {
+        return Promise.resolve({ data: {} });
+      }
+      return Promise.reject(new Error(`Unexpected POST to ${url}`));
+    });
+    const user = userEvent.setup();
+    const { onSuccess } = renderForm();
+
+    await fillBaseFields(user);
+    await user.click(screen.getByRole("button", { name: "Add variant" }));
+    fireEvent.change(screen.getByLabelText("Variant size"), { target: { value: "L" } });
+    fireEvent.change(screen.getByLabelText("Variant price"), { target: { value: "12" } });
+    fireEvent.change(screen.getByLabelText("Variant stock"), { target: { value: "3" } });
+    await user.click(screen.getByRole("button", { name: "Create product" }));
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        "/api/products",
+        expect.objectContaining({ size: "L", price: 12, stock: 3, categoryId: "c1" }),
+      ),
+    );
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith("/api/products/base-1/variants", {
+        productId: "variant-1",
+      }),
+    );
+    await waitFor(() =>
+      expect(onSuccess).toHaveBeenCalledWith(
+        { ...baseProduct, images: ["x.jpg"] },
+        { hasVariantErrors: false },
+      ),
+    );
+  });
+
+  it("continues past a failing variant row and still reports base success", async () => {
+    const baseProduct = {
+      id: "base-2",
+      name: { en: "Shirt" },
+      description: null,
+      stock: 5,
+      images: [],
+      category: categories[0],
+      assignedAgent: null,
+    };
+    mockedAxios.isAxiosError.mockImplementation(
+      (error) => (error as { isAxiosError?: boolean })?.isAxiosError === true,
+    );
+    mockedAxios.post.mockImplementation((url: string) => {
+      if (url === "/api/products") {
+        return Promise.reject({
+          isAxiosError: true,
+          response: { data: { error: "A variant with that size and color is already in this group" } },
+        });
+      }
+      if (url === "/api/products/base-2/images") {
+        return Promise.resolve({ data: { product: { ...baseProduct, images: ["x.jpg"] } } });
+      }
+      return Promise.reject(new Error(`Unexpected POST to ${url}`));
+    });
+    // Only the base product's own create call should resolve; override after the
+    // fact for that first specific call.
+    mockedAxios.post.mockImplementationOnce((url: string) =>
+      url === "/api/products"
+        ? Promise.resolve({ data: { product: baseProduct } })
+        : Promise.reject(new Error(`Unexpected POST to ${url}`)),
+    );
+    const user = userEvent.setup();
+    const { onSuccess } = renderForm();
+
+    await fillBaseFields(user);
+    await user.click(screen.getByRole("button", { name: "Add variant" }));
+    fireEvent.change(screen.getByLabelText("Variant size"), { target: { value: "L" } });
+    fireEvent.change(screen.getByLabelText("Variant price"), { target: { value: "12" } });
+    fireEvent.change(screen.getByLabelText("Variant stock"), { target: { value: "3" } });
+    await user.click(screen.getByRole("button", { name: "Create product" }));
+
+    expect(
+      await screen.findByText("A variant with that size and color is already in this group"),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(onSuccess).toHaveBeenCalledWith(
+        { ...baseProduct, images: ["x.jpg"] },
+        { hasVariantErrors: true },
+      ),
+    );
+  });
+});
+
 describe("ProductForm AI suggestions", () => {
   beforeEach(() => {
     mockGet();

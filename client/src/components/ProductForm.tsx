@@ -15,6 +15,11 @@ import {
   type UpdateProductFormInput,
   type UpdateProductInput,
 } from "@es-market/core";
+import ProductVariantRows, {
+  emptyVariantRowValues,
+  validateVariantRow,
+  type VariantRowState,
+} from "@/components/ProductVariantRows";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,7 +46,7 @@ export default function ProductForm({
   onSuccess,
 }: {
   product?: ProductRow;
-  onSuccess?: (product: ProductRow) => void;
+  onSuccess?: (product: ProductRow, meta?: { hasVariantErrors: boolean }) => void;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -49,6 +54,85 @@ export default function ProductForm({
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const pendingProductRef = useRef<ProductRow | null>(null);
+  // Create-mode only: additional size/color/price/stock variants to create
+  // and link alongside the base product in one submission. The base
+  // product's own size/color fields (above) remain "variant #1" — this list
+  // is only for the rest.
+  const [variantRows, setVariantRows] = useState<VariantRowState[]>([]);
+  const [variantDuplicateError, setVariantDuplicateError] = useState<string | null>(null);
+  const nextVariantRowId = useRef(0);
+  const hasVariantErrorsRef = useRef(false);
+
+  function addVariantRow() {
+    const id = String(nextVariantRowId.current++);
+    setVariantRows((rows) => [
+      ...rows,
+      { id, values: emptyVariantRowValues(), errors: {}, status: "idle" },
+    ]);
+  }
+
+  function removeVariantRow(id: string) {
+    setVariantRows((rows) => rows.filter((row) => row.id !== id));
+  }
+
+  function updateVariantRow(id: string, patch: Partial<VariantRowState["values"]>) {
+    setVariantRows((rows) =>
+      rows.map((row) =>
+        row.id === id
+          ? { ...row, values: { ...row.values, ...patch }, errors: {}, status: "idle" }
+          : row,
+      ),
+    );
+  }
+
+  // Sequentially creates + links each additional variant row as its own
+  // Product, copying the base product's name/description/category/tags/
+  // assignee (per the "same product, different size/color/price" mental
+  // model this UI is built around) but each row's own price/salePrice/
+  // stock/size/color. Best-effort: a failing row doesn't abort the rest, so
+  // as many variants as possible get created+linked in one submit — a
+  // failed row's product may still exist standalone, recoverable later via
+  // ProductVariantLinks in the edit dialog. Returns whether any row failed.
+  async function createVariantRows(baseProductId: string, baseInput: UpdateProductInput) {
+    let hasErrors = false;
+    for (const row of variantRows) {
+      setVariantRows((rows) =>
+        rows.map((r) => (r.id === row.id ? { ...r, status: "pending", errorMessage: undefined } : r)),
+      );
+      try {
+        const variantPayload = {
+          name: baseInput.name,
+          description: baseInput.description,
+          categoryId: baseInput.categoryId,
+          assignedAgentId: baseInput.assignedAgentId,
+          tags: baseInput.tags,
+          lowStockThreshold: baseInput.lowStockThreshold,
+          size: row.values.size || undefined,
+          color: row.values.color || undefined,
+          price: row.values.price,
+          salePrice: row.values.salePrice === "" ? undefined : row.values.salePrice,
+          stock: row.values.stock,
+        };
+        const created = await axios
+          .post("/api/products", variantPayload)
+          .then((res) => res.data.product as ProductRow);
+        await axios.post(`/api/products/${baseProductId}/variants`, { productId: created.id });
+        setVariantRows((rows) =>
+          rows.map((r) => (r.id === row.id ? { ...r, status: "done" } : r)),
+        );
+      } catch (error) {
+        hasErrors = true;
+        const message =
+          axios.isAxiosError(error) && error.response?.data?.error
+            ? String(error.response.data.error)
+            : t("admin.products.form.variantError");
+        setVariantRows((rows) =>
+          rows.map((r) => (r.id === row.id ? { ...r, status: "error", errorMessage: message } : r)),
+        );
+      }
+    }
+    return hasErrors;
+  }
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: () =>
@@ -139,14 +223,23 @@ export default function ProductForm({
 
       const formData = new FormData();
       for (const file of imageFiles) formData.append("images", file);
-      return axios
+      const withImages = await axios
         .post(`/api/products/${created.id}/images`, formData)
         .then((res) => res.data.product as ProductRow);
+
+      if (variantRows.length > 0) {
+        hasVariantErrorsRef.current = await createVariantRows(created.id, input);
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      } else {
+        hasVariantErrorsRef.current = false;
+      }
+
+      return withImages;
     },
     onSuccess: (product) => {
       pendingProductRef.current = null;
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      onSuccess?.(product);
+      onSuccess?.(product, { hasVariantErrors: hasVariantErrorsRef.current });
     },
   });
 
@@ -168,6 +261,32 @@ export default function ProductForm({
         if (!product && imageFiles.length === 0) {
           setImageError(t("admin.products.form.imageRequired"));
           return;
+        }
+        if (!product) {
+          const rowErrors = variantRows.map((row) => validateVariantRow(row.values));
+          if (rowErrors.some((errors) => Object.keys(errors).length > 0)) {
+            setVariantRows((rows) => rows.map((row, index) => ({ ...row, errors: rowErrors[index]! })));
+            return;
+          }
+          const pairs: Array<[string | null, string | null]> = [
+            [input.size ?? null, input.color ?? null],
+            ...variantRows.map(
+              (row): [string | null, string | null] => [row.values.size || null, row.values.color || null],
+            ),
+          ];
+          const seen = new Set<string>();
+          const hasDuplicate = pairs.some(([size, color]) => {
+            if (size === null && color === null) return false;
+            const key = `${size} ${color}`;
+            if (seen.has(key)) return true;
+            seen.add(key);
+            return false;
+          });
+          if (hasDuplicate) {
+            setVariantDuplicateError(t("admin.products.form.duplicateVariantError"));
+            return;
+          }
+          setVariantDuplicateError(null);
         }
         mutation.mutate(input);
       })}
@@ -506,6 +625,20 @@ export default function ProductForm({
           {errors.color && <p className="text-sm text-destructive">{errors.color.message}</p>}
         </div>
       </div>
+      {!product && (
+        <>
+          <ProductVariantRows
+            rows={variantRows}
+            onAdd={addVariantRow}
+            onRemove={removeVariantRow}
+            onChange={updateVariantRow}
+            disabled={mutation.isPending}
+          />
+          {variantDuplicateError && (
+            <p className="text-sm text-destructive">{variantDuplicateError}</p>
+          )}
+        </>
+      )}
       <div className="grid gap-1.5">
         <Label htmlFor="product-form-assigned-agent">
           {t("admin.products.form.assignedAgent")}
@@ -591,6 +724,28 @@ export default function ProductForm({
           {imageError && <p className="text-sm text-destructive">{imageError}</p>}
         </div>
       )}
+      {!product && mutation.isPending && variantRows.length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          {t("admin.products.form.variantCreating", {
+            current: Math.min(
+              variantRows.filter((row) => row.status === "done" || row.status === "error").length + 1,
+              variantRows.length,
+            ),
+            total: variantRows.length,
+          })}
+        </p>
+      )}
+      {!product &&
+        !mutation.isPending &&
+        variantRows.length > 0 &&
+        variantRows.some((row) => row.status === "error") && (
+          <p className="text-sm text-destructive">
+            {t("admin.products.form.variantsPartialFailure", {
+              failed: variantRows.filter((row) => row.status === "error").length,
+              total: variantRows.length,
+            })}
+          </p>
+        )}
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
       <DialogFooter showCloseButton>
         <Button type="submit" disabled={mutation.isPending}>

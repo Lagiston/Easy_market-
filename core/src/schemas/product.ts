@@ -94,6 +94,39 @@ export const createProductSchema = z.object({
   }
 });
 
+// Client-only: one row of the repeatable "additional variants" list on the
+// Create Product form. Never sent to the server as-is — each row is later
+// assembled into a normal createProductSchema-shaped POST body (copying the
+// base product's name/description/categoryId/tags/assignedAgentId) and
+// linked in via linkVariantSchema's route. Mirrors createProductSchema's own
+// price/salePrice/size/color/stock fields and superRefine exactly, but stays
+// its own schema since createProductSchema also carries name/description/
+// category/tags fields a variant row doesn't need.
+export const productVariantRowSchema = z
+  .object({
+    size: z.preprocess(emptyToUndefined, z.string().trim().max(50, VARIANT_LABEL_ERROR).optional()),
+    color: z.preprocess(emptyToUndefined, z.string().trim().max(50, VARIANT_LABEL_ERROR).optional()),
+    price: z.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR),
+    salePrice: z.preprocess(
+      emptyToUndefined,
+      z.number(PRICE_ERROR).int(PRICE_ERROR).min(0, PRICE_ERROR).optional(),
+    ),
+    stock: z.number(STOCK_ERROR).int(STOCK_ERROR).min(0, STOCK_ERROR),
+  })
+  .superRefine((value, ctx) => {
+    if (value.salePrice !== undefined && value.salePrice >= value.price) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["salePrice"],
+        message: "Sale price must be less than the regular price",
+      });
+    }
+  });
+
+export type ProductVariantRowInput = z.infer<typeof productVariantRowSchema>;
+
+export type ProductVariantRowFormInput = z.input<typeof productVariantRowSchema>;
+
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 
 // Pre-transform shape (what the form fields hold before name/description are normalized).

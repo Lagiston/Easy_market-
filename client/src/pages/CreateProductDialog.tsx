@@ -26,7 +26,11 @@ export default function CreateProductDialog() {
           <DialogTitle>{t("admin.products.createDialog.trigger")}</DialogTitle>
           <DialogDescription>{t("admin.products.createDialog.description")}</DialogDescription>
         </DialogHeader>
-        <ProductForm onSuccess={() => setOpen(false)} />
+        <ProductForm
+          onSuccess={(_product, meta) => {
+            if (!meta?.hasVariantErrors) setOpen(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
