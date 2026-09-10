@@ -253,7 +253,7 @@ export function ScrollFrameAnimation({
               </div>
             )}
             {pillarsChildren && pillarsChildren.length > 0 && (
-              <div className="pointer-events-none w-full space-y-4 md:absolute md:inset-auto md:bottom-[6%] md:left-0 md:block md:w-auto">
+              <div className="pointer-events-none w-full space-y-4 md:absolute md:inset-auto md:right-0 md:bottom-[6%] md:block md:w-auto">
                 {pillarsChildren.map((pillar, i) => (
                   <div key={i}>{pillar}</div>
                 ))}
@@ -294,7 +294,7 @@ export function ScrollFrameAnimation({
               </div>
             )}
             {pillarsChildren && pillarsChildren.length > 0 && (
-              <div className="pointer-events-none w-full space-y-4 md:absolute md:inset-auto md:bottom-[6%] md:left-0 md:block md:w-auto">
+              <div className="pointer-events-none w-full space-y-4 md:absolute md:inset-auto md:right-0 md:bottom-[6%] md:block md:w-auto">
                 {pillarsChildren.map((pillar, i) => (
                   <div
                     key={i}
