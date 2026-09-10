@@ -1063,8 +1063,7 @@
         "variantDone": "تم الإنشاء",
         "variantError": "تعذّر إنشاء هذا المتغيّر. يرجى المحاولة مرة أخرى.",
         "variantCreating": "جارٍ إنشاء المتغيّر {{current}} من {{total}}…",
-        "variantsPartialFailure": "تم إنشاء المنتج؛ فشل {{failed}} من {{total}} من المتغيرات — انظر أدناه.",
-        "duplicateVariantError": "لا يمكن أن يكون لمتغيرين نفس المقاس واللون."
+        "variantsPartialFailure": "تم إنشاء المنتج؛ فشل {{failed}} من {{total}} من المتغيرات — انظر أدناه."
       },
       "createDialog": {
         "trigger": "إنشاء منتج",

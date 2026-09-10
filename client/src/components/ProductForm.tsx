@@ -59,7 +59,6 @@ export default function ProductForm({
   // product's own size/color fields (above) remain "variant #1" — this list
   // is only for the rest.
   const [variantRows, setVariantRows] = useState<VariantRowState[]>([]);
-  const [variantDuplicateError, setVariantDuplicateError] = useState<string | null>(null);
   const nextVariantRowId = useRef(0);
   const hasVariantErrorsRef = useRef(false);
 
@@ -268,25 +267,6 @@ export default function ProductForm({
             setVariantRows((rows) => rows.map((row, index) => ({ ...row, errors: rowErrors[index]! })));
             return;
           }
-          const pairs: Array<[string | null, string | null]> = [
-            [input.size ?? null, input.color ?? null],
-            ...variantRows.map(
-              (row): [string | null, string | null] => [row.values.size || null, row.values.color || null],
-            ),
-          ];
-          const seen = new Set<string>();
-          const hasDuplicate = pairs.some(([size, color]) => {
-            if (size === null && color === null) return false;
-            const key = `${size} ${color}`;
-            if (seen.has(key)) return true;
-            seen.add(key);
-            return false;
-          });
-          if (hasDuplicate) {
-            setVariantDuplicateError(t("admin.products.form.duplicateVariantError"));
-            return;
-          }
-          setVariantDuplicateError(null);
         }
         mutation.mutate(input);
       })}
@@ -626,18 +606,13 @@ export default function ProductForm({
         </div>
       </div>
       {!product && (
-        <>
-          <ProductVariantRows
-            rows={variantRows}
-            onAdd={addVariantRow}
-            onRemove={removeVariantRow}
-            onChange={updateVariantRow}
-            disabled={mutation.isPending}
-          />
-          {variantDuplicateError && (
-            <p className="text-sm text-destructive">{variantDuplicateError}</p>
-          )}
-        </>
+        <ProductVariantRows
+          rows={variantRows}
+          onAdd={addVariantRow}
+          onRemove={removeVariantRow}
+          onChange={updateVariantRow}
+          disabled={mutation.isPending}
+        />
       )}
       <div className="grid gap-1.5">
         <Label htmlFor="product-form-assigned-agent">

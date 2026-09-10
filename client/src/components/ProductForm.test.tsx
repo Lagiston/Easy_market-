@@ -357,26 +357,6 @@ describe("ProductForm variant rows (create mode)", () => {
     expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
-  it("blocks submit when a variant row's size/color duplicates the base product's", async () => {
-    const user = userEvent.setup();
-    renderForm();
-
-    await fillBaseFields(user);
-    await user.type(screen.getByLabelText("Size"), "M");
-    await user.type(screen.getByLabelText("Color"), "Red");
-    await user.click(screen.getByRole("button", { name: "Add variant" }));
-    fireEvent.change(screen.getByLabelText("Variant size"), { target: { value: "M" } });
-    fireEvent.change(screen.getByLabelText("Variant color"), { target: { value: "Red" } });
-    fireEvent.change(screen.getByLabelText("Variant price"), { target: { value: "10" } });
-    fireEvent.change(screen.getByLabelText("Variant stock"), { target: { value: "5" } });
-    await user.click(screen.getByRole("button", { name: "Create product" }));
-
-    expect(
-      await screen.findByText("Two variants can't have the same size and color."),
-    ).toBeInTheDocument();
-    expect(mockedAxios.post).not.toHaveBeenCalled();
-  });
-
   it("creates the base product plus each variant row and links them", async () => {
     const baseProduct = {
       id: "base-1",

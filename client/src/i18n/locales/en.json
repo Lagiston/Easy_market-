@@ -1034,8 +1034,7 @@
         "variantDone": "Created",
         "variantError": "Could not create this variant. Please try again.",
         "variantCreating": "Creating variant {{current}} of {{total}}…",
-        "variantsPartialFailure": "Product created; {{failed}} of {{total}} variants failed — see below.",
-        "duplicateVariantError": "Two variants can't have the same size and color."
+        "variantsPartialFailure": "Product created; {{failed}} of {{total}} variants failed — see below."
       },
       "createDialog": {
         "trigger": "Create product",
