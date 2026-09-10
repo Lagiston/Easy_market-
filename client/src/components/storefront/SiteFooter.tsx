@@ -116,11 +116,12 @@ export default function SiteFooter() {
 
           <div className="relative h-px w-full bg-[linear-gradient(90deg,rgba(31,131,189,0.35),rgba(0,0,0,0.06)_30%,rgba(0,0,0,0.02))] dark:bg-[linear-gradient(90deg,rgba(79,184,238,0.35),rgba(255,255,255,0.09)_30%,rgba(255,255,255,0.03))]" />
 
-          <div className="relative flex flex-wrap items-center justify-between gap-4">
-            <p className="font-jetbrains-mono text-[12px] text-muted-foreground dark:text-[rgba(180,208,226,0.4)]">
+          <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div />
+            <p className="justify-self-center text-center font-jetbrains-mono text-[12px] text-muted-foreground dark:text-[rgba(180,208,226,0.4)]">
               {t("footer.copyright", { year: new Date().getFullYear() })}
             </p>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-self-end gap-2.5">
               {socialLinks.map(({ key, href, Icon }) => (
                 <a
                   key={key}
